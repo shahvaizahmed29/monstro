@@ -25,7 +25,8 @@ class DatabaseSeeder extends Seeder
             ProgramLevelSeeder::class,
             SessionSeeder::class,
             ReservationSeeder::class,
-            CheckInsSeeder::class
+            CheckInsSeeder::class,
+            MemberProgramsSeeder::class
         ]);
     }
 }

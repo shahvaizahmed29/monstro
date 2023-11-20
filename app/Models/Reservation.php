@@ -25,4 +25,8 @@ class Reservation extends Model
         return $this->hasMany(CheckIns::class);
     }
 
+    public function session(){
+        return $this->belongsTo(Session::class);
+    }
+
 }

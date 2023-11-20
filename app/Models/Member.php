@@ -35,4 +35,8 @@ class Member extends Model
         return $this->hasMany(Reservation::class);
     }
 
+    public function programs(){
+        return $this->belongsToMany(Location::class, 'member_programs', 'member_id', 'program_id');
+    }
+    
 }

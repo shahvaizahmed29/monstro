@@ -30,4 +30,8 @@ class Session extends Model
         return $this->belongsTo(ProgramLevel::class);
     }
 
+    public function reservations(){
+        return $this->hasMany(Reservation::class);
+    }
+
 }
