@@ -1,11 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use App\Http\Resources\ProgramsResource;
-use App\Models\Member;
+use App\Http\Controllers\BaseController;
 use App\Models\ProgramLevel;
-use Illuminate\Http\Request;
 
 class ProgramController extends BaseController
 {
