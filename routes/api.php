@@ -20,3 +20,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('get-reservations-by-member', [App\Http\Controllers\ReservationController::class, 'getReservationsByMember'])->name('get.reservations');
 Route::get('get-sessions/{program_id}', [App\Http\Controllers\ProgramController::class, 'getSessions'])->name('get.sessions');
+
+Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login'])->name('login');
