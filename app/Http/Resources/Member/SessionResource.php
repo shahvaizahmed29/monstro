@@ -33,6 +33,7 @@ class SessionResource extends JsonResource
             'programLevel' => $this->whenLoaded('programLevel', function () {
                 return new ProgramLevelResource($this->programLevel);
             }),
+            'reservations' => ReservationResource::collection($this->whenLoaded('reservations')),
         ];
 
 

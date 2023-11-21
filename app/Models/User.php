@@ -49,12 +49,12 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function vendors(){
-        return $this->hasMany(Vendor::class);
+    public function vendor(){
+        return $this->hasOne(Vendor::class);
     }
 
-    public function members(){
-        return $this->hasMany(Member::class);
+    public function member(){
+        return $this->hasOne(Member::class);
     }
 
 }

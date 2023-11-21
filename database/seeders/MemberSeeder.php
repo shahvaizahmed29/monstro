@@ -13,7 +13,7 @@ class MemberSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = User::take(3)->get();
+        $users = User::orderBy('created_at', 'desc')->take(3)->get();
 
         $members = [
             [
