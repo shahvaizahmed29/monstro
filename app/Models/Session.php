@@ -56,7 +56,7 @@ class Session extends Model
                 // Calculate the time remaining for the next class
                 $timeRemaining = $now->diff($nextClassStart);
     
-                return $timeRemaining->format('%H:%I') . " remaining for next class";
+                return "In ".$timeRemaining->format('%H:%I') . " hours";
             }
 
         } else {
