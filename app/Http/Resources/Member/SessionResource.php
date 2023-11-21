@@ -29,6 +29,7 @@ class SessionResource extends JsonResource
             'saturday' => $this->saturday,
             'sunday' => $this->sunday,
             'status' => $this->status,
+            'currentStatus' => $this->getCurrentStatusAttribute(),
             'programLevel' => $this->whenLoaded('programLevel', function () {
                 return new ProgramLevelResource($this->programLevel);
             }),
