@@ -17,6 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('member_id');
             $table->tinyInteger('status');
             $table->date('start_date');
+            $table->date('end_date');
             $table->timestamps();
             $table->softDeletes();
         });

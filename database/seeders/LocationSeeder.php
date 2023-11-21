@@ -24,8 +24,6 @@ class LocationSeeder extends Seeder
                 'country' => 'California',
                 'postal_code' => '11215',
                 'website' => 'https://www.californiajunction.com',
-                'first_name' => 'CA',
-                'last_name' => '(USA)',
                 'email' => 'california.location@gmail.com',
                 'phone' => '+198998768772',
                 'meta_data' => [
@@ -47,8 +45,6 @@ class LocationSeeder extends Seeder
                 'country' => 'USA',
                 'postal_code' => '77002',
                 'website' => 'https://www.texasstation.com',
-                'first_name' => 'TX',
-                'last_name' => '(USA)',
                 'email' => 'texas.station@gmail.com',
                 'phone' => '+12897654321',
                 'meta_data' => [
@@ -70,8 +66,6 @@ class LocationSeeder extends Seeder
                 'country' => 'USA',
                 'postal_code' => '10001',
                 'website' => 'https://www.newyorkplaza.com',
-                'first_name' => 'NY',
-                'last_name' => '(USA)',
                 'email' => 'newyork.plaza@gmail.com',
                 'phone' => '+12129876543',
                 'meta_data' => [
@@ -96,8 +90,6 @@ class LocationSeeder extends Seeder
                 'country' => $location['country'],
                 'postal_code' => $location['postal_code'],
                 'website' => $location['website'],
-                'first_name' => $location['first_name'],
-                'last_name' => $location['last_name'],
                 'email' => $location['email'],
                 'phone' => $location['phone'],
                 'meta_data' => json_encode($location['meta_data']),

@@ -20,8 +20,6 @@ class Location extends Model
         'country',
         'postal_code',
         'website',
-        'first_name',
-        'last_name',
         'email',
         'phone',
         'meta_data',

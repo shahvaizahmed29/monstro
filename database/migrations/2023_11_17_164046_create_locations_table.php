@@ -22,8 +22,6 @@ return new class extends Migration
             $table->string('country');
             $table->string('postal_code')->nullable();
             $table->string('website')->nullable();
-            $table->string('first_name')->nullable();
-            $table->string('last_name')->nullable();
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->longText('meta_data')->nullable();

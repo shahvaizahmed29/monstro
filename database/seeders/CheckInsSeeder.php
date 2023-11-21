@@ -15,43 +15,43 @@ class CheckInsSeeder extends Seeder
         $check_ins = [
             [
                 'reservation_id' => 1,
-                'check_in_time' => '12:37:45',
-                'check_out_time' => '20:40:45'
+                'check_in_time' => '01:30:00',
+                'check_out_time' => '02:00:00'
             ],
             [
                 'reservation_id' => 2,
-                'check_in_time' => '12:37:45',
-                'check_out_time' => '20:40:45'
+                'check_in_time' => '01:35:00',
+                'check_out_time' => '02:00:00'
             ],
             [
                 'reservation_id' => 3,
-                'check_in_time' => '12:37:45',
-                'check_out_time' => '20:40:45'
+                'check_in_time' => '01:40:00',
+                'check_out_time' => '02:00:00'
             ],
             [
                 'reservation_id' => 4,
-                'check_in_time' => '12:37:45',
-                'check_out_time' => '20:40:45'
+                'check_in_time' => '01:45:00',
+                'check_out_time' => '02:00:00'
             ],
             [
                 'reservation_id' => 5,
-                'check_in_time' => '12:37:45',
-                'check_out_time' => '20:40:45'
+                'check_in_time' => '01:30:00',
+                'check_out_time' => '02:00:00'
             ],
             [
                 'reservation_id' => 6,
-                'check_in_time' => '12:37:45',
-                'check_out_time' => '20:40:45'
+                'check_in_time' => '01:35:00',
+                'check_out_time' => '02:00:00'
             ],
             [
                 'reservation_id' => 7,
-                'check_in_time' => '12:37:45',
-                'check_out_time' => '20:40:45'
+                'check_in_time' => '01:40:00',
+                'check_out_time' => '02:00:00'
             ],
             [
                 'reservation_id' => 8,
-                'check_in_time' => '12:37:45',
-                'check_out_time' => '20:40:45'
+                'check_in_time' => '01:45:00',
+                'check_out_time' => '02:00:00'
             ],
         ];
 

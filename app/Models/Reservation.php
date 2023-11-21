@@ -15,6 +15,7 @@ class Reservation extends Model
         'member_id',
         'status',
         'start_date',
+        'end_date',
     ];
 
     public function member(){
