@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Models\CheckIn;
 use Illuminate\Database\Seeder;
 
-class CheckInsSeeder extends Seeder
+class CheckInSeeder extends Seeder
 {
     /**
      * Run the database seeds.
