@@ -18,11 +18,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('session/{session_id}', [App\Http\Controllers\Api\SessionController::class, 'getSessionCheckIns'])->name('get.session.checkins');
+// Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('get-reservations-by-member', [App\Http\Controllers\Api\ReservationController::class, 'getReservationsByMember'])->name('get.reservations.by.member');
-    Route::get('get-sessions/{program_id}', [App\Http\Controllers\Api\ProgramController::class, 'getSessions'])->name('get.sessions');
-});
+    Route::get('get-checkins/{reservation_id}', [App\Http\Controllers\Api\ReservationController::class, 'getCheckInsByReservation'])->name('get.checkins.by.reservation');
+// });
 
 
 Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login'])->name('login');

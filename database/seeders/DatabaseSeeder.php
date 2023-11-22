@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-use App\Models\CheckIns;
+use App\Models\CheckIn;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
             ProgramLevelSeeder::class,
             SessionSeeder::class,
             ReservationSeeder::class,
-            CheckInsSeeder::class,
+            CheckInSeeder::class,
             MemberProgramsSeeder::class
         ]);
     }

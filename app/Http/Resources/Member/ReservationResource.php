@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\Member;
 
-use App\Http\Resources\CheckInsResource;
+use App\Http\Resources\CheckInResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\Member\SessionResource;
@@ -29,7 +29,9 @@ class ReservationResource extends JsonResource
             'member' => $this->whenLoaded('member', function () {
                 return new MemberResource($this->member);
             }),
-            'checkIns' => CheckInsResource::collection($this->whenLoaded('checkIns'))
+            'checkIns' => $this->whenLoaded('checkIns', function () {
+                return new MemberResource($this->checkIns);
+            })
         ];
 
         return $reservation;

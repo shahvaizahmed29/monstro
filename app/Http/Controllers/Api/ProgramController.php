@@ -11,7 +11,6 @@ class ProgramController extends BaseController
         $program_level = ProgramLevel::with(['sessions.reservations.checkIns'])
             ->where('program_id', $program_id)
             ->get();
-
         return $program_level;
     }
 

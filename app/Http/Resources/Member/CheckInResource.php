@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Member;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class CheckInsResource extends JsonResource
+class CheckInResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -18,9 +18,7 @@ class CheckInsResource extends JsonResource
             'id' => $this->id,
             'reservationId' => $this->reservation_id,
             'checkInTime' => $this->check_in_time,
-            'checkOutTime' => $this->check_out_time,
-            'createdAt' => $this->created_at,
-            'updatedAt' => $this->updated_at,
+            'checkOutTime' => $this->check_out_time
         ];
 
         return $check_ins;

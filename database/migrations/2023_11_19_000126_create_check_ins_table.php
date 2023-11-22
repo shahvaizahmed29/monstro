@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('check_ins', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('reservation_id');
-            $table->time('check_in_time');
-            $table->time('check_out_time');
+            $table->datetime('check_in_time');
+            $table->datetime('check_out_time');
             $table->timestamps();
             $table->softDeletes();
         });
