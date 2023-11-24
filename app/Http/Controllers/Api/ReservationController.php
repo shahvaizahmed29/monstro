@@ -31,7 +31,7 @@ class ReservationController extends BaseController
     public function getCheckInsByReservation($reservation_id) {
         $checkIns = CheckIn::where('id', $reservation_id)->paginate(1);
         $data = [
-            'checkIns' => ReservationResource::collection($checkIns),
+            'checkIns' => CheckInResource::collection($checkIns),
             'pagination' => [
                 'current_page' => $checkIns->currentPage(),
                 'per_page' => $checkIns->perPage(),
