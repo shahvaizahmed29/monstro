@@ -48,15 +48,20 @@ class ReservationController extends BaseController
     public function markAttendance(Request $request){
         $checkIn = CheckIn::create([
             'reservation_id' => $request->reservationId,
-            'check_in_time' => $request->checkInTime
+            'check_in_time' =>  now()->format('Y-m-d H:i:s')
         ]);
         return $this->sendResponse(new CheckInResource($checkIn), 'Success');
     }
 
     public function markCheckOut(Request $request, $checkInId){
         $checkIn = CheckIn::findOrFail($checkInId);
-        $checkIn->check_out_time = $request->checkOutTime;
+        $checkIn->check_out_time =  now()->format('Y-m-d H:i:s');
         $checkIn->save();
         return $this->sendResponse(new CheckInResource($checkIn), 'Success');
+    }
+
+    public function getReservationById($reservation_id) {
+        $reservation = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', 1)->where('id', $reservation_id)->first();
+        return $this->sendResponse(new ReservationResource($reservation), 'Get member reservations successfully');
     }
 }
