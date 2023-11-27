@@ -11,7 +11,7 @@ class AuthController extends BaseController
 {
     public function login(Request $request)
     {
-        $user= User::where('email', $request->email)->first();
+        $user= User::with('member')->where('email', $request->email)->first();
         
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response([
@@ -19,8 +19,18 @@ class AuthController extends BaseController
             ], 404);
         }
     
-        $token = $user->createToken('my-app-token')->plainTextToken;
-    
+        $token = $user->createToken('<monstro@2023!/>')->plainTextToken;
+        
+        $user = [
+            'id' => $user->id,
+            'email' => $user->email,
+            'secondary_email' => $user->member->email,
+            'name' => $user->member->name,
+            'phone' => $user->member->phone,
+            'referral_code' => $user->member->referral_code,
+            'avatar' => $user->member->avatar,
+        ];
+        
         $response = [
             'user' => $user,
             'token' => $token
