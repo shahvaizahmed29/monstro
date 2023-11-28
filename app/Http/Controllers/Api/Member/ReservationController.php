@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Member;
 
 use App\Http\Controllers\BaseController;
 use App\Models\Reservation;
 use App\Models\CheckIn;
 use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Member\CheckInResource;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ReservationController extends BaseController
