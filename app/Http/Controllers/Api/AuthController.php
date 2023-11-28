@@ -11,7 +11,8 @@ class AuthController extends BaseController
 {
     public function login(Request $request)
     {
-        $user= User::with('member')->where('email', $request->email)->first();
+       
+        $user= User::with(['vendor','member','roles'])->where('email', $request->email)->first();
         
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response([
@@ -20,23 +21,31 @@ class AuthController extends BaseController
         }
     
         $token = $user->createToken('<monstro@2023!/>')->plainTextToken;
+        if($user->hasRole(\App\Models\User::VENDOR)) {
+            $user = [
+                'id' => $user->id,
+                'email' => $user->email,
+                'secondary_email' => $user->vendor->email,
+                'name' => $user->vendor->name,
+                'phone' => $user->vendor->phone,
+                'referral_code' => $user->vendor->referral_code,
+                'avatar' => $user->vendor->avatar,
+            ];
+        } else {
+            $user = [
+                'id' => $user->id,
+                'email' => $user->email,
+                'secondary_email' => $user->member->email,
+                'name' => $user->member->name,
+                'phone' => $user->member->phone,
+                'referral_code' => $user->member->referral_code,
+                'avatar' => $user->member->avatar,
+            ];
+        }
         
-        $user = [
-            'id' => $user->id,
-            'email' => $user->email,
-            'secondary_email' => $user->member->email,
-            'name' => $user->member->name,
-            'phone' => $user->member->phone,
-            'referral_code' => $user->member->referral_code,
-            'avatar' => $user->member->avatar,
-        ];
-        
-        $response = [
-            'user' => $user,
-            'token' => $token
-        ];
+        $user['token'] = $token;
     
-        return $this->sendResponse($response, 'Success');
+        return $this->sendResponse($user, 'Success');
     }
 
 }
