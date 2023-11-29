@@ -8,11 +8,14 @@ use App\Models\Reservation;
 use App\Models\CheckIn;
 use App\Http\Controllers\BaseController;
 use App\Http\Resources\Member\CheckInResource;
+use App\Http\Resources\Vendor\MemberResource;
 use App\Http\Resources\Vendor\ReservationResource;
+use App\Models\Member;
 
 class ReservationController extends BaseController
 {
     public function getReservationsByMember($member_id) {
+        $member = Member::find($member_id);
         $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->paginate(25);
         if(count($reservations) > 0) {
             $location = $reservations[0]->session->programLevel->program->location;
@@ -22,6 +25,7 @@ class ReservationController extends BaseController
         }
         $data = [
             'reservations' => ReservationResource::collection($reservations),
+            'member_details' => new MemberResource($member),
             'pagination' => [
                 'current_page' => $reservations->currentPage(),
                 'per_page' => $reservations->perPage(),
