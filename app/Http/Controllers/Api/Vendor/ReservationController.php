@@ -25,7 +25,7 @@ class ReservationController extends BaseController
         }
         $data = [
             'reservations' => ReservationResource::collection($reservations),
-            'member_details' => new MemberResource($member),
+            'memberDetails' => new MemberResource($member),
             'pagination' => [
                 'current_page' => $reservations->currentPage(),
                 'per_page' => $reservations->perPage(),
