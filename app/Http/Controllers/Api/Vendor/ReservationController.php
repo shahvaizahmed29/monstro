@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\Vendor;
 
-use App\Http\Controllers\BaseController;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
 use App\Models\Reservation;
 use App\Models\CheckIn;
+use App\Http\Controllers\BaseController;
 use App\Http\Resources\Vendor\ReservationResource;
 use App\Http\Resources\Vendor\CheckInResource;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
 
 class ReservationController extends BaseController
 {
@@ -45,7 +45,7 @@ class ReservationController extends BaseController
         }
 
         // Check if a check-in record already exists for the given reservation and today's date
-        $existingCheckIn = CheckIn::where('reservation_id', $request->reservationId)
+        $existingCheckIn = CheckIn::where('reservation_id', $reservation->id)
             ->whereDate('check_in_time', Carbon::today())
             ->first();
 
@@ -56,7 +56,7 @@ class ReservationController extends BaseController
 
         // Create a new check-in record
         $checkIn = CheckIn::create([
-            'reservation_id' => $request->reservationId,
+            'reservation_id' => $reservation->id,
             'check_in_time' => now()->format('Y-m-d H:i:s')
         ]);
 

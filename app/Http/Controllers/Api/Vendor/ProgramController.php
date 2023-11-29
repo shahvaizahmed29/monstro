@@ -2,19 +2,23 @@
 
 namespace App\Http\Controllers\Api\Vendor;
 
-use App\Http\Controllers\BaseController;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\ProgramStoreRequest;
-use App\Http\Resources\Member\ProgramResource;
+use Illuminate\Http\Request;
 use App\Models\Program;
 use App\Models\ProgramLevel;
 use App\Models\Session;
-use Illuminate\Http\Request;
+use App\Http\Controllers\BaseController;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\ProgramStoreRequest;
+use App\Http\Resources\Vendor\ProgramResource;
 
 class ProgramController extends BaseController
 {
     public function getProgramsByLocation($location_id){
-        $programs = Program::where('location_id', $location_id)->paginate(1);
+        $location = Location::find($location_id);
+        if($location->vendor_id != auth()->user()->vendor->id) {
+            return $this->sendError('Vendor not authorize, Please contact admin', [], 401);
+        }
+        $programs = Program::where('location_id', $location_id)->paginate(25);
         $data = [
             'programs' => ProgramResource::collection($programs),
             'pagination' => [
@@ -31,7 +35,10 @@ class ProgramController extends BaseController
     }
     
     public function addProgram(ProgramStoreRequest $request){
-
+        $location = Location::find($request->location_id);
+        if($location->vendor_id != auth()->user()->vendor->id) {
+            return $this->sendError('Vendor not authorize, Please contact admin', [], 401);
+        }
         $program = Program::create([
             'location_id' => $request->location_id,
             'unique_identifier_ghl' => $request->unique_identifier_ghl,
@@ -65,9 +72,8 @@ class ProgramController extends BaseController
                 'status' => 1
             ]);
         }
-
         $program = Program::with('levels.sessions')->find($program->id);
-        return $this->sendResponse(new ProgramResource($program), 'Program with program level and related sessions.');
+        return $this->sendResponse(new ProgramResource($program), 'Program created successfully.');
     }
 
 }
