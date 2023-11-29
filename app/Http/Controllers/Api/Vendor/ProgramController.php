@@ -1,0 +1,73 @@
+<?php
+
+namespace App\Http\Controllers\Api\Vendor;
+
+use App\Http\Controllers\BaseController;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\ProgramStoreRequest;
+use App\Http\Resources\Member\ProgramResource;
+use App\Models\Program;
+use App\Models\ProgramLevel;
+use App\Models\Session;
+use Illuminate\Http\Request;
+
+class ProgramController extends BaseController
+{
+    public function getProgramsByLocation($location_id){
+        $programs = Program::where('location_id', $location_id)->paginate(1);
+        $data = [
+            'programs' => ProgramResource::collection($programs),
+            'pagination' => [
+                'current_page' => $programs->currentPage(),
+                'per_page' => $programs->perPage(),
+                'total' => $programs->total(),
+                'prev_page_url' => $programs->previousPageUrl(),
+                'next_page_url' => $programs->nextPageUrl(),
+                'first_page_url' => $programs->url(1),
+                'last_page_url' => $programs->url($programs->lastPage()),
+            ],
+        ];
+        return $this->sendResponse($data, 'Get programs related to specific location');
+    }
+    
+    public function addProgram(ProgramStoreRequest $request){
+
+        $program = Program::create([
+            'location_id' => $request->location_id,
+            'unique_identifier_ghl' => $request->unique_identifier_ghl,
+            'name' => $request->program_name,
+            'description' => $request->description,
+            'capacity' => $request->capacity,
+            'min_age' => $request->min_age,
+            'max_age' => $request->max_age,
+            'avatar' => $request->avatar ?? null,
+            'status' => 1
+        ]);
+
+        foreach($request->sessions as $session){
+            $program_level = ProgramLevel::create([
+                'name' => $session['program_level_name'],
+                'program_id' => $program->id
+            ]);
+
+            $session = Session::create([
+                'program_level_id' => $program_level->id,
+                'duration_time' => $session['duration_time'],
+                'start_date' => $session['start_date'],
+                'end_date' => $session['end_date'],
+                'monday' => $session['monday'],
+                'tuesday' => $session['tuesday'],
+                'wednesday' => $session['wednesday'],
+                'thursday' => $session['thursday'],
+                'friday' => $session['friday'],
+                'saturday' => $session['saturday'],
+                'sunday' => $session['sunday'],
+                'status' => 1
+            ]);
+        }
+
+        $program = Program::with('levels.sessions')->find($program->id);
+        return $this->sendResponse(new ProgramResource($program), 'Program with program level and related sessions.');
+    }
+
+}
