@@ -17,6 +17,8 @@ class LocationResource extends JsonResource
         $location = [
             'id' => $this->id,
             'name' => $this->name,
+            'email' => $this->email,
+            'phone' => $this->phone,
             'address' => $this->address,
             'city' => $this->city,
             'state' => $this->state,
@@ -24,9 +26,6 @@ class LocationResource extends JsonResource
             'country' => $this->country,
             'postalCode' => $this->postal_code,
             'website' => $this->website,
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'metaData' => $this->meta_data,
         ];
         return $location;
     }

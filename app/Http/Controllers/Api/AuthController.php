@@ -11,7 +11,6 @@ class AuthController extends BaseController
 {
     public function login(Request $request)
     {
-       
         $user= User::with(['vendor','member','roles'])->where('email', $request->email)->first();
         
         if (!$user || !Hash::check($request->password, $user->password)) {
@@ -30,6 +29,7 @@ class AuthController extends BaseController
                 'phone' => $user->vendor->phone,
                 'referral_code' => $user->vendor->referral_code,
                 'avatar' => $user->vendor->avatar,
+                'locations' => $user->vendor->locations
             ];
         } else {
             $user = [

@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Api\Member;
 
-use App\Http\Controllers\BaseController;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
 use App\Models\Reservation;
 use App\Models\CheckIn;
+use App\Http\Controllers\BaseController;
 use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Member\CheckInResource;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
 
 class ReservationController extends BaseController
 {
-    public function getReservationsByMember($member_id = null) {
-        $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', 1)->paginate(1);
+    public function getReservationsByMember() {
+        $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', auth()->user()->member->id)->paginate(25);
         $data = [
             'reservations' => ReservationResource::collection($reservations),
             'pagination' => [
@@ -30,7 +30,11 @@ class ReservationController extends BaseController
     }
 
     public function getCheckInsByReservation($reservation_id) {
-        $checkIns = CheckIn::where('id', $reservation_id)->paginate(1);
+        $reservation = Reservation::find($reservation_id);
+        if($reservation->member_id != auth()->user()->member->id) {
+            return $this->sendError('Member not authorize, Please contact support', [], 401);
+        }
+        $checkIns = CheckIn::where('id', $reservation_id)->paginate(25);
         $data = [
             'checkIns' => CheckInResource::collection($checkIns),
             'pagination' => [
@@ -43,11 +47,16 @@ class ReservationController extends BaseController
                 'last_page_url' => $checkIns->url($checkIns->lastPage()),
             ],
         ];
-        return $this->sendResponse($data, 'Get checkins by reservation');
+        return $this->sendResponse($data, 'Checkins by reservation.');
     }
 
     public function markAttendance(Request $request)
     {
+        $reservation = Reservation::find($request->reservationId);
+        if($reservation->member_id != auth()->user()->member->id) {
+            return $this->sendError('Member not authorize', [], 401);
+        }
+
         // Check if a check-in record already exists for the given reservation and today's date
         $existingCheckIn = CheckIn::where('reservation_id', $request->reservationId)
             ->whereDate('check_in_time', Carbon::today())
@@ -55,7 +64,7 @@ class ReservationController extends BaseController
 
         if ($existingCheckIn) {
             // If a record already exists, you can return an appropriate response
-            return $this->sendError('Check-in record already exists for this reservation today.');
+            return $this->sendError('Attendence for today already recorded for this program.');
         }
 
         // Create a new check-in record
@@ -67,18 +76,8 @@ class ReservationController extends BaseController
         return $this->sendResponse(new CheckInResource($checkIn), 'Success');
     }
 
-    public function markCheckOut(Request $request, $checkInId){
-        $checkIn = CheckIn::findOrFail($checkInId);
-        if($checkIn->check_out_time) {
-            return $this->sendError('Check-out record already exists for this reservation today.');
-        }
-        $checkIn->check_out_time =  now()->format('Y-m-d H:i:s');
-        $checkIn->save();
-        return $this->sendResponse(new CheckInResource($checkIn), 'Success');
-    }
-
     public function getReservationById($reservation_id) {
-        $reservation = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', 1)->where('id', $reservation_id)->first();
-        return $this->sendResponse(new ReservationResource($reservation), 'Get member reservations successfully');
+        $reservation = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', auth()->user()->member->id)->where('id', $reservation_id)->first();
+        return $this->sendResponse(new ReservationResource($reservation), 'Attendence marked.');
     }
 }

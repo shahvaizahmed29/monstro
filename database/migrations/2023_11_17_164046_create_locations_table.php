@@ -13,17 +13,18 @@ return new class extends Migration
     {
         Schema::create('locations', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('go_high_level_location_id');
+            $table->string('go_high_level_location_id')->unique();
             $table->string('name');
-            $table->string('address');
-            $table->string('city');
-            $table->string('state');
+            $table->string('address')->nullable();
+            $table->string('city')->nullable();
+            $table->string('state')->nullable();
             $table->string('logo_url')->nullable();
-            $table->string('country');
+            $table->string('country')->nullable();
             $table->string('postal_code')->nullable();
             $table->string('website')->nullable();
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
+            $table->unsignedBigInteger('vendor_id');
             $table->longText('meta_data')->nullable();
             $table->timestamps();
             $table->softDeletes();

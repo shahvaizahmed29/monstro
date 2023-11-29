@@ -21,7 +21,7 @@ class Member extends Model
 
     public function locations(){
         return $this->belongsToMany(Location::class, 'member_locations', 'member_id', 'location_id');
-    }
+    }    
 
     public function achievements(){
         return $this->belongsToMany(MemberAchievement::class, 'member_achievements', 'member_id', 'achievement_id');
@@ -36,7 +36,7 @@ class Member extends Model
     }
 
     public function programs(){
-        return $this->belongsToMany(Location::class, 'member_programs', 'member_id', 'program_id');
+        return $this->belongsToMany(Program::class, 'member_programs', 'member_id', 'program_id');
     }
     
 }

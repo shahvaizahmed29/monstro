@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Resources\Member;
+namespace App\Http\Resources\Vendor;
 
 use App\Http\Resources\CheckInResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\Member\SessionResource;
-use App\Http\Resources\Member\MemberResource;
+use App\Http\Resources\Vendor\SessionResource;
+use App\Http\Resources\Vendor\MemberResource;
 
 
 class ReservationResource extends JsonResource

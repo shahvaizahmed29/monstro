@@ -22,15 +22,16 @@ class Location extends Model
         'website',
         'email',
         'phone',
+        'vendor_id',
         'meta_data',
     ];
 
-    public function vendors(){
-        return $this->belongsToMany(Location::class, 'vendor_locations', 'location_id', 'vendor_id');
+    public function vendor(){
+        return $this->belongsTo(Vendor::class);
     }
 
     public function members(){
-        return $this->belongsToMany(Location::class, 'member_locations', 'location_id', 'member_id');
+        return $this->belongsToMany(Member::class, 'member_locations', 'location_id', 'member_id');
     }
 
     public function programs(){

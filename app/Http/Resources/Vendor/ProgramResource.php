@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Resources\Member;
+namespace App\Http\Resources\Vendor;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\Member\LocationResource;
+use App\Http\Resources\Vendor\LocationResource;
 
 class ProgramResource extends JsonResource
 {
@@ -24,6 +24,7 @@ class ProgramResource extends JsonResource
             'minAge' => $this->min_age,
             'maxAge' => $this->max_age,
             'avatar' => $this->avatar,
+            'status' => $this->status,
             'location' => $this->whenLoaded('location', function () {
                 return new LocationResource($this->location);
             })
