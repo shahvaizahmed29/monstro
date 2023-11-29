@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             VendorSeeder::class,
             LocationSeeder::class,
-            VendorLocationSeeder::class,
+            // VendorLocationSeeder::class,
             MemberSeeder::class,
             MemberLocationSeeder::class,
             ProgramSeeder::class,

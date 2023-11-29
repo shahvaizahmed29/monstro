@@ -7,8 +7,8 @@ use Carbon\Carbon;
 use App\Models\Reservation;
 use App\Models\CheckIn;
 use App\Http\Controllers\BaseController;
+use App\Http\Resources\Member\CheckInResource;
 use App\Http\Resources\Vendor\ReservationResource;
-use App\Http\Resources\Vendor\CheckInResource;
 
 class ReservationController extends BaseController
 {

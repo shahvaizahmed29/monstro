@@ -26,6 +26,7 @@ class LocationSeeder extends Seeder
                 'website' => 'https://www.californiajunction.com',
                 'email' => 'california.location@gmail.com',
                 'phone' => '+198998768772',
+                'vendor_id' => 2,
                 'meta_data' => [
                     'name' => 'California Junction',
                     'address' => 'Main Square Road California',
@@ -47,6 +48,7 @@ class LocationSeeder extends Seeder
                 'website' => 'https://www.texasstation.com',
                 'email' => 'texas.station@gmail.com',
                 'phone' => '+12897654321',
+                'vendor_id' => 3,
                 'meta_data' => [
                     'name' => 'Texas Station',
                     'address' => 'Main Street Texas',
@@ -68,6 +70,7 @@ class LocationSeeder extends Seeder
                 'website' => 'https://www.newyorkplaza.com',
                 'email' => 'newyork.plaza@gmail.com',
                 'phone' => '+12129876543',
+                'vendor_id' => 4,
                 'meta_data' => [
                     'name' => 'New York Plaza',
                     'address' => 'Broadway Avenue',
@@ -92,6 +95,7 @@ class LocationSeeder extends Seeder
                 'website' => $location['website'],
                 'email' => $location['email'],
                 'phone' => $location['phone'],
+                'vendor_id' => $location['vendor_id'],
                 'meta_data' => json_encode($location['meta_data']),
             ]);
         }
