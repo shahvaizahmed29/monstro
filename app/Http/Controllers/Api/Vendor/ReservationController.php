@@ -20,7 +20,7 @@ class ReservationController extends BaseController
         if(count($reservations) > 0) {
             $location = $reservations[0]->session->programLevel->program->location;
             if($location->vendor_id != auth()->user()->vendor->id) {
-                return $this->sendError('Vendor not authorize, Please contact admin.', [], 401);
+                return $this->sendError('Vendor not authorize, Please contact admin.', [], 403);
             }
         }
         $data = [
@@ -41,11 +41,10 @@ class ReservationController extends BaseController
 
     public function markAttendance(Request $request)
     {
-
         $reservation = Reservation::find($request->reservationId);
         $location = $reservation->session->programLevel->program->location;
         if($location->vendor_id != auth()->user()->vendor->id) {
-            return $this->sendError('Vendor not authorize, Please contact admin', [], 401);
+            return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
         }
 
         // Check if a check-in record already exists for the given reservation and today's date

@@ -17,7 +17,7 @@ class ProgramController extends BaseController
     public function getProgramsByLocation($location_id){
         $location = Location::find($location_id);
         if($location->vendor_id != auth()->user()->vendor->id) {
-            return $this->sendError('Vendor not authorize, Please contact admin', [], 401);
+            return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
         }
         $programs = Program::where('location_id', $location_id)->paginate(25);
         $data = [
@@ -38,7 +38,7 @@ class ProgramController extends BaseController
     public function addProgram(ProgramStoreRequest $request){
         $location = Location::find($request->location_id);
         if($location->vendor_id != auth()->user()->vendor->id) {
-            return $this->sendError('Vendor not authorize, Please contact admin', [], 401);
+            return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
         }
         $program = Program::create([
             'location_id' => $request->location_id,

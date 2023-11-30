@@ -23,11 +23,16 @@ class Reservation extends Model
     }
 
     public function checkIns(){
-        return $this->hasMany(CheckIns::class);
+        return $this->hasMany(CheckIn::class);
     }
 
     public function session(){
         return $this->belongsTo(Session::class);
     }
 
+    public function getCurrentStatusForTodayAttribute()
+    {
+        $now = \Carbon\Carbon::now();
+        return $this->checkIns()->whereDate('check_in_time', $now)->count();
+    }
 }

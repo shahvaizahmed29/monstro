@@ -32,7 +32,7 @@ class ReservationController extends BaseController
     public function getCheckInsByReservation($reservation_id) {
         $reservation = Reservation::find($reservation_id);
         if($reservation->member_id != auth()->user()->member->id) {
-            return $this->sendError('Member not authorize, Please contact support', [], 401);
+            return $this->sendError('Member not authorize, Please contact support', [], 403);
         }
         $checkIns = CheckIn::where('id', $reservation_id)->paginate(25);
         $data = [
@@ -54,7 +54,7 @@ class ReservationController extends BaseController
     {
         $reservation = Reservation::find($request->reservationId);
         if($reservation->member_id != auth()->user()->member->id) {
-            return $this->sendError('Member not authorize', [], 401);
+            return $this->sendError('Member not authorize', [], 403);
         }
 
         // Check if a check-in record already exists for the given reservation and today's date
