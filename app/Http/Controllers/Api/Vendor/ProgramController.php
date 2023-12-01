@@ -35,6 +35,16 @@ class ProgramController extends BaseController
         return $this->sendResponse($data, 'Get programs related to specific location');
     }
     
+    public function getProgramById($id){
+      
+        $program = Program::find($id);
+        $location = $program->location;
+        if($location->vendor_id != auth()->user()->vendor->id) {
+            return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
+        }
+        return $this->sendResponse(new ProgramResource($program), 'Get programs related to specific location');
+    }
+
     public function addProgram(ProgramStoreRequest $request){
         $location = Location::find($request->location_id);
         if($location->vendor_id != auth()->user()->vendor->id) {
