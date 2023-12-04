@@ -20,7 +20,8 @@ class MemberResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'referralCode' => $this->referral_code,
-            'avatar' => $this->avatar
+            'avatar' => $this->avatar,
+            'reservations' => ReservationResource::collection($this->reservations)
         ];
         return $member;
     }

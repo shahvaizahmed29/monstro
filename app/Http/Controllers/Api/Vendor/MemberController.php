@@ -22,4 +22,12 @@ class MemberController extends BaseController
         return $this->sendResponse(MemberResource::collection($members), 'Location members');
     }
 
+    public function getMemberSessionDetailsAndProgram($member_id){
+        $member = Member::with(['reservations.session.programLevel.program'])
+            ->where('id', $member_id)
+            ->first();
+
+        return $this->sendResponse(new MemberResource($member), 'Member details with session reservations and program');
+    }
+
 }
