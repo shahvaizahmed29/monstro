@@ -23,7 +23,7 @@ class ProgramStoreRequest extends FormRequest
     {
         return [
             'location_id' => 'required|integer',
-            'custom_field_ghl_id' => 'required',
+            // 'custom_field_ghl_id' => 'required',
             'program_name' => 'required|string',
             'description' => 'required|string',
             'capacity' => 'required|integer',

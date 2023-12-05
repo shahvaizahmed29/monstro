@@ -64,7 +64,7 @@ class ProgramSeeder extends Seeder
                 $program = $programs[$index];
         
                 $newProgram = new Program([
-                    'custom_field_ghl_id' => $program['custom_field_ghl_id'],
+                    // 'custom_field_ghl_id' => $program['custom_field_ghl_id'],
                     'name' => $program['name'],
                     'description' => $program['description'],
                     'capacity' => $program['capacity'],
