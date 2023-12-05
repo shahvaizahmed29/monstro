@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Api\Vendor;
 
 use Illuminate\Http\Request;
+use DB;
+use App\Models\User;
 use App\Models\Member;
+use App\Models\Reservation;
+use App\Models\ProgramLevel;
 use App\Models\Location;
+use App\Models\Session;
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
-use App\Models\Reservation;
 
 class MemberController extends BaseController
 {
@@ -35,6 +39,55 @@ class MemberController extends BaseController
     }
 
     public static function createMemberFromGHL($contact) {
-        
+        try {
+         
+            if(isset($contact['customFields'])) {
+                $customFields = $contact['customFields'];
+                foreach($customFields as $customField) {
+                    $programLevel = ProgramLevel::with(['program' => function ($query) use($customField) {
+                        $query->where('custom_field_ghl_id', $customField['id']);
+                    }])->where('custom_field_ghl_value', $customField['value'])->first();
+                    if($programLevel) {
+                        try {
+                            DB::beginTransaction();
+                            $session = Session::where('program_level_id',$programLevel->id)->latest()->first();
+                            $user = User::create([
+                                'name' => isset($contact['name']) ? $contact['name'] : '',
+                                'email' => $contact['email'],
+                                'password' => bcrypt($contact['email'].'@'.'2023!!'),
+                                'email_verified_at' => now()
+                            ]);
+                            $user->assignRole(User::MEMBER);
+                            $randomNumberMT = mt_rand(100, 999);
+                            $member = Member::create([
+                                'name' => isset($contact['name']) ? $contact['name'] : '',
+                                'email' =>  $contact['email'],
+                                'phone' => isset($contact['phone']) ? $contact['phone'] : '',
+                                'referral_code' => $randomNumberMT.$user->id,
+                                'user_id' => $user->id
+                            ]);
+                            $reservation = Reservation::create([
+                                'session_id' => $session->id,
+                                'member_id' =>  $member->id,
+                                'status' => 1,
+                                'start_date' => Carbon::today()->format('Y-m-d'),
+                                'end_data' => $session->end_date
+                            ]);
+                            DB::commit();
+                        } catch(\Exception $error) {
+                            DB::rollback();
+                            $data = [
+                                'contact' => $contact,
+                                'customField' => $customField
+                            ];
+                            return $this->sendError('Something went wrong while creating contact!', json_encode($data));
+                        }
+                    }
+                } 
+            }
+          
+        } catch(\Exception $error) {
+            return $this->sendError('Something went wrong while creating contact!', json_encode($contact));
+        }
     }
 }

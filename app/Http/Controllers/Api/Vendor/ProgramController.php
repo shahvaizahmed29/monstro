@@ -6,11 +6,11 @@ use Illuminate\Http\Request;
 use App\Models\Program;
 use App\Models\ProgramLevel;
 use App\Models\Session;
+use App\Models\Location;
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProgramStoreRequest;
 use App\Http\Resources\Vendor\ProgramResource;
-use App\Models\Location;
 
 class ProgramController extends BaseController
 {
