@@ -26,7 +26,7 @@ class Program extends Model
         return $this->belongsTo(Location::class);
     }
 
-    public function levels(){
+    public function programLevels(){
         return $this->hasMany(ProgramLevel::class);
     }
 
