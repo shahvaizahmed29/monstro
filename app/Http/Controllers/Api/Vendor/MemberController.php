@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Vendor;
 
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use DB;
 use App\Models\User;
 use App\Models\Member;
@@ -40,13 +41,11 @@ class MemberController extends BaseController
 
     public static function createMemberFromGHL($contact) {
         try {
-         
+            \Log::info(json_encode($contact));
             if(isset($contact['customFields'])) {
                 $customFields = $contact['customFields'];
                 foreach($customFields as $customField) {
-                    $programLevel = ProgramLevel::with(['program' => function ($query) use($customField) {
-                        $query->where('custom_field_ghl_id', $customField['id']);
-                    }])->where('custom_field_ghl_value', $customField['value'])->first();
+                    $programLevel = ProgramLevel::with(['program'])->where('custom_field_ghl_value', $customField['value'])->first();
                     if($programLevel) {
                         try {
                             DB::beginTransaction();

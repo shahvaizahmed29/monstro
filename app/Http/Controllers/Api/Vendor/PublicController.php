@@ -31,7 +31,7 @@ class PublicController extends BaseController
             $url = 'https://services.leadconnectorhq.com/contacts/?locationId='.$locationId.'&limit=100';
 
             $tokenObj = $tokenObj->json();
-            
+          
             do {
                 $response = Http::withHeaders([
                     'Accept' => 'application/json',
@@ -52,7 +52,7 @@ class PublicController extends BaseController
                     }
                 }
                 foreach($contacts as $contact) {
-                    MemberController::createMemberFromGHL($contact);
+                    MemberController::createMemberFromGHL($contact, $customFields);
                 }
                 \Log::info($url);
                 \Log::info(count($contacts));

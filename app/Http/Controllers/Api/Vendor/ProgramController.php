@@ -37,7 +37,7 @@ class ProgramController extends BaseController
     
     public function getProgramById($id){
       
-        $program = Program::find($id);
+        $program = Program::with('programLevel')->where('id',$id)->first();
         $location = $program->location;
         if($location->vendor_id != auth()->user()->vendor->id) {
             return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
