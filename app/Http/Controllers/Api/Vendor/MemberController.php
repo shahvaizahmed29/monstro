@@ -24,24 +24,13 @@ class MemberController extends BaseController
         return $this->sendResponse(MemberResource::collection($members), 'Location members');
     }
 
-    public function getMemberSessionDetailsAndProgram($member_id){
-        $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->paginate(25);
+    public function getMemberDetails($member_id){
+        $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id);
         $member_details = Member::where('id', $member_id)->first();
-
         $data = [
             'memberDetails' => new MemberResource($member_details),
-            'reservations' => ReservationResource::collection($reservations),
-            'pagination' => [
-                'current_page' => $reservations->currentPage(),
-                'per_page' => $reservations->perPage(),
-                'total' => $reservations->total(),
-                'prev_page_url' => $reservations->previousPageUrl(),
-                'next_page_url' => $reservations->nextPageUrl(),
-                'first_page_url' => $reservations->url(1),
-                'last_page_url' => $reservations->url($reservations->lastPage()),
-            ],
+            'reservations' => ReservationResource::collection($reservations)
         ];
-
         return $this->sendResponse($data, 'Member details with session reservations and program');
     }
 
