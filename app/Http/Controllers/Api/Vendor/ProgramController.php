@@ -71,8 +71,9 @@ class ProgramController extends BaseController
                 'parent_id' => $parent_id
             ]);
             
-            $program_level['custom_field_ghl_value'] = $randomNumberMT.'_'.$program_level->id;
+            $program_level->custom_field_ghl_value = $randomNumberMT . '_' . $program_level->id;
             $program_level->save();
+            
 
             $parent_id = $program_level->id;
 
