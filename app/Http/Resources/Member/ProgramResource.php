@@ -27,9 +27,7 @@ class ProgramResource extends JsonResource
             'location' => $this->whenLoaded('location', function () {
                 return new LocationResource($this->location);
             }),
-            'programLevels' => $this->whenLoaded('programLevels', function () {
-                return ProgramLevelResource::collection($this->programLevels);
-            }),
+            'programLevels' => $this->programLevels
         ];
 
         return $program;
