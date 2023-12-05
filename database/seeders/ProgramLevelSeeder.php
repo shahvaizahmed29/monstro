@@ -32,7 +32,7 @@ class ProgramLevelSeeder extends Seeder
             if (isset($levels[$index])) {
                 $level = $levels[$index];
 
-                $program->levels()->create([
+                $program->programLevels()->create([
                     'name' => $level['name'],
                     'custom_field_ghl_value' => $level['custom_field_ghl_value'],
                     'parent_id' => $level['parent_id']
