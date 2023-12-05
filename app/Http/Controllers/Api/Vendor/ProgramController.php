@@ -88,7 +88,7 @@ class ProgramController extends BaseController
                 'status' => 1
             ]);
         }
-        $program = Program::with('levels.sessions')->find($program->id);
+        $program = Program::with('programLevels.sessions')->find($program->id);
         return $this->sendResponse(new ProgramResource($program), 'Program created successfully.');
     }
 

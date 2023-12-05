@@ -41,7 +41,6 @@ class MemberController extends BaseController
 
     public static function createMemberFromGHL($contact) {
         try {
-            \Log::info(json_encode($contact));
             if(isset($contact['customFields'])) {
                 $customFields = $contact['customFields'];
                 foreach($customFields as $customField) {
