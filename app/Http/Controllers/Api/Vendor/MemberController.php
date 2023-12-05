@@ -45,4 +45,7 @@ class MemberController extends BaseController
         return $this->sendResponse($data, 'Member details with session reservations and program');
     }
 
+    public static function createMemberFromGHL($contact) {
+        \Log::info(json_encode($contact));
+    }
 }

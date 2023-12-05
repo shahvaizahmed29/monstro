@@ -44,4 +44,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 });
 
+Route::get('sync-members-by-location/{locationId}', [App\Http\Controllers\Api\Vendor\PublicController::class, 'syncMembersByLocation'])->name('sync.member.by.location');
+
 Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login'])->name('login');
