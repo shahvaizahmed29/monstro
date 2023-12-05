@@ -66,4 +66,12 @@ class ReservationController extends BaseController
         return $this->sendResponse(new CheckInResource($checkIn), 'Attendence marked.');
     }
 
+    public function getCheckInsByReservation($reservation_id) {
+        $reservation = Reservation::find($reservation_id);
+        if($reservation->member_id != auth()->user()->member->id) {
+            return $this->sendError('Member not authorize, Please contact support', [], 403);
+        }
+        $checkIns = CheckIn::where('id', $reservation_id)->latest()->get();
+        return $this->sendResponse($checkIns, 'Checkins by reservation.');
+    }
 }
