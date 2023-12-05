@@ -13,6 +13,7 @@ class ProgramLevel extends Model
     protected $fillable = [
         'name',
         'program_id',
+        'custom_field_ghl_id',
         'parent_id'
     ];
 

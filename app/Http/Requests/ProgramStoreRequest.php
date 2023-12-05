@@ -23,7 +23,7 @@ class ProgramStoreRequest extends FormRequest
     {
         return [
             'location_id' => 'required|integer',
-            'unique_identifier_ghl' => 'required',
+            'custom_field_ghl_id' => 'required',
             'program_name' => 'required|string',
             'description' => 'required|string',
             'capacity' => 'required|integer',
@@ -32,6 +32,7 @@ class ProgramStoreRequest extends FormRequest
 
             'sessions' => 'required|array',
             'sessions.*.program_level_name' => 'required|string',
+            'sessions.*.program_level_ghl_value' => 'required|string',
             'sessions.*.duration_time' => 'required|integer',
             'sessions.*.start_date' => 'required|date',
             'sessions.*.end_date' => 'required|date|after_or_equal:sessions.*.start_date',

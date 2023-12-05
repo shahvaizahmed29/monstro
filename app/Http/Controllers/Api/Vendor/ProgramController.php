@@ -52,7 +52,7 @@ class ProgramController extends BaseController
         }
         $program = Program::create([
             'location_id' => $request->location_id,
-            'unique_identifier_ghl' => $request->unique_identifier_ghl,
+            'custom_field_ghl_id' => $request->custom_field_ghl_id,
             'name' => $request->program_name,
             'description' => $request->description,
             'capacity' => $request->capacity,
@@ -62,11 +62,16 @@ class ProgramController extends BaseController
             'status' => 1
         ]);
 
+        $parent_id = null;
         foreach($request->sessions as $session){
             $program_level = ProgramLevel::create([
                 'name' => $session['program_level_name'],
-                'program_id' => $program->id
+                'custom_field_ghl_value' => $session['program_level_ghl_value'],
+                'program_id' => $program->id,
+                'parent_id' => $parent_id
             ]);
+            
+            $parent_id = $program_level->id;
 
             $session = Session::create([
                 'program_level_id' => $program_level->id,

@@ -12,7 +12,7 @@ class Program extends Model
 
     protected $fillable = [
         'location_id',
-        'unique_identifier_ghl',
+        'custom_field_ghl_id',
         'name',
         'description',
         'capacity',

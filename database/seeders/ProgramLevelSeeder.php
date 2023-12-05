@@ -18,10 +18,12 @@ class ProgramLevelSeeder extends Seeder
         $levels = [
             [
                 'name' => 'Level 1',
+                'custom_field_ghl_id' => 'Level 1',
                 'parent_id' => null
             ],
             [
                 'name' => 'Level 2',
+                'custom_field_ghl_id' => 'Level 2',
                 'parent_id' => null
             ]
         ];

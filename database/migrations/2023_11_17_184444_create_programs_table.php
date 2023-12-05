@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('programs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('location_id');
-            $table->longText('unique_identifier_ghl');
+            $table->longText('custom_field_ghl_id');
             $table->string('name');
             $table->string('description');
             $table->double('capacity');

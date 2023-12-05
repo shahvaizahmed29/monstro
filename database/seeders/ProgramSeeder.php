@@ -16,7 +16,7 @@ class ProgramSeeder extends Seeder
     {
         $programs = [
             [
-                'unique_identifier_ghl' => '9We8u8uhiJKlLe38knjew34q98ue5r9ty',
+                'custom_field_ghl_id' => '9We8u8uhiJKlLe38knjew34q98ue5r9ty',
                 'name' => 'Program 1',
                 'description' => 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry`s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.',
                 'capacity' => 20,
@@ -26,7 +26,7 @@ class ProgramSeeder extends Seeder
                 'status' => 1,
             ],
             [
-                'unique_identifier_ghl' => 'Aer8u8uhiJKMNop38knjew34q98ue5r9ty',
+                'custom_field_ghl_id' => 'Aer8u8uhiJKMNop38knjew34q98ue5r9ty',
                 'name' => 'Program 2',
                 'description' => 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry`s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.',
                 'capacity' => 18,
@@ -36,7 +36,7 @@ class ProgramSeeder extends Seeder
                 'status' => 1,
             ],
             [
-                'unique_identifier_ghl' => 'Aer8u8uhiJKMNop38knjew34q98ue5r9ty',
+                'custom_field_ghl_id' => 'Aer8u8uhiJKMNop38knjew34q98ue5r9ty',
                 'name' => 'Program 3',
                 'description' => 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry`s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.',
                 'capacity' => 25,
@@ -46,7 +46,7 @@ class ProgramSeeder extends Seeder
                 'status' => 1,
             ],
             [
-                'unique_identifier_ghl' => 'Aer8u8uhiJKMNop38knjew34q98ue5r9ty',
+                'custom_field_ghl_id' => 'Aer8u8uhiJKMNop38knjew34q98ue5r9ty',
                 'name' => 'Program 3',
                 'description' => 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry`s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.',
                 'capacity' => 100,
@@ -64,7 +64,7 @@ class ProgramSeeder extends Seeder
                 $program = $programs[$index];
         
                 $newProgram = new Program([
-                    'unique_identifier_ghl' => $program['unique_identifier_ghl'],
+                    'custom_field_ghl_id' => $program['custom_field_ghl_id'],
                     'name' => $program['name'],
                     'description' => $program['description'],
                     'capacity' => $program['capacity'],

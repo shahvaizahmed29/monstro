@@ -35,6 +35,6 @@ class MemberController extends BaseController
     }
 
     public static function createMemberFromGHL($contact) {
-        \Log::info(json_encode($contact));
+        
     }
 }
