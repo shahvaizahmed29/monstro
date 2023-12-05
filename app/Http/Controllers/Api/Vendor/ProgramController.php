@@ -63,14 +63,17 @@ class ProgramController extends BaseController
         ]);
 
         $parent_id = null;
+        $randomNumberMT = mt_rand(10000, 99999);
         foreach($request->sessions as $session){
             $program_level = ProgramLevel::create([
                 'name' => $session['program_level_name'],
-                'custom_field_ghl_value' => $session['program_level_ghl_value'],
                 'program_id' => $program->id,
                 'parent_id' => $parent_id
             ]);
             
+            $program_level['custom_field_ghl_value'] = $randomNumberMT.'_'.$program_level->id;
+            $program_level->save();
+
             $parent_id = $program_level->id;
 
             $session = Session::create([

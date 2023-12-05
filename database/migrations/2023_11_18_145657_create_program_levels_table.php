@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->unsignedBigInteger('program_id');
             $table->unsignedBigInteger('parent_id')->nullable();
-            $table->longText('custom_field_ghl_value');
+            $table->longText('custom_field_ghl_value')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
