@@ -21,7 +21,9 @@ class MemberResource extends JsonResource
             'phone' => $this->phone,
             'referralCode' => $this->referral_code,
             'avatar' => $this->avatar,
-            'reservations' => ReservationResource::collection($this->reservations)
+            'reservations' => $this->whenLoaded('reservations', function () {
+                return new ReservationResource($this->reservations);
+            })
         ];
         return $member;
     }

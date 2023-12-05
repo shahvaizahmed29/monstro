@@ -25,7 +25,7 @@ class MemberController extends BaseController
     }
 
     public function getMemberDetails($member_id){
-        $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id);
+        $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->get();
         $member_details = Member::where('id', $member_id)->first();
         $data = [
             'memberDetails' => new MemberResource($member_details),
