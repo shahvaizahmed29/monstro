@@ -15,10 +15,10 @@ use App\Http\Resources\Vendor\ProgramResource;
 class ProgramController extends BaseController
 {
     public function getProgramsByLocation($location_id){
-        $location = Location::find($location_id);
-        if($location->vendor_id != auth()->user()->vendor->id) {
-            return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
-        }
+        // $location = Location::find($location_id);
+        // if($location->vendor_id != auth()->user()->vendor->id) {
+        //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
+        // }
         $programs = Program::where('location_id', $location_id)->paginate(25);
         $data = [
             'programs' => ProgramResource::collection($programs),
@@ -38,10 +38,10 @@ class ProgramController extends BaseController
     public function getProgramById($id){
       
         $program = Program::with('programLevels')->where('id',$id)->first();
-        $location = $program->location;
-        if($location->vendor_id != auth()->user()->vendor->id) {
-            return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
-        }
+        // $location = $program->location;
+        // if($location->vendor_id != auth()->user()->vendor->id) {
+        //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
+        // }
         return $this->sendResponse(new ProgramResource($program), 'Get programs related to specific location');
     }
 

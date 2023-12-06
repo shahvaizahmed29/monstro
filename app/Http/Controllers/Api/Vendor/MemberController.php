@@ -19,10 +19,10 @@ use App\Http\Resources\Vendor\MemberResource;
 class MemberController extends BaseController
 {
     public function getMembersByLocation($location_id){
-        $location = Location::find($location_id);
-        if($location->vendor_id != auth()->user()->vendor->id) {
-            return $this->sendError('Vendor not authenticated', [], 403);
-        }
+        // $location = Location::find($location_id);
+        // if($location->vendor_id != auth()->user()->vendor->id) {
+        //     return $this->sendError('Vendor not authenticated', [], 403);
+        // }
         $members = Member::whereHas('locations', function ($query) use ($location_id) {
             $query->where('locations.id', $location_id);
         })->get();
