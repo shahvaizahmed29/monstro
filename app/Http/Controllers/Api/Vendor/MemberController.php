@@ -25,7 +25,10 @@ class MemberController extends BaseController
         // }
         $members = Member::whereHas('locations', function ($query) use ($location_id) {
             $query->where('locations.id', $location_id);
+        })->whereHas("user.roles", function ($q){
+            $q->where('name', \App\Models\User::MEMBER);
         })->get();
+
         return $this->sendResponse(MemberResource::collection($members), 'Location members');
     }
 
