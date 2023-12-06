@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Http\Controllers\Api\Vendor;
+
+use App\Http\Controllers\BaseController;
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+
+class AuthController extends BaseController
+{
+    public function vendorAuthenticate(Request $request){
+        $vendor = User::where('email', $request->email)->whereHas("roles", function ($q){
+            $q->where('name', \App\Models\User::VENDOR);
+        })->first();
+        
+        if (!$vendor || !Hash::check($request->password, $vendor->password)) {
+            return $this->sendResponse(false, 401);
+        }
+
+        return $this->sendResponse(true, 200);
+    }
+
+}

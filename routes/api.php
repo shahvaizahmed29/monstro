@@ -28,6 +28,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('get-checkins/{reservation_id}', [App\Http\Controllers\Api\Member\ReservationController::class, 'getCheckInsByReservation'])->name('get.checkins.by.reservation');
         Route::post('mark-attendance', [App\Http\Controllers\Api\Member\ReservationController::class, 'markAttendance'])->name('mark.attendance');
     });
+
+    Route::prefix('vendor')->group(function () {
+        Route::post('authenticate', [App\Http\Controllers\Api\Vendor\AuthController::class, 'vendorAuthenticate'])->name('vendor.authenticate');
+    });
 });
 
 //==================================================================================================================================================================================
