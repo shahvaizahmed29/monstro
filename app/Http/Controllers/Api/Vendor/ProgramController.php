@@ -46,10 +46,10 @@ class ProgramController extends BaseController
     }
 
     public function addProgram(ProgramStoreRequest $request){
-        $location = Location::find($request->location_id);
-        if($location->vendor_id != auth()->user()->vendor->id) {
-            return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
-        }
+        // $location = Location::find($request->location_id);
+        // if($location->vendor_id != auth()->user()->vendor->id) {
+        //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
+        // }
         $program = Program::create([
             'location_id' => $request->location_id,
             // 'custom_field_ghl_id' => $request->custom_field_ghl_id,
@@ -82,13 +82,13 @@ class ProgramController extends BaseController
                 'duration_time' => $session['duration_time'],
                 'start_date' => $session['start_date'],
                 'end_date' => $session['end_date'],
-                'monday' => $session['monday'],
-                'tuesday' => $session['tuesday'],
-                'wednesday' => $session['wednesday'],
-                'thursday' => $session['thursday'],
-                'friday' => $session['friday'],
-                'saturday' => $session['saturday'],
-                'sunday' => $session['sunday'],
+                'monday' => $session['monday'] ?? null,
+                'tuesday' => $session['tuesday'] ?? null,
+                'wednesday' => $session['wednesday'] ?? null,
+                'thursday' => $session['thursday'] ?? null,
+                'friday' => $session['friday'] ?? null,
+                'saturday' => $session['saturday'] ?? null,
+                'sunday' => $session['sunday'] ?? null,
                 'status' => 1
             ]);
         }

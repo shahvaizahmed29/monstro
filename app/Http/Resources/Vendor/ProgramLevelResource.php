@@ -27,7 +27,8 @@ class ProgramLevelResource extends JsonResource
             }),
             'program' => $this->whenLoaded('program', function () {
                 return new ProgramResource($this->program);
-            })
+            }),
+            'sessions' => SessionResource::collection($this->sessions),
         ];
                 
         return $program_level;
