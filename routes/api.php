@@ -35,6 +35,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('vendor')->group(function () {
         Route::post('authenticate', [App\Http\Controllers\Api\Vendor\AuthController::class, 'vendorAuthenticate'])->name('vendor.authenticate');
     });
+
+    Route::get('logout', [App\Http\Controllers\Api\Vendor\AuthController::class, 'logout'])->name('logout');
 });
 
 //==================================================================================================================================================================================
