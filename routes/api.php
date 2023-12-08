@@ -22,7 +22,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //==================================================================================================================================================================================
     //===================================================================================== Members Routes =============================================================================
     //==================================================================================================================================================================================
-    Route::prefix('member')->group(function () {
+    Route::group(['prefix' => 'member', 'middleware' => ['is_member']], function () {
         Route::get('get-reservations-by-member', [App\Http\Controllers\Api\Member\ReservationController::class, 'getReservationsByMember'])->name('get.reservations.by.member');
         Route::get('get-reservations-by-id/{reservation_id}', [App\Http\Controllers\Api\Member\ReservationController::class, 'getReservationById'])->name('get.reservations.by.id');
         Route::get('get-checkins/{reservation_id}', [App\Http\Controllers\Api\Member\ReservationController::class, 'getCheckInsByReservation'])->name('get.checkins.by.reservation');
@@ -32,7 +32,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //==================================================================================================================================================================================
     //===================================================================================== Vendors Routes =============================================================================
     //==================================================================================================================================================================================
-    Route::prefix('vendor')->group(function () {
+    Route::group(['prefix' => 'vendor', 'middleware' => ['is_vendor']], function () {
         Route::post('authenticate', [App\Http\Controllers\Api\Vendor\AuthController::class, 'vendorAuthenticate'])->name('vendor.authenticate');
     });
 
