@@ -21,7 +21,6 @@ return new class extends Migration
             $table->integer('min_age');
             $table->integer('max_age');
             $table->string('avatar')->nullable();
-            $table->boolean('status')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });

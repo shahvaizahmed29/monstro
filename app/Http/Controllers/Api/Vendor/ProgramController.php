@@ -61,7 +61,6 @@ class ProgramController extends BaseController
                 'min_age' => $request->min_age,
                 'max_age' => $request->max_age,
                 'avatar' => $request->avatar ?? null,
-                'status' => 1
             ]);
 
             $parent_id = null;
@@ -91,7 +90,7 @@ class ProgramController extends BaseController
                     'friday' => $session['friday'] ?? null,
                     'saturday' => $session['saturday'] ?? null,
                     'sunday' => $session['sunday'] ?? null,
-                    'status' => 1
+                    'status' => \App\Models\Session::ACTIVE
                 ]);
             }
             $program = Program::with('programLevels.sessions')->find($program->id);

@@ -23,7 +23,6 @@ class ProgramSeeder extends Seeder
                 'min_age' => 11,
                 'max_age' => 60,
                 'avatar' => null,
-                'status' => 1,
             ],
             [
                 'custom_field_ghl_id' => 'Aer8u8uhiJKMNop38knjew34q98ue5r9ty',
@@ -33,7 +32,6 @@ class ProgramSeeder extends Seeder
                 'min_age' => 16,
                 'max_age' => 48,
                 'avatar' => null,
-                'status' => 1,
             ],
             [
                 'custom_field_ghl_id' => 'Aer8u8uhiJKMNop38knjew34q98ue5r9ty',
@@ -43,7 +41,6 @@ class ProgramSeeder extends Seeder
                 'min_age' => 22,
                 'max_age' => 42,
                 'avatar' => null,
-                'status' => 1,
             ],
             [
                 'custom_field_ghl_id' => 'Aer8u8uhiJKMNop38knjew34q98ue5r9ty',
@@ -53,7 +50,6 @@ class ProgramSeeder extends Seeder
                 'min_age' => 3,
                 'max_age' => 80,
                 'avatar' => null,
-                'status' => 1,
             ],
         ];
 
@@ -70,8 +66,7 @@ class ProgramSeeder extends Seeder
                     'capacity' => $program['capacity'],
                     'min_age' => $program['min_age'],
                     'max_age' => $program['max_age'],
-                    'avatar' => $program['avatar'],
-                    'status' => $program['status'],
+                    'avatar' => $program['avatar']
                 ]);
         
                 $location->programs()->save($newProgram);

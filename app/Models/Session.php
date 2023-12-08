@@ -10,6 +10,10 @@ class Session extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const ACTIVE = 1; 
+    public const INACTIVE = 2; 
+    public const COMPLETED = 3;    
+
     protected $fillable = [
         'program_level_id',
         'duration_time',
