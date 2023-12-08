@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Log;
 class AuthController extends BaseController
 {
     public function vendorAuthenticate(Request $request){
+        if($request->user()->email !== $request->email){
+            return $this->sendResponse('Unauthorized', 401);
+        }
+
         $vendor = User::where('email', $request->email)->whereHas("roles", function ($q){
             $q->where('name', \App\Models\User::VENDOR);
         })->first();
