@@ -15,7 +15,7 @@ class MemberLocationSeeder extends Seeder
      */
     public function run(): void
     {
-        $members = Member::take(3)->get();
+        $members = Member::orderBy('id', 'desc')->take(3)->get();
         $locations = Location::take(3)->get();
 
         foreach ($members as $member) {

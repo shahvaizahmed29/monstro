@@ -23,26 +23,37 @@ class ProgramStoreRequest extends FormRequest
     {
         return [
             'location_id' => 'required|integer',
-            // 'custom_field_ghl_id' => 'required',
             'program_name' => 'required|string',
             'description' => 'required|string',
             'capacity' => 'required|integer',
             'min_age' => 'required|integer|min:0',
             'max_age' => 'required|integer|gt:min_age',
-
-            'sessions' => 'required|array',
+            'sessions' => [
+                'required',
+                'array',
+                function ($attribute, $value, $fail) {
+                    // Check if all sessions have at least one day with a value
+                    $allHaveDayValues = collect($value)->every(function ($session) {
+                        return collect($session)->only(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])->filter()->isNotEmpty();
+                    });
+            
+                    if (!$allHaveDayValues) {
+                        $fail('Every session must have at least one day with a time value.');
+                    }
+                },
+            ],
+            // Other validation rules...                                                                                 
             'sessions.*.program_level_name' => 'required|string',
-            // 'sessions.*.program_level_ghl_value' => 'required|string',
             'sessions.*.duration_time' => 'required|integer',
             'sessions.*.start_date' => 'required|date',
             'sessions.*.end_date' => 'required|date|after_or_equal:sessions.*.start_date',
-            'sessions.*.monday' => 'required|date_format:H:i:s',
-            'sessions.*.tuesday' => 'required|date_format:H:i:s',
-            'sessions.*.wednesday' => 'required|date_format:H:i:s',
-            'sessions.*.thursday' => 'required|date_format:H:i:s',
-            'sessions.*.friday' => 'required|date_format:H:i:s',
-            'sessions.*.saturday' => 'required|date_format:H:i:s',
-            'sessions.*.sunday' => 'required|date_format:H:i:s'
+            'sessions.*.monday' => 'nullable|date_format:H:i:s',
+            'sessions.*.tuesday' => 'nullable|date_format:H:i:s',
+            'sessions.*.wednesday' => 'nullable|date_format:H:i:s',
+            'sessions.*.thursday' => 'nullable|date_format:H:i:s',
+            'sessions.*.friday' => 'nullable|date_format:H:i:s',
+            'sessions.*.saturday' => 'nullable|date_format:H:i:s',
+            'sessions.*.sunday' => 'nullable|date_format:H:i:s',
         ];
     }
 }

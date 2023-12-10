@@ -39,4 +39,8 @@ class Member extends Model
         return $this->belongsToMany(Program::class, 'member_programs', 'member_id', 'program_id');
     }
     
+    public function user(){
+        return $this->belongsTo(User::class);
+    }
+
 }

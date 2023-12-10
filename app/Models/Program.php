@@ -18,8 +18,7 @@ class Program extends Model
         'capacity',
         'min_age',
         'max_age',
-        'avatar',
-        'status'
+        'avatar'
     ];
 
     public function location(){
