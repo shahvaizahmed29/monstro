@@ -52,11 +52,8 @@ class PublicController extends BaseController
                     }
                 }
                 foreach($contacts as $contact) {
-                    MemberController::createMemberFromGHL($contact, $customFields);
+                    MemberController::createMemberFromGHL($contact, $locationId);
                 }
-                \Log::info($url);
-                \Log::info(count($contacts));
-                \Log::info(json_encode($response['meta']));
             } while($url);
 
         } catch(\Exception $error) {

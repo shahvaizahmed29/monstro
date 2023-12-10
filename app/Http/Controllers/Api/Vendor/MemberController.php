@@ -10,6 +10,7 @@ use App\Models\Member;
 use App\Models\Reservation;
 use App\Models\ProgramLevel;
 use App\Models\Location;
+use App\Models\MemberLocation;
 use App\Models\Session;
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
@@ -39,12 +40,25 @@ class MemberController extends BaseController
         return $this->sendResponse($data, 'Member details with session reservations and program');
     }
 
-    public static function createMemberFromGHL($contact) {
+    public static function createMemberFromGHL($contact, $locationId) {
         try {
             if(isset($contact['customFields'])) {
                 $customFields = $contact['customFields'];
                 foreach($customFields as $customField) {
-                    $programLevel = ProgramLevel::with(['program'])->where('custom_field_ghl_value', $customField['value'])->first();
+                    \Log::info(json_encode($customField['value']));
+                    if (strpos($customField['value'], '_') === false) {
+                        continue;
+                    }
+                    $parts = explode('_', $customField['value']);
+                    \Log::info(json_encode($parts));
+                    if(count($parts)<2) {
+                        continue;
+                    }
+
+                    $programLevelId = $parts[1];
+                    $programLevel = ProgramLevel::with(['program'])->where('id', $programLevelId)->first();
+                    \Log::info(json_encode($programLevel));
+                    
                     if($programLevel) {
                         try {
                             DB::beginTransaction();
@@ -69,8 +83,15 @@ class MemberController extends BaseController
                                 'member_id' =>  $member->id,
                                 'status' => 1,
                                 'start_date' => Carbon::today()->format('Y-m-d'),
-                                'end_data' => $session->end_date
+                                'end_date' => $session->end_date
                             ]);
+                            $location= Location::where('go_high_level_location_id', $locationId)->first();
+                            // DB::table('member_locations')->insert([
+                            //     'member_id' => $member->id,
+                            //     'location_id' => $location->id,
+                            //     'go_high_level_location_id' => $locationId
+                            // ]);
+                            \Log::info('========= 3 ========');
                             DB::commit();
                         } catch(\Exception $error) {
                             DB::rollback();
@@ -78,14 +99,14 @@ class MemberController extends BaseController
                                 'contact' => $contact,
                                 'customField' => $customField
                             ];
-                            return $this->sendError('Something went wrong while creating contact!', json_encode($data));
+                            throw $error;
                         }
                     }
                 } 
             }
           
         } catch(\Exception $error) {
-            return $this->sendError('Something went wrong while creating contact!', json_encode($contact));
+            throw $error;
         }
     }
 }
