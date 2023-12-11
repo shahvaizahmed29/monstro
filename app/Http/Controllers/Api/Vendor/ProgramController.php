@@ -15,12 +15,16 @@ use Exception;
 
 class ProgramController extends BaseController
 {
-    public function getProgramsByLocation($location_id){
-        // $location = Location::find($location_id);
+    public function getProgramsByLocation(){
+        $requestLocationId = request()->header('Locationid');
+        $location = Location::where('go_high_level_location_id', $requestLocationId)->first();
+        if(!$location) {
+            return $this->sendError('Location Id not found'); 
+        }
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
         // }
-        $programs = Program::where('location_id', $location_id)->paginate(25);
+        $programs = Program::where('location_id', $location->id)->paginate(25);
         $data = [
             'programs' => ProgramResource::collection($programs),
             'pagination' => [
@@ -37,8 +41,9 @@ class ProgramController extends BaseController
     }
     
     public function getProgramById($id){
-      
-        $program = Program::with('programLevels')->where('id',$id)->first();
+        $requestLocationId = request()->header('Locationid');
+        $location = Location::where('go_high_level_location_id', $requestLocationId)->first();
+        $program = Program::with('programLevels')->where('id',$id)->where('location_id', $location->id)->first();
         // $location = $program->location;
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
@@ -47,13 +52,18 @@ class ProgramController extends BaseController
     }
 
     public function addProgram(ProgramStoreRequest $request){
+        $requestLocationId = request()->header('Locationid');
+        $location = Location::where('go_high_level_location_id', $requestLocationId)->first();
+        if(!$location) {
+            return $this->sendError('Location Id not found'); 
+        }
         try{
             // $location = Location::find($request->location_id);
             // if($location->vendor_id != auth()->user()->vendor->id) {
             //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
             // }
             $program = Program::create([
-                'location_id' => $request->location_id,
+                'location_id' => $location->id,
                 // 'custom_field_ghl_id' => $request->custom_field_ghl_id,
                 'name' => $request->program_name,
                 'description' => $request->description,
