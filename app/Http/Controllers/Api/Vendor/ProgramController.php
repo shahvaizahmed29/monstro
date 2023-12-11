@@ -12,6 +12,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProgramStoreRequest;
 use App\Http\Resources\Vendor\ProgramResource;
 use Exception;
+use Illuminate\Support\Facades\Log;
+use DB;
 
 class ProgramController extends BaseController
 {
@@ -96,6 +98,48 @@ class ProgramController extends BaseController
             }
             $program = Program::with('programLevels.sessions')->find($program->id);
             return $this->sendResponse(new ProgramResource($program), 'Program created successfully.');
+        }catch(Exception $e){
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function getProgramDetails($programId){
+        try{
+            $location = request()->location;
+            $program = Program::where('id', $programId)->first();
+
+            if(!$program){
+                return $this->sendError('Program does not exist.', [], 400);
+            }
+
+            $totalEnrolledStudentsCount = DB::table('member_locations')
+                ->where('location_id', $location->id)
+                ->count();
+
+            $activeStudentsCount = Program::where('id', $programId)
+                ->with([
+                    'programLevels.sessions.reservations' => function ($query) {
+                        $query->whereHas('session', function ($sessionQuery) {
+                            $sessionQuery->where('status', \App\Models\Session::ACTIVE);
+                        });
+                    },
+                ])
+                ->first()
+                ->programLevels
+                ->flatMap(function ($programLevel) {
+                    return $programLevel->sessions->flatMap(function ($session) {
+                        return $session->reservations->pluck('member_id');
+                    });
+                })
+                ->unique()
+                ->count();
+            
+            $data = [
+                'totalEnrolledStudentsCount' => $totalEnrolledStudentsCount,
+                'activeStudentsCount' => $activeStudentsCount
+            ];
+
+            return $this->sendResponse($data, 'Program related information related to program and location.');
         }catch(Exception $e){
             return $this->sendError($e->getMessage(), [], 500);
         }
