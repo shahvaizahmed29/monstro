@@ -16,7 +16,7 @@ use Exception;
 class ProgramController extends BaseController
 {
     public function getProgramsByLocation(){
-        $locationId = request()->locationId;
+        $location = request()->location;
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
         // }
@@ -37,8 +37,7 @@ class ProgramController extends BaseController
     }
     
     public function getProgramById($id){
-        $locationId = request()->locationId;
-        $location = Location::where('go_high_level_location_id', $locationId)->first();
+        $location = request()->location;
         $program = Program::with('programLevels')->where('id',$id)->where('location_id', $location->id)->first();
         // $location = $program->location;
         // if($location->vendor_id != auth()->user()->vendor->id) {
@@ -48,11 +47,7 @@ class ProgramController extends BaseController
     }
 
     public function addProgram(ProgramStoreRequest $request){
-        $locationId = request()->locationId;
-        $location = Location::where('go_high_level_location_id', $locationId)->first();
-        if(!$location) {
-            return $this->sendError('Location Id not found'); 
-        }
+        $location = request()->location;
         try{
             // $location = Location::find($request->location_id);
             // if($location->vendor_id != auth()->user()->vendor->id) {

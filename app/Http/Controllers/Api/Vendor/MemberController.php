@@ -24,7 +24,8 @@ class MemberController extends BaseController
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authenticated', [], 403);
         // }
-        $locationId = request()->locationId;
+        $location = request()->location;
+        $locationId = $location->id;
         $members = Member::whereHas('locations', function ($query) use ($locationId) {
             $query->where('locations.id', $locationId);
         })->whereHas("user.roles", function ($q){
@@ -35,7 +36,8 @@ class MemberController extends BaseController
     }
 
     public function getMemberDetails($member_id){
-        $locationId = request()->locationId;
+        $location = request()->location;
+        $locationId = $location->id;
         $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->get();
         if(count($reservations)) {
             $memberLocationId = $reservations[0]->session->programLevel[0]->program->location_id;

@@ -42,7 +42,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 //==================================================================================================================================================================================
 //===================================================================================== Vendors Public Routes =============================================================================
 //==================================================================================================================================================================================
-Route::prefix('vendor')->group(['middleware' => ['checkLocationId']],function () {
+Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],function () {
     Route::get('get-vendor-locations', [App\Http\Controllers\Api\Vendor\LocationsController::class, 'getVendorLocations'])->name('get.vendor.locations');
     Route::get('get-programs-by-location', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramsByLocation'])->name('get.programs.by.location');
     Route::get('get-programs-by-id/{id}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramById'])->name('get.program.by.id');
