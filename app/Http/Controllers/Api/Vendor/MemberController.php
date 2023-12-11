@@ -40,7 +40,7 @@ class MemberController extends BaseController
         $locationId = $location->id;
         $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->get();
         if(count($reservations)) {
-            $memberLocationId = $reservations[0]->session->programLevel[0]->program->location_id;
+            $memberLocationId = $reservations[0]->session->programLevel->program->location_id;
             if($memberLocationId != $locationId) {
                 return $this->sendError('Member doesn\'t exist');
             }
