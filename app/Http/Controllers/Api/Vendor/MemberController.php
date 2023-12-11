@@ -19,13 +19,14 @@ use App\Http\Resources\Vendor\MemberResource;
 
 class MemberController extends BaseController
 {
-    public function getMembersByLocation($location_id){
+    public function getMembersByLocation(){
         // $location = Location::find($location_id);
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authenticated', [], 403);
         // }
-        $members = Member::whereHas('locations', function ($query) use ($location_id) {
-            $query->where('locations.id', $location_id);
+        $locationId = request()->locationId;
+        $members = Member::whereHas('locations', function ($query) use ($locationId) {
+            $query->where('locations.id', $locationId);
         })->whereHas("user.roles", function ($q){
             $q->where('name', \App\Models\User::MEMBER);
         })->get();
@@ -34,7 +35,14 @@ class MemberController extends BaseController
     }
 
     public function getMemberDetails($member_id){
+        $locationId = request()->locationId;
         $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->get();
+        if(count($reservations)) {
+            $memberLocationId = $reservations[0]->session->programLevel[0]->program->location_id;
+            if($memberLocationId != $locationId) {
+                return $this->sendError('Member doesn\'t exist');
+            }
+        }
         $member_details = Member::where('id', $member_id)->first();
         $data = [
             'memberDetails' => new MemberResource($member_details),

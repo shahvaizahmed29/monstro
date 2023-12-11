@@ -16,11 +16,7 @@ use Exception;
 class ProgramController extends BaseController
 {
     public function getProgramsByLocation(){
-        $requestLocationId = request()->header('Locationid');
-        $location = Location::where('go_high_level_location_id', $requestLocationId)->first();
-        if(!$location) {
-            return $this->sendError('Location Id not found'); 
-        }
+        $locationId = request()->locationId;
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
         // }
@@ -41,8 +37,8 @@ class ProgramController extends BaseController
     }
     
     public function getProgramById($id){
-        $requestLocationId = request()->header('Locationid');
-        $location = Location::where('go_high_level_location_id', $requestLocationId)->first();
+        $locationId = request()->locationId;
+        $location = Location::where('go_high_level_location_id', $locationId)->first();
         $program = Program::with('programLevels')->where('id',$id)->where('location_id', $location->id)->first();
         // $location = $program->location;
         // if($location->vendor_id != auth()->user()->vendor->id) {
@@ -52,8 +48,8 @@ class ProgramController extends BaseController
     }
 
     public function addProgram(ProgramStoreRequest $request){
-        $requestLocationId = request()->header('Locationid');
-        $location = Location::where('go_high_level_location_id', $requestLocationId)->first();
+        $locationId = request()->locationId;
+        $location = Location::where('go_high_level_location_id', $locationId)->first();
         if(!$location) {
             return $this->sendError('Location Id not found'); 
         }
