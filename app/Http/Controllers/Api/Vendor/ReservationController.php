@@ -43,9 +43,9 @@ class ReservationController extends BaseController
     {
         $reservation = Reservation::find($request->reservationId);
         $location = $reservation->session->programLevel->program->location;
-        if($location->vendor_id != auth()->user()->vendor->id) {
-            return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
-        }
+        // if($location->vendor_id != auth()->user()->vendor->id) {
+        //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
+        // }
 
         // Check if a check-in record already exists for the given reservation and today's date
         $existingCheckIn = CheckIn::where('reservation_id', $reservation->id)
