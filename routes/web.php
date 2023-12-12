@@ -20,3 +20,8 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+Route::get('public/leadconnector', [App\Http\Controllers\PublicController::class, 'redirectToGHL'])->name('redirect.ghl');
+Route::get('public/leadconnector/callback', [App\Http\Controllers\PublicController::class, 'storeGHL'])->name('ghl.callback');
+
+Route::get('sync_ghl_locations', [App\Http\Controllers\PublicController::class, 'ghlSyncLocations'])->name('ghl.sync.locations');

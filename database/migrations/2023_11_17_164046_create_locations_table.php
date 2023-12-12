@@ -15,13 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('go_high_level_location_id')->unique();
             $table->string('name');
-            $table->string('address')->nullable();
+            $table->longText('address')->nullable();
             $table->string('city')->nullable();
             $table->string('state')->nullable();
             $table->string('logo_url')->nullable();
             $table->string('country')->nullable();
             $table->string('postal_code')->nullable();
-            $table->string('website')->nullable();
+            $table->longText('website')->nullable();
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->foreignId('vendor_id')->nullable()->constrained();

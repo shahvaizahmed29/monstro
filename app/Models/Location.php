@@ -26,6 +26,10 @@ class Location extends Model
         'meta_data',
     ];
 
+    protected $casts = [
+        'meta_data' => 'array',
+    ];
+
     public function vendor(){
         return $this->belongsTo(Vendor::class);
     }

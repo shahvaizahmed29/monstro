@@ -16,18 +16,17 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolesAndPermissionsSeeder::class,
-            UserSeeder::class,
-            VendorSeeder::class,
-            LocationSeeder::class,
-            // VendorLocationSeeder::class,
-            MemberSeeder::class,
-            MemberLocationSeeder::class,
-            ProgramSeeder::class,
-            ProgramLevelSeeder::class,
-            SessionSeeder::class,
-            ReservationSeeder::class,
-            CheckInSeeder::class,
-            MemberProgramsSeeder::class
+            // UserSeeder::class,
+            // VendorSeeder::class,
+            // LocationSeeder::class,
+            // MemberSeeder::class,
+            // MemberLocationSeeder::class,
+            // ProgramSeeder::class,
+            // ProgramLevelSeeder::class,
+            // SessionSeeder::class,
+            // ReservationSeeder::class,
+            // CheckInSeeder::class,
+            // MemberProgramsSeeder::class
         ]);
     }
 }
