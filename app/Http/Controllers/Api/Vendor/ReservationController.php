@@ -63,7 +63,7 @@ class ReservationController extends BaseController
             'check_in_time' => now()->format('Y-m-d H:i:s')
         ]);
 
-        return $this->sendResponse(new CheckInResource($checkIn), 'Attendence marked.');
+        return $this->sendResponse(new CheckInResource($checkIn), 'Attendance marked.');
     }
 
     public function getCheckInsByReservation($reservation_id) {
