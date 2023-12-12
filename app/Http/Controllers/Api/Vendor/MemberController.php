@@ -53,29 +53,28 @@ class MemberController extends BaseController
         return $this->sendResponse($data, 'Member details with session reservations and program');
     }
 
-    public static function createMemberFromGHL($contact, $locationId) {
-        try {
-            if(isset($contact['customFields'])) {
-                $customFields = $contact['customFields'];
-                foreach($customFields as $customField) {
-                    \Log::info(json_encode($customField['value']));
-                    if (strpos($customField['value'], '_') === false) {
-                        continue;
-                    }
-                    $parts = explode('_', $customField['value']);
-                    \Log::info(json_encode($parts));
-                    if(count($parts)<2) {
-                        continue;
-                    }
+    public static function createMemberFromGHL($contact, $location) {
+        if(isset($contact['customFields'])) {
+            $customFields = $contact['customFields'];
+            foreach($customFields as $customField) {
+                if (strpos($customField['value'], '_') === false) {
+                    continue;
+                }
+                $parts = explode('_', $customField['value']);
+                
+                if(count($parts)<2) {
+                    continue;
+                }
 
-                    $programLevelId = $parts[1];
-                    $programLevel = ProgramLevel::with(['program'])->where('id', $programLevelId)->first();
-                    \Log::info(json_encode($programLevel));
-                    
-                    if($programLevel) {
-                        try {
-                            DB::beginTransaction();
-                            $session = Session::where('program_level_id',$programLevel->id)->latest()->first();
+                $programLevelId = $parts[1];
+                $programLevel = ProgramLevel::with(['program'])->where('id', $programLevelId)->first();
+                
+                if($programLevel) {
+                    try {
+                        DB::beginTransaction();
+                        $session = Session::where('program_level_id',$programLevel->id)->latest()->first();
+                        $user = User::where('email', $contact['email'])->first();
+                        if(!$user) {
                             $user = User::create([
                                 'name' => isset($contact['name']) ? $contact['name'] : '',
                                 'email' => $contact['email'],
@@ -91,35 +90,31 @@ class MemberController extends BaseController
                                 'referral_code' => $randomNumberMT.$user->id,
                                 'user_id' => $user->id
                             ]);
-                            $reservation = Reservation::create([
-                                'session_id' => $session->id,
-                                'member_id' =>  $member->id,
-                                'status' => 1,
-                                'start_date' => Carbon::today()->format('Y-m-d'),
-                                'end_date' => $session->end_date
-                            ]);
-                            $location= Location::where('go_high_level_location_id', $locationId)->first();
-                            // DB::table('member_locations')->insert([
-                            //     'member_id' => $member->id,
-                            //     'location_id' => $location->id,
-                            //     'go_high_level_location_id' => $locationId
-                            // ]);
-                            \Log::info('========= 3 ========');
-                            DB::commit();
-                        } catch(\Exception $error) {
-                            DB::rollback();
-                            $data = [
-                                'contact' => $contact,
-                                'customField' => $customField
-                            ];
-                            throw $error;
+                        } else {
+                            $member = $user->member;
                         }
+                        $reservation = Reservation::create([
+                            'session_id' => $session->id,
+                            'member_id' =>  $member->id,
+                            'status' => 1,
+                            'start_date' => Carbon::today()->format('Y-m-d'),
+                            'end_date' => $session->end_date
+                        ]);
+                        
+                        $member->locations()->attach($location->id, ['go_high_level_location_id' => $location->go_high_level_location_id, 'go_high_level_contact_id' => $contact['id']]);
+                        DB::commit();
+                    } catch(\Exception $error) {
+                        DB::rollback();
+                        $data = [
+                            'contact' => $contact,
+                            'customField' => $customField
+                        ];
+                        \Log::info($error->getMessage());
                     }
-                } 
-            }
-          
-        } catch(\Exception $error) {
-            throw $error;
+                }
+            } 
         }
+          
+        
     }
 }

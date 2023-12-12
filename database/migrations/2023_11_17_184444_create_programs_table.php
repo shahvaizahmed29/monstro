@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('location_id')->constrained()->onDelete('cascade');
             // $table->longText('custom_field_ghl_id');
             $table->string('name');
-            $table->string('description');
+            $table->longText('description');
             $table->double('capacity');
             $table->integer('min_age');
             $table->integer('max_age');

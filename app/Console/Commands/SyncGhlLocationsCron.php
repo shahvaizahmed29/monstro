@@ -1,13 +1,8 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Console\Commands;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
@@ -15,21 +10,26 @@ use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Location;
 
-class SycnGHLLocations implements ShouldQueue
+class SyncGhlLocationsCron extends Command
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'sync:ghl-locations';
 
     /**
-     * Create a new job instance.
+     * The console command description.
+     *
+     * @var string
      */
-    public function __construct()
-    {
-    }
+    protected $description = 'Command description';
 
     /**
-     * Execute the job.
+     * Execute the console command.
      */
-    public function handle(): void
+    public function handle()
     {
         $ignore_locations = [
             'Monstro',
@@ -113,7 +113,7 @@ class SycnGHLLocations implements ShouldQueue
                         $user = User::create([
                             'name' => isset($location['name']) ? $location['name']: $location['id'],
                             'email' => $location['email'],
-                            'password' => bcrypt(str_replace(' ', '', $location['lastName']).'@2024!'),
+                            'password' => bcrypt(str_replace(' ', '', $location['id']).'@2024!'),
                             'email_verified_at' => now()
                         ]);
                         $user->assignRole(\App\Models\User::VENDOR);
@@ -124,8 +124,9 @@ class SycnGHLLocations implements ShouldQueue
                             'company_website' => isset( $location['website']) ?  $location['website'] : '',
                             'company_address' => isset($location['address']) ? $location['address'] : ''
                         ]);
+                    } else {
+                        $vendor = $user->vendor;
                     }
-                    $vendor = $user->vendor;
                     $location = Location::create([
                         'go_high_level_location_id' => $location['id'],
                         'name' => isset($location['name']) ? $location['name'] : $location['id'],
@@ -151,6 +152,5 @@ class SycnGHLLocations implements ShouldQueue
             }
             $offset = $offset + count($allLocations);  
         } while(count($allLocations) > 0);
-       
     }
 }

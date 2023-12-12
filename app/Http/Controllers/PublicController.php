@@ -43,8 +43,4 @@ class PublicController extends Controller
             Log::info($response->json());
         }
     }
-
-    public function ghlSyncLocations() {
-        SycnGHLLocations::dispatch();
-    }
 }

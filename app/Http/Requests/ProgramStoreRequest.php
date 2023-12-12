@@ -22,7 +22,7 @@ class ProgramStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'location_id' => 'required|integer',
+            // 'location_id' => 'required|integer',
             'program_name' => 'required|string',
             'description' => 'required|string',
             'capacity' => 'required|integer',

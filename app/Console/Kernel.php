@@ -13,6 +13,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('check-session:status')->everySixHours();
+        $schedule->command('sync:ghl-locations')->hourly();
+        $schedule->command('sync:ghl-contacts')->everySixHours();
     }
 
     /**
