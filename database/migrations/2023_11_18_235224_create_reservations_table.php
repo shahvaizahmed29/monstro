@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('session_id');
-            $table->unsignedBigInteger('member_id');
-            $table->tinyInteger('status');
+            $table->foreignId('session_id')->constrained()->onDelete('cascade');
+            $table->foreignId('member_id')->constrained()->onDelete('cascade');
+            $table->tinyInteger('status')->default(1);
             $table->date('start_date');
             $table->date('end_date');
             $table->timestamps();

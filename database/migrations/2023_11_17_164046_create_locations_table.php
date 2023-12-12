@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('website')->nullable();
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
-            $table->unsignedBigInteger('vendor_id');
+            $table->foreignId('vendor_id')->nullable()->constrained();
             $table->longText('meta_data')->nullable();
             $table->timestamps();
             $table->softDeletes();

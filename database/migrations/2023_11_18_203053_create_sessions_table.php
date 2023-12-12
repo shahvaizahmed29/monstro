@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('sessions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('program_level_id');
+            $table->foreignId('program_level_id')->constrained()->onDelete('cascade');
             $table->integer('duration_time');
             $table->date('start_date');
             $table->date('end_date');
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->time('friday')->nullable();
             $table->time('saturday')->nullable();
             $table->time('sunday')->nullable();
-            $table->tinyInteger('status');
+            $table->tinyInteger('status')->default(1);
             $table->timestamps();
             $table->softDeletes();
         });

@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('program_levels', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->unsignedBigInteger('program_id');
-            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->foreignId('program_id')->constrained()->onDelete('cascade');
+            $table->foreignId('parent_id')->nullable()->constrained(
+                table: 'program_levels'
+            );
             $table->longText('custom_field_ghl_value')->nullable();
             $table->timestamps();
             $table->softDeletes();

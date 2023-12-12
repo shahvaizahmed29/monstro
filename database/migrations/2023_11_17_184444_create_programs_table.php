@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('programs', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('location_id');
+            $table->foreignId('location_id')->constrained()->onDelete('cascade');
             // $table->longText('custom_field_ghl_id');
             $table->string('name');
             $table->string('description');

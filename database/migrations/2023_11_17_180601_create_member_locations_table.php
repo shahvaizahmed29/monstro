@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('member_locations', function (Blueprint $table) {
-            $table->unsignedBigInteger('member_id');
-            $table->unsignedBigInteger('location_id');
+            $table->foreignId('location_id')->constrained()->onDelete('cascade');
+            $table->foreignId('member_id')->constrained()->onDelete('cascade');
             $table->unsignedBigInteger('go_high_level_location_id');
             $table->timestamps();
         });

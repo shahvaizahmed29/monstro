@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('check_ins', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('reservation_id');
-            $table->datetime('check_in_time')->nullable();
+            $table->foreignId('reservation_id')->constrained()->onDelete('cascade');
+            $table->datetime('check_in_time');
             $table->datetime('check_out_time')->nullable();
             $table->timestamps();
             $table->softDeletes();
