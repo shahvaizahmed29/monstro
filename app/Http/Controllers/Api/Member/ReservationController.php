@@ -78,6 +78,6 @@ class ReservationController extends BaseController
 
     public function getReservationById($reservation_id) {
         $reservation = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', auth()->user()->member->id)->where('id', $reservation_id)->first();
-        return $this->sendResponse(new ReservationResource($reservation), 'Attendence marked.');
+        return $this->sendResponse(new ReservationResource($reservation), 'Reservations.');
     }
 }
