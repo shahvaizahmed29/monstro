@@ -13,11 +13,11 @@ class AuthController extends BaseController
     {
         $user= User::with(['vendor','member','roles'])->where('email', $request->email)->first();
         
-        // if (!$user || !Hash::check($request->password, $user->password)) {
-        //     return response([
-        //         'message' => 'These credentials do not match our records.'
-        //     ], 401);
-        // }
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response([
+                'message' => 'These credentials do not match our records.'
+            ], 401);
+        }
     
         $token = $user->createToken('<monstro@2023!/>')->plainTextToken;
         if($user->hasRole(\App\Models\User::VENDOR)) {

@@ -16,10 +16,12 @@ use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
+use Illuminate\Support\Facades\Log;
 
 class MemberController extends BaseController
 {
     public function getMembersByLocation(){
+        //Code commented out below becuase auth guard is not applied anymore.
         // $location = Location::find($location_id);
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authenticated', [], 403);
@@ -42,7 +44,7 @@ class MemberController extends BaseController
         if(count($reservations)) {
             $memberLocationId = $reservations[0]->session->programLevel->program->location_id;
             if($memberLocationId != $locationId) {
-                return $this->sendError('Member doesn\'t exist');
+                return $this->sendError('Member doesnot exist');
             }
         }
         $member_details = Member::where('id', $member_id)->first();
@@ -96,7 +98,7 @@ class MemberController extends BaseController
                         $reservation = Reservation::create([
                             'session_id' => $session->id,
                             'member_id' =>  $member->id,
-                            'status' => 1,
+                            'status' => \App\Models\Reservation::ACTIVE,
                             'start_date' => Carbon::today()->format('Y-m-d'),
                             'end_date' => $session->end_date
                         ]);
@@ -109,7 +111,7 @@ class MemberController extends BaseController
                             'contact' => $contact,
                             'customField' => $customField
                         ];
-                        \Log::info($error->getMessage());
+                        Log::info($error->getMessage());
                     }
                 }
             } 

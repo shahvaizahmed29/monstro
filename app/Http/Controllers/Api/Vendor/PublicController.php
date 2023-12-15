@@ -8,6 +8,7 @@ use App\Models\Vendor;
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\Vendor\MemberController;
+use Illuminate\Support\Facades\Log;
 
 class PublicController extends BaseController
 {

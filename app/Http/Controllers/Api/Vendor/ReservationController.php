@@ -19,6 +19,7 @@ class ReservationController extends BaseController
         $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->paginate(25);
         if(count($reservations) > 0) {
             $location = $reservations[0]->session->programLevel->program->location;
+            //Code commented out below becuase auth guard is not applied anymore.
             // if($location->vendor_id != auth()->user()->vendor->id) {
             //     return $this->sendError('Vendor not authorize, Please contact admin.', [], 403);
             // }
@@ -43,6 +44,7 @@ class ReservationController extends BaseController
     {
         $reservation = Reservation::find($request->reservationId);
         $location = $reservation->session->programLevel->program->location;
+        //Code commented out below becuase auth guard is not applied anymore.
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
         // }
@@ -68,7 +70,7 @@ class ReservationController extends BaseController
 
     public function getCheckInsByReservation($reservation_id) {
         $reservation = Reservation::find($reservation_id);
-        // auth to be added
+        //Code commented out below becuase auth guard is not applied anymore.
         // if($reservation->member_id != auth()->user()->member->id) {
         //     return $this->sendError('Member not authorize, Please contact support', [], 403);
         // }

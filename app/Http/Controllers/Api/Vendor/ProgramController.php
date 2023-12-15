@@ -19,6 +19,7 @@ class ProgramController extends BaseController
 {
     public function getProgramsByLocation(){
         $location = request()->location;
+        //Code commented out below becuase auth guard is not applied anymore.
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
         // }
@@ -41,6 +42,7 @@ class ProgramController extends BaseController
     public function getProgramById($id){
         $location = request()->location;
         $program = Program::with('programLevels')->where('id',$id)->where('location_id', $location->id)->first();
+        //Code commented out below becuase auth guard is not applied anymore.
         // $location = $program->location;
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
@@ -51,6 +53,7 @@ class ProgramController extends BaseController
     public function addProgram(ProgramStoreRequest $request){
         $location = request()->location;
         try{
+            //Code commented out below becuase auth guard is not applied anymore.
             // $location = Location::find($request->location_id);
             // if($location->vendor_id != auth()->user()->vendor->id) {
             //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Location;
+use Exception;
 
 class SycnGHLLocations implements ShouldQueue
 {
@@ -104,7 +105,7 @@ class SycnGHLLocations implements ShouldQueue
                         continue;
                     }
                     if(!isset($location['email'])) {
-                        \Log::info(json_encode($location));
+                        Log::info(json_encode($location));
                         continue;
                     }
                     DB::beginTransaction();
