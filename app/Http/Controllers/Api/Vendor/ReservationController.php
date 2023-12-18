@@ -8,9 +8,11 @@ use App\Models\Reservation;
 use App\Models\CheckIn;
 use App\Http\Controllers\BaseController;
 use App\Http\Resources\Member\CheckInResource;
+use App\Http\Resources\Vendor\MeetingResource;
 use App\Http\Resources\Vendor\MemberResource;
 use App\Http\Resources\Vendor\ReservationResource;
 use App\Models\Member;
+use Exception;
 
 class ReservationController extends BaseController
 {
@@ -77,4 +79,36 @@ class ReservationController extends BaseController
         $checkIns = CheckIn::where('id', $reservation_id)->latest()->get();
         return $this->sendResponse($checkIns, 'Checkins by reservation.');
     }
+
+    public function memberUpcomingMeetings($memberId){
+        try {
+            //Get the member reservations along with sessions, program level and program
+            $reservations = Reservation::where('member_id', $memberId)
+                ->with(['session.programLevel.program'])
+                ->whereHas('session', function ($query){
+                    $query->whereDate('start_date', '>=', Carbon::today());
+                })
+                ->get();
+
+            $meetings = $reservations->map(function ($reservation) {
+                $session = $reservation->session;
+                $program = $session->programLevel->program;
+                
+                // Calculating start and end time of meeting
+                $startTime = Carbon::parse($session->start_date)->addHours($session->time);
+                $endTime = $startTime->copy()->addHours($session->duration_time);
+    
+                return [
+                    'title' => $program->name,
+                    'start' => $startTime->format('Y-m-d\TH:i:s'),
+                    'end' => $endTime->format('Y-m-d\TH:i:s'),
+                ];
+            })->toArray();
+    
+            return $this->sendResponse(MeetingResource::collection($meetings), 'Member Upcoming Meetings.');
+        } catch(Exception $e) {
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
 }
