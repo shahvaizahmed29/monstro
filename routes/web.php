@@ -23,3 +23,4 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 
 Route::get('public/leadconnector', [App\Http\Controllers\PublicController::class, 'redirectToGHL'])->name('redirect.ghl');
 Route::get('public/leadconnector/callback', [App\Http\Controllers\PublicController::class, 'storeGHL'])->name('ghl.callback');
+Route::post('public/store-ghl-location', [App\Http\Controllers\PublicController::class, 'storeGhlLocation'])->name('store.ghl.location');
