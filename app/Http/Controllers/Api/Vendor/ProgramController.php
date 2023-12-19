@@ -11,6 +11,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProgramStoreRequest;
 use App\Http\Resources\Vendor\ProgramResource;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use DB;
@@ -136,13 +137,49 @@ class ProgramController extends BaseController
                 })
                 ->unique()
                 ->count();
+
+            $meetings = $this->getProgramRelatedMeetings($programId);
             
             $data = [
                 'totalEnrolledStudentsCount' => $totalEnrolledStudentsCount,
-                'activeStudentsCount' => $activeStudentsCount
+                'activeStudentsCount' => $activeStudentsCount,
+                'meetings' => $meetings
             ];
 
             return $this->sendResponse($data, 'Program related information related to program and location.');
+        }catch(Exception $e){
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function getProgramRelatedMeetings($programId){
+        try{
+            $program = Program::with([
+                'programLevels.sessions' => function ($query) {
+                    $query->whereDate('start_date', '>=', now()->toDateString());
+                }
+            ])
+            ->where('id', $programId)
+            ->first();
+
+            $meetings = [];
+
+            foreach ($program->programLevels as $programLevel) {
+                foreach ($programLevel->sessions as $session) {
+                    foreach ($session->reservations as $reservation) {
+                        $startTime = Carbon::parse($session->start_date)->addHours($session->time);
+                        $endTime = $startTime->copy()->addHours($session->duration_time);
+
+                        $meetings[] = [
+                            'title' => $program->name,
+                            'start' => $startTime->format('Y-m-d\TH:i:s'),
+                            'end' => $endTime->format('Y-m-d\TH:i:s'),
+                        ];
+                    }
+                }
+            }
+
+            return $meetings;
         }catch(Exception $e){
             return $this->sendError($e->getMessage(), [], 500);
         }
