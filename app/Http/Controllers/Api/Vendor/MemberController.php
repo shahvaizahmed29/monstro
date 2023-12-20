@@ -55,7 +55,13 @@ class MemberController extends BaseController
             ->pluck('go_high_level_contact_id')
             ->first();
 
+        $member = Member::find($member_id);
+        $latest_check_in_times = $member->latestCheckInTimes($member_id);
+        $single_check_in_time = Carbon::parse($latest_check_in_times[0]);
+        $last_seen = $single_check_in_time->diffForHumans();
+
         $member_details['go_high_level_contact_id'] = $go_high_level_contact_id;
+        $member_details['last_seen'] = $last_seen;
 
         $data = [
             'memberDetails' => new MemberResource($member_details),
