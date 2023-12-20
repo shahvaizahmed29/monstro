@@ -25,6 +25,7 @@ class MemberResource extends JsonResource
             'reservations' => $this->whenLoaded('reservations', function () {
                 return new ReservationResource($this->reservations);
             }),
+            'goHighLevelContactId' => $this->when($this->go_high_level_contact_id !== null, $this->go_high_level_contact_id)
         ];
         return $member;
     }
