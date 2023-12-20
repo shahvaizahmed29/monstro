@@ -43,4 +43,12 @@ class Member extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function isActive(): bool{
+        $activeReservationsCount = $this->reservations()
+            ->where('status', \App\Models\Reservation::ACTIVE)
+            ->count();
+
+        return $activeReservationsCount > 0 ? true : false;
+    }
+
 }

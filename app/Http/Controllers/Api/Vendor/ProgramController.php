@@ -137,13 +137,10 @@ class ProgramController extends BaseController
                 })
                 ->unique()
                 ->count();
-
-            $meetings = $this->getProgramRelatedMeetings($programId);
             
             $data = [
                 'totalEnrolledStudentsCount' => $totalEnrolledStudentsCount,
                 'activeStudentsCount' => $activeStudentsCount,
-                'meetings' => $meetings
             ];
 
             return $this->sendResponse($data, 'Program related information related to program and location.');
@@ -152,31 +149,27 @@ class ProgramController extends BaseController
         }
     }
 
-    public function getProgramRelatedMeetings($programId){
+    public function programLevelMeetings($programLevelId){
         try{
-            $program = Program::with([
-                'programLevels.sessions' => function ($query) {
+            $programLevel = ProgramLevel::with(['program',
+                'sessions' => function ($query) {
                     $query->whereDate('start_date', '>=', now()->toDateString());
                 }
             ])
-            ->where('id', $programId)
+            ->where('id', $programLevelId)
             ->first();
 
             $meetings = [];
 
-            foreach ($program->programLevels as $programLevel) {
-                foreach ($programLevel->sessions as $session) {
-                    foreach ($session->reservations as $reservation) {
-                        $startTime = Carbon::parse($session->start_date)->addHours($session->time);
-                        $endTime = $startTime->copy()->addHours($session->duration_time);
+            foreach ($programLevel->sessions as $session) {
+                $startTime = Carbon::parse($session->start_date)->addHours($session->time);
+                $endTime = $startTime->copy()->addHours($session->duration_time);
 
-                        $meetings[] = [
-                            'title' => $program->name,
-                            'start' => $startTime->format('Y-m-d\TH:i:s'),
-                            'end' => $endTime->format('Y-m-d\TH:i:s'),
-                        ];
-                    }
-                }
+                $meetings[] = [
+                    'title' => $programLevel->program->name,
+                    'start' => $startTime->format('Y-m-d\TH:i:s'),
+                    'end' => $endTime->format('Y-m-d\TH:i:s'),
+                ];
             }
 
             return $meetings;

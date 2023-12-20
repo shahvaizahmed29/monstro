@@ -21,9 +21,10 @@ class MemberResource extends JsonResource
             'phone' => $this->phone,
             'referralCode' => $this->referral_code,
             'avatar' => $this->avatar,
+            'activeStatus' => $this->isActive() ? 'Active' : 'Not Active',
             'reservations' => $this->whenLoaded('reservations', function () {
                 return new ReservationResource($this->reservations);
-            })
+            }),
         ];
         return $member;
     }
