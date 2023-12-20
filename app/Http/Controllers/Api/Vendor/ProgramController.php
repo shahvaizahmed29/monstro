@@ -115,10 +115,13 @@ class ProgramController extends BaseController
             if(!$program){
                 return $this->sendError('Program does not exist.', [], 400);
             }
+            
+            //Below code is commented for now. It will be removed after review in future.
+            // $totalEnrolledStudentsCount = DB::table('member_locations')
+            //     ->where('location_id', $location->id)
+            //     ->count();
 
-            $totalEnrolledStudentsCount = DB::table('member_locations')
-                ->where('location_id', $location->id)
-                ->count();
+            $totalEnrolledStudentsCount = $program->location->members()->count();
 
             $activeStudentsCount = Program::where('id', $programId)
                 ->with([
