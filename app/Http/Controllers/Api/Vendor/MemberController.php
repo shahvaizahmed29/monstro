@@ -28,13 +28,35 @@ class MemberController extends BaseController
         // }
         $location = request()->location;
         $locationId = $location->id;
-        $members = Member::whereHas('locations', function ($query) use ($locationId) {
+        $membersByLocation = Member::whereHas('locations', function ($query) use ($locationId) {
             $query->where('locations.id', $locationId);
         })->whereHas("user.roles", function ($q){
             $q->where('name', \App\Models\User::MEMBER);
-        })->get();
+        })->with([
+            'reservations.checkIns' => function ($query) {
+                $query->latest('check_in_time');
+            }
+        ])->get();
 
-        return $this->sendResponse(MemberResource::collection($members), 'Location members');
+        $members = $membersByLocation->map(function ($membersByLocation) {
+            $latestCheckInTime = $membersByLocation->reservations->pluck('checkIns.0.check_in_time')->first();
+        
+            if ($latestCheckInTime) {
+                $carbonInstance = Carbon::parse($latestCheckInTime);
+                $membersByLocation->last_seen = $carbonInstance->diffForHumans();
+            } else {
+                $membersByLocation->last_seen = null;
+            }
+        
+            return $membersByLocation;
+        });
+
+        $members->each(function ($member) {
+            $member->unsetRelation('reservations');
+            $member->unsetRelation('checkIns');
+        });
+        
+        return $this->sendResponse(MemberResource::collection($members), 'Members with details for the location.');
     }
 
     public function getMemberDetails($member_id){
@@ -55,13 +77,7 @@ class MemberController extends BaseController
             ->pluck('go_high_level_contact_id')
             ->first();
 
-        $member = Member::find($member_id);
-        $latest_check_in_times = $member->latestCheckInTimes($member_id);
-        $single_check_in_time = Carbon::parse($latest_check_in_times[0]);
-        $last_seen = $single_check_in_time->diffForHumans();
-
         $member_details['go_high_level_contact_id'] = $go_high_level_contact_id;
-        $member_details['last_seen'] = $last_seen;
 
         $data = [
             'memberDetails' => new MemberResource($member_details),

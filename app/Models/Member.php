@@ -51,15 +51,4 @@ class Member extends Model
         return $activeReservationsCount > 0 ? true : false;
     }
 
-    public function latestCheckInTimes($memberId)
-    {
-        $member = $this->with([
-            'reservations.checkIns' => function ($query) {
-                $query->latest('check_in_time')->limit(1);
-            }
-        ])->find($memberId);
-
-        return $member->reservations->pluck('checkIns.0.check_in_time');
-    }
-
 }
