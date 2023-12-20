@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('check-session:status')->everySixHours();
         $schedule->command('sync:ghl-locations')->hourly();
         $schedule->command('sync:ghl-contacts')->everySixHours();
+        $schedule->command('check-reservation:status')->everySixHours();
     }
 
     /**
