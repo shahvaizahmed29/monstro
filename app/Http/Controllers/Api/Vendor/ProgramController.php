@@ -123,6 +123,10 @@ class ProgramController extends BaseController
 
             $totalEnrolledStudentsCount = $program->location->members()->count();
 
+            $ProgramLevel = $program->programLevels()->first();
+            $totalSessionCount = 0;
+            ($ProgramLevel) ? $totalSessionCount = $ProgramLevel->sessions()->count() : 0; 
+
             $activeStudentsCount = Program::where('id', $programId)
                 ->with([
                     'programLevels.sessions.reservations' => function ($query) {
@@ -144,6 +148,7 @@ class ProgramController extends BaseController
             $data = [
                 'totalEnrolledStudentsCount' => $totalEnrolledStudentsCount,
                 'activeStudentsCount' => $activeStudentsCount,
+                'totalSessionCount' => $totalSessionCount
             ];
 
             return $this->sendResponse($data, 'Program related information related to program and location.');
