@@ -116,12 +116,12 @@ class ProgramController extends BaseController
                 return $this->sendError('Program does not exist.', [], 400);
             }
             
-            //Below code is commented for now. It will be removed after review in future.
-            // $totalEnrolledStudentsCount = DB::table('member_locations')
-            //     ->where('location_id', $location->id)
-            //     ->count();
-
-            $totalEnrolledStudentsCount = $program->location->members()->count();
+            $totalEnrolledStudentsCount = 0;
+            foreach ($program->programLevels as $programLevel) {
+                foreach ($programLevel->sessions as $session) {
+                    $totalEnrolledStudentsCount += $session->reservations()->where('status', \App\Models\Reservation::ACTIVE)->count();
+                }
+            }
 
             $ProgramLevel = $program->programLevels()->first();
             $totalSessionCount = 0;
