@@ -1,4 +1,4 @@
-<?php
+\<?php
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -58,6 +58,8 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
 
 Route::get('vendor/{vendor_id}/locations' , [\App\Http\Controllers\Api\Vendor\LocationsController::class , 'vendorLocations'])->name('vendor.locations');
 Route::put('vendor/{vendor_id}/update-passowrd',[App\Http\Controllers\Api\Vendor\VendorController::class, 'updatePassword'])->name('update.passowrd');
+Route::get('/support-categories', [App\Http\Controllers\Api\SupportCategoryController::class, 'index'])->name('support.categories');
+Route::post('/create-support-ticket', [App\Http\Controllers\Api\SupportCategoryController::class, 'createSupportTicket'])->name('create.support.ticket');
 
 Route::get('sync-members-by-location/{locationId}', [App\Http\Controllers\Api\Vendor\PublicController::class, 'syncMembersByLocation'])->name('sync.member.by.location');
 
