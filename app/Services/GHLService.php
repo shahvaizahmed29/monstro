@@ -7,16 +7,17 @@ use Illuminate\Support\Facades\Http;
 
 class GHLService
 {
-    public function getUser($email){
+    public function getUserWithOwnerRole($email){
         $response = Http::withHeaders([
             'Content-type' => 'application/json',
             'Authorization' => 'Bearer ' . config('services.ghl.agency_key'),
             'Version' => config('services.ghl.api_version'),
-        ])->get(config('services.ghl.api_url') . `users/search?` .$email);
+        ])->get(config('services.ghl.api_url') . `users/search?query=` .$email);
         
         return $response->json();
     }
 
+    
     public function getGhlLocation($location_id){
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . config('services.ghl.agency_key'),
@@ -26,8 +27,13 @@ class GHLService
         if ($response->successful()) {
             $ghl_location_data = $response->json();
             return $ghl_location_data;
+        } else {
+            \Log::info('==== GHL SERVICE - getGhlLocation() =====');
+            \Log::info(json_encode($response->json()));
+            return null;
         }
     }
+
 
     public function updateUser($user_id, $body){
         $response = Http::withHeaders([
@@ -38,8 +44,13 @@ class GHLService
         
         if ($response->successful()) {
             return $response->json();
-        } 
+        } else {
+            \Log::info('==== GHL SERVICE - updateUser() =====');
+            \Log::info(json_encode($response->json()));
+            return null;
+        }
     }
+
 
     public function createContact($email, $password){
         $response = Http::withHeaders([
@@ -55,7 +66,11 @@ class GHLService
         
         if ($response->successful()) {
             return $response->json();
-        } 
+        } else {
+            \Log::info('==== GHL SERVICE - createContact() =====');
+            \Log::info(json_encode($response->json()));
+            return null;
+        }
     }
 
 
@@ -80,6 +95,10 @@ class GHLService
 
         if ($response->successful()) {
             return $response->json();
+        } else {
+            \Log::info('==== GHL SERVICE - createTask() =====');
+            \Log::info(json_encode($response->json()));
+            return null;
         }
     }
 

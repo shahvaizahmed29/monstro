@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('price')->nullable(false);
             $table->integer('setup')->nullable(false);
             $table->decimal('trial', 8, 2)->nullable(false);
-            $table->json('features')->nullable(false)->default('[]');
+            $table->json('features')->nullable(false);
             $table->timestamps();
             $table->softDeletes();
         });

@@ -108,25 +108,25 @@ class SyncGhlLocationsCron extends Command
                         continue;
                     }
                     DB::beginTransaction();
-                    $user = User::where('email', $location['email'])->first();
-                    if(!$user) {
-                        $user = User::create([
-                            'name' => isset($location['name']) ? $location['name']: $location['id'],
-                            'email' => $location['email'],
-                            'password' => bcrypt(str_replace(' ', '', $location['id']).'@2024!'),
-                            'email_verified_at' => now()
-                        ]);
-                        $user->assignRole(\App\Models\User::VENDOR);
-                        $vendor = Vendor::create([
-                            'user_id' => $user->id,
-                            'company_name' => isset($location['name']) ? $location['name'] : $location['id'],
-                            'company_email' => $location['email'],
-                            'company_website' => isset( $location['website']) ?  $location['website'] : '',
-                            'company_address' => isset($location['address']) ? $location['address'] : ''
-                        ]);
-                    } else {
-                        $vendor = $user->vendor;
-                    }
+                    // $user = User::where('email', $location['email'])->first();
+                    // if(!$user) {
+                    //     $user = User::create([
+                    //         'name' => isset($location['name']) ? $location['name']: $location['id'],
+                    //         'email' => $location['email'],
+                    //         'password' => bcrypt(str_replace(' ', '', $location['id']).'@2024!'),
+                    //         'email_verified_at' => now()
+                    //     ]);
+                    //     $user->assignRole(\App\Models\User::VENDOR);
+                    //     $vendor = Vendor::create([
+                    //         'user_id' => $user->id,
+                    //         'company_name' => isset($location['name']) ? $location['name'] : $location['id'],
+                    //         'company_email' => $location['email'],
+                    //         'company_website' => isset( $location['website']) ?  $location['website'] : '',
+                    //         'company_address' => isset($location['address']) ? $location['address'] : ''
+                    //     ]);
+                    // } else {
+                    //     $vendor = $user->vendor;
+                    // }
                     $location = Location::create([
                         'go_high_level_location_id' => $location['id'],
                         'name' => isset($location['name']) ? $location['name'] : $location['id'],
@@ -139,7 +139,7 @@ class SyncGhlLocationsCron extends Command
                         'website' => isset($location['website']) ? $location['website'] : '',
                         'email' => $location['email'],
                         'phone' => isset($location['phone']) ? $location['phone'] : '',
-                        'vendor_id' => $vendor->id,
+                        // 'vendor_id' => $vendor->id,
                         'meta_data' => $location
                     ]);
                     DB::commit();
