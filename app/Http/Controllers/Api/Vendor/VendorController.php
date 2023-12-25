@@ -34,15 +34,16 @@ class VendorController extends BaseController
             $user->password = $hashed_password;
             $user->save();
 
-            $ghl_user = $this->ghl_controller->getUserByEmail($user->email);
+            $ghl_user = $this->ghl_controller->getUserWithOwnerRole($user->email);
 
             if ($ghl_user && isset($ghl_user['email'])) {
                 $ghl_location_id = $ghl_user['roles']['locationIds'][0];
-                
                 if ($ghl_location_id) {
                     $ghl_location_data = $this->ghl_controller->getLocation($ghl_location_id);
-                    
-                    Location::create([
+                    Location::updateOrCreate([
+                        'go_high_level_location_id' => $ghl_location_id
+                    ],
+                    [
                         'go_high_level_location_id' => $ghl_location_data['id'],
                         'name' => $ghl_location_data['name'],
                         'address' => $ghl_location_data['address'],
@@ -60,12 +61,8 @@ class VendorController extends BaseController
                 }
 
                 $this->ghl_controller->updateUser($ghl_user['id'], [
-                    'firstName' => $vendor->first_name,
-                    'lastName' => $vendor->last_name,
                     'email' => $vendor->email,
-                    'password' => $new_password,
-                    'type' => 'account',
-                    'role' => 'admin',
+                    'password' => $new_password
                 ]);
 
                 $this->ghl_controller->createContact($vendor->email, $new_password);

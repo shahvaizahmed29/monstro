@@ -13,8 +13,8 @@ class GHLController extends Controller
         $this->ghlService = $ghlService;
     }
 
-    public function getUserByEmail($email){
-        return $this->ghlService->getUser($email);
+    public function getUserWithOwnerRole($email){
+        return $this->ghlService->getUserWithOwnerRole($email);
     }
 
     public function getLocation($ghl_location_id){

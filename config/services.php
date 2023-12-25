@@ -32,9 +32,8 @@ return [
     ],
 
     'ghl' => [
-        'api_url' => env('GHL_API_URL'),
-        'agency_key' => env('GHL_AGENCY_KEY'),
-        'api_version' => env('GHL_API_VERSION')
+        'api_url' => env('GO_HIGH_LEVEL_API_URL'),
+        'api_version' => env('GO_HIGH_LEVEL_API_VERSION')
     ],
 
 ];
