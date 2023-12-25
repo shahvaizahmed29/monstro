@@ -33,14 +33,20 @@ class Vendor extends Model
         return $this->hasMany(Location::class);
     }
 
-    // public function plan()
-    // {
-    //     return $this->belongsTo(Plan::class);
-    // }
+    public function plan(){
+        return $this->belongsTo(Plan::class);
+    }
 
-    // public function steps()
-    // {
-    //     return $this->hasMany(Step::class);
-    // }
+    public function steps(){
+        return $this->hasMany(ProgressStep::class);
+    }
+
+    public function paymentMethods(){
+        return $this->hasMany(PaymentMethod::class);
+    }
+
+    public function progress(){
+        return $this->hasMany(VendorProgress::class);
+    }
 
 }

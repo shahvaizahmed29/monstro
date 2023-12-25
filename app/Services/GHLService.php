@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\TicketStatus;
+use Exception;
 use Illuminate\Support\Facades\Http;
 
 class GHLService
@@ -80,6 +81,20 @@ class GHLService
 
         if ($response->successful()) {
             return $response->json();
+        }
+    }
+
+    public function updateContact($updates){
+        try {
+            $response = Http::withHeaders([
+                'Content-type' => 'application/json',
+                'Authorization' => 'Bearer ' . config('services.ghl.agency_key'),
+                'Version' => config('services.ghl.api_version'),
+            ])->post(config('services.ghl.api_url') .`contacts`, $updates);
+
+            return $response->json();
+        } catch (Exception $error) {
+           return $error->getMessage();
         }
     }
 

@@ -37,4 +37,9 @@ return [
         'api_version' => env('GHL_API_VERSION')
     ],
 
+    'stripe' => [
+        'public_key' => config('STRIPE_KEY'),
+        'secret_key' => config('STRIPE_SECRET'),
+    ],
+
 ];
