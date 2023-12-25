@@ -119,11 +119,17 @@ class GHLService
         try {
             $response = Http::withHeaders([
                 'Content-type' => 'application/json',
-                'Authorization' => 'Bearer ' . config('services.ghl.agency_key'),
+                'Authorization' => 'Bearer ' . $this->ghlIntegration['value'],
                 'Version' => config('services.ghl.api_version'),
             ])->post(config('services.ghl.api_url') .`contacts`, $updates);
 
-            return $response->json();
+            if ($response->successful()) {
+                return $response->json();
+            } else {
+                Log::info('==== GHL SERVICE - updateContact() =====');
+                Log::info(json_encode($response->json()));
+                return null;
+            }
         } catch (Exception $error) {
            return $error->getMessage();
         }
