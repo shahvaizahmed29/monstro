@@ -32,10 +32,12 @@ class SyncGhlContactsCron extends Command
      */
     public function handle()
     {
-        $token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRoQ2xhc3MiOiJDb21wYW55IiwiYXV0aENsYXNzSWQiOiJaNDl3bWY4ZzM4UXN4ZWRvQmRpRyIsInNvdXJjZSI6IklOVEVHUkFUSU9OIiwic291cmNlSWQiOiI2NTc4Mzk0NTA4MWEzZTEyZjZlMGI0MTEtbHEyOThxa2YiLCJjaGFubmVsIjoiT0FVVEgiLCJwcmltYXJ5QXV0aENsYXNzSWQiOiJaNDl3bWY4ZzM4UXN4ZWRvQmRpRyIsIm9hdXRoTWV0YSI6eyJzY29wZXMiOlsiYnVzaW5lc3Nlcy5yZWFkb25seSIsImJ1c2luZXNzZXMud3JpdGUiLCJjb250YWN0cy5yZWFkb25seSIsImNvbnRhY3RzLndyaXRlIiwibG9jYXRpb25zLndyaXRlIiwibG9jYXRpb25zLnJlYWRvbmx5IiwibG9jYXRpb25zL2N1c3RvbVZhbHVlcy53cml0ZSIsImxvY2F0aW9ucy9jdXN0b21WYWx1ZXMucmVhZG9ubHkiLCJsb2NhdGlvbnMvY3VzdG9tRmllbGRzLnJlYWRvbmx5IiwibG9jYXRpb25zL2N1c3RvbUZpZWxkcy53cml0ZSIsImxvY2F0aW9ucy90YWdzLnJlYWRvbmx5IiwibG9jYXRpb25zL3RhZ3Mud3JpdGUiLCJvcHBvcnR1bml0aWVzLnJlYWRvbmx5Iiwib3Bwb3J0dW5pdGllcy53cml0ZSIsIm9hdXRoLnJlYWRvbmx5Iiwib2F1dGgud3JpdGUiXSwiY2xpZW50IjoiNjU3ODM5NDUwODFhM2UxMmY2ZTBiNDExIiwiY2xpZW50S2V5IjoiNjU3ODM5NDUwODFhM2UxMmY2ZTBiNDExLWxxMjk4cWtmIn0sImlhdCI6MTcwMjM5MDg0My45ODEsImV4cCI6MTcwMjQ3NzI0My45ODF9.g091fh2ivrXGwuoxjp7kiT7PlUWUT82SjLmS5LriJhU';
-        $companyId = 'Z49wmf8g38QsxedoBdiG';
-        // $locations = Location::all();
-        $locations = Location::where('go_high_level_location_id', 'kxsCgZcTUell5zwFkTUc')->get();
+        $ghl_integration = Setting::where('name', 'ghl_integration')->first();
+
+        $token = $ghl_integration['value'];
+        $companyId = $ghl_integration['companyId'];
+        $locations = Location::all();
+        // $locations = Location::where('go_high_level_location_id', 'kxsCgZcTUell5zwFkTUc')->get();
         foreach($locations as $location) {
             try {
                 $tokenObj = Http::withHeaders([
