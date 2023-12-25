@@ -42,4 +42,8 @@ class Location extends Model
         return $this->hasMany(Program::class);
     }
 
+    public function supportTicket(){
+        return $this->hasOne(SupportTicket::class);
+    }
+
 }

@@ -31,4 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'ghl' => [
+        'api_url' => env('GHL_API_URL'),
+        'agency_key' => env('GHL_AGENCY_KEY'),
+        'api_version' => env('GHL_API_VERSION')
+    ],
+
 ];

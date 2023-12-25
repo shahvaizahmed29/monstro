@@ -1,4 +1,4 @@
-<?php
+\<?php
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -43,7 +43,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 //===================================================================================== Vendors Public Routes =============================================================================
 //==================================================================================================================================================================================
 Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],function () {
-    Route::get('get-vendor-locations', [App\Http\Controllers\Api\Vendor\LocationsController::class, 'getVendorLocations'])->name('get.vendor.locations');
     Route::get('get-programs-by-location', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramsByLocation'])->name('get.programs.by.location');
     Route::get('get-programs-by-id/{id}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramById'])->name('get.program.by.id');
     Route::post('add-program', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addProgram'])->name('add.program');
@@ -56,6 +55,13 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::get('get-session-meetings-by-member/{member_id}', [App\Http\Controllers\Api\Vendor\ReservationController::class, 'memberUpcomingMeetings'])->name('get.session.meetings.by.member');
     Route::get('program-level-meetings/{program_level_id}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'programLevelMeetings'])->name('program.level.meetings');
 });
+
+Route::get('vendor/{vendor_id}/locations' , [\App\Http\Controllers\Api\Vendor\LocationsController::class , 'vendorLocations'])->name('vendor.locations');
+Route::put('vendor/{vendor_id}/update-passowrd',[App\Http\Controllers\Api\Vendor\VendorController::class, 'updatePassword'])->name('update.passowrd');
+Route::get('/support-categories', [App\Http\Controllers\Api\SupportCategoryController::class, 'index'])->name('support.categories');
+Route::post('/create-support-ticket', [App\Http\Controllers\Api\SupportCategoryController::class, 'createSupportTicket'])->name('create.support.ticket');
+Route::get('/plans', [App\Http\Controllers\Api\PlansController::class, 'getPlans'])->name('get.plans');
+Route::get('/plans/{name}', [App\Http\Controllers\Api\PlansController::class, 'getPlansByName'])->name('get.plans.by.name');
 
 Route::get('sync-members-by-location/{locationId}', [App\Http\Controllers\Api\Vendor\PublicController::class, 'syncMembersByLocation'])->name('sync.member.by.location');
 
