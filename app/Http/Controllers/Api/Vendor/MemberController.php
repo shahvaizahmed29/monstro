@@ -105,7 +105,7 @@ class MemberController extends BaseController
                 if($programLevel) {
                     try {
                         DB::beginTransaction();
-                        $session = Session::where('program_level_id',$programLevel->id)->latest()->first();
+                        $session = Session::where('program_level_id',$programLevel->id)->where('status', Session::ACTIVE)->latest()->first();
                         $user = User::where('email', $contact['email'])->first();
                         if(!$user) {
                             $user = User::create([
@@ -129,7 +129,7 @@ class MemberController extends BaseController
                         $reservation = Reservation::create([
                             'session_id' => $session->id,
                             'member_id' =>  $member->id,
-                            'status' => \App\Models\Reservation::ACTIVE,
+                            'status' => Reservation::ACTIVE,
                             'start_date' => Carbon::today()->format('Y-m-d'),
                             'end_date' => $session->end_date
                         ]);
@@ -142,6 +142,9 @@ class MemberController extends BaseController
                             'contact' => $contact,
                             'customField' => $customField
                         ];
+                        Log::info('===== Create New Member =====');
+                        Log::info(json_encode($location));
+                        Log::info(json_encode($contact));
                         Log::info($error->getMessage());
                     }
                 }

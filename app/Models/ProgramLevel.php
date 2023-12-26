@@ -29,4 +29,10 @@ class ProgramLevel extends Model
         return $this->hasMany(Session::class);
     }
 
+    public function activeSessions()
+    {
+        return $this->sessions()
+            ->where('status', Session::ACTIVE)->latest()->first();
+    }
+
 }

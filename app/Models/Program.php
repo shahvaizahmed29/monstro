@@ -37,4 +37,46 @@ class Program extends Model
         return $this->belongsToMany(Location::class, 'member_programs', 'program_id', 'member_id');
     }
 
+    public function monthlyRetentionRate()
+    {
+        $currentMonth = now()->startOfMonth();
+        $previousMonth = now()->subMonth()->startOfMonth();
+
+        $newStudents = $this->members()
+            ->whereHas('sessions', function ($query) use ($currentMonth) {
+                $query->where('created_at', '>=', $currentMonth);
+            })
+            ->count();
+
+        $retainedStudents = $this->members()
+            ->whereHas('sessions', function ($query) use ($previousMonth) {
+                $query->where('created_at', '>=', $previousMonth);
+            })
+            ->whereHas('sessions', function ($query) use ($currentMonth) {
+                $query->where('created_at', '<', $currentMonth);
+            })
+            ->count();
+
+        if ($newStudents > 0) {
+            $retentionRate = ($retainedStudents / $newStudents) * 100;
+        } else {
+            $retentionRate = 0;
+        }
+
+        return $retentionRate;
+    }
+
+    public function totalActiveStudents()
+    {
+        return $this->members()
+            ->whereHas('sessions', function ($query) {
+                $query->where('status', Session::ACTIVE);
+            })
+            ->count();
+    }
+
+    public function totalStudents()
+    {
+        return $this->members()->count();
+    }
 }

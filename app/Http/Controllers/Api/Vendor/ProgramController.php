@@ -71,7 +71,7 @@ class ProgramController extends BaseController
             ]);
 
             $parent_id = null;
-            $randomNumberMT = mt_rand(10000, 99999);
+            // $randomNumberMT = mt_rand(10000, 99999);
             foreach($request->sessions as $session){
                 $program_level = ProgramLevel::create([
                     'name' => $session['program_level_name'],
@@ -79,7 +79,7 @@ class ProgramController extends BaseController
                     'parent_id' => $parent_id
                 ]);
                 
-                $program_level->custom_field_ghl_value = $randomNumberMT . '_' . $program_level->id;
+                $program_level->custom_field_ghl_value = $program->id . '_' . $program_level->id;
                 $program_level->save();
                 
 
@@ -100,7 +100,7 @@ class ProgramController extends BaseController
                     'status' => \App\Models\Session::ACTIVE
                 ]);
             }
-            $program = Program::with('programLevels.sessions')->find($program->id);
+            $program = Program::with('programLevels.sessions')->where('id', $program->id)->first();
             return $this->sendResponse(new ProgramResource($program), 'Program created successfully.');
         }catch(Exception $e){
             return $this->sendError($e->getMessage(), [], 500);
@@ -110,45 +110,54 @@ class ProgramController extends BaseController
     public function getProgramDetails($programId){
         try{
             $location = request()->location;
-            $program = Program::where('id', $programId)->first();
+            $program = Program::with('members')->where('id', $programId)->where('location_id', $location->id)->first();
 
             if(!$program){
                 return $this->sendError('Program does not exist.', [], 400);
             }
-            
-            $totalEnrolledStudentsCount = 0;
-            foreach ($program->programLevels as $programLevel) {
-                foreach ($programLevel->sessions as $session) {
-                    $totalEnrolledStudentsCount += $session->reservations()->where('status', \App\Models\Reservation::ACTIVE)->count();
-                }
-            }
 
-            $ProgramLevel = $program->programLevels()->first();
-            $totalSessionCount = 0;
-            ($ProgramLevel) ? $totalSessionCount = $ProgramLevel->sessions()->count() : 0; 
+            $totalStudents = $program->totalStudents();
+            $totalActiveStudents = $program->totalActiveStudents();
+            $monthlyRetentionRate = $program->monthlyRetentionRate();
 
-            $activeStudentsCount = Program::where('id', $programId)
-                ->with([
-                    'programLevels.sessions.reservations' => function ($query) {
-                        $query->whereHas('session', function ($sessionQuery) {
-                            $sessionQuery->where('status', \App\Models\Session::ACTIVE);
-                        });
-                    },
-                ])
-                ->first()
-                ->programLevels
-                ->flatMap(function ($programLevel) {
-                    return $programLevel->sessions->flatMap(function ($session) {
-                        return $session->reservations->pluck('member_id');
-                    });
-                })
-                ->unique()
-                ->count();
+            // foreach ($program->programLevels as $programLevel) {
+            //     foreach ($programLevel->sessions as $session) {
+            //         $totalEnrolledStudentsCount += $session->reservations()->where('status', \App\Models\Reservation::ACTIVE)->count();
+            //     }
+            // }
+
+            // $ProgramLevel = $program->programLevels()->first();
+         
+            // ($ProgramLevel) ? $totalSessionCount = $ProgramLevel->sessions()->count() : 0; 
+
+            // $activeStudentsCount = Program::where('id', $programId)
+            //     ->with([
+            //         'programLevels.sessions.reservations' => function ($query) {
+            //             $query->whereHas('session', function ($sessionQuery) {
+            //                 $sessionQuery->where('status', Session::ACTIVE);
+            //             });
+            //         },
+            //     ])
+            //     ->first()
+            //     ->programLevels
+            //     ->flatMap(function ($programLevel) {
+            //         return $programLevel->sessions->flatMap(function ($session) {
+            //             return $session->reservations->pluck('member_id');
+            //         });
+            //     })
+            //     ->unique()
+            //     ->count();
             
+            // $data = [
+            //     'totalEnrolledStudentsCount' => $totalEnrolledStudentsCount,
+            //     'activeStudentsCount' => $activeStudentsCount,
+            //     'totalSessionCount' => $totalSessionCount
+            // ];
+
             $data = [
-                'totalEnrolledStudentsCount' => $totalEnrolledStudentsCount,
-                'activeStudentsCount' => $activeStudentsCount,
-                'totalSessionCount' => $totalSessionCount
+                'totalStudents' => $totalStudents,
+                'totalActiveStudents' => $totalActiveStudents,
+                'monthlyRetentionRate' => $monthlyRetentionRate
             ];
 
             return $this->sendResponse($data, 'Program related information related to program and location.');
@@ -157,30 +166,23 @@ class ProgramController extends BaseController
         }
     }
 
-    public function programLevelMeetings($programLevelId){
+    public function programLevelActiveSessions($programLevelId){
         try{
-            $programLevel = ProgramLevel::with(['program',
-                'sessions' => function ($query) {
-                    $query->whereDate('start_date', '>=', now()->toDateString());
-                }
-            ])
-            ->where('id', $programLevelId)
-            ->first();
+            $programLevel = ProgramLevel::where('id', $programLevelId)->first();
+            $activeSessions = $programLevel->activeSessions();
+            $formated_sessions = [];
 
-            $meetings = [];
-
-            foreach ($programLevel->sessions as $session) {
+            foreach ($activeSessions as $session) {
                 $startTime = Carbon::parse($session->start_date)->addHours($session->time);
                 $endTime = $startTime->copy()->addHours($session->duration_time);
-
-                $meetings[] = [
+                $formated_sessions[] = [
                     'title' => $programLevel->program->name,
                     'start' => $startTime->format('Y-m-d\TH:i:s'),
                     'end' => $endTime->format('Y-m-d\TH:i:s'),
                 ];
             }
 
-            return $meetings;
+            return $formated_sessions;
         }catch(Exception $e){
             return $this->sendError($e->getMessage(), [], 500);
         }
