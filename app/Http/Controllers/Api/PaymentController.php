@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Vendor\VendorController;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\DepositRequest;
+use App\Http\Resources\Vendor\VendorResource;
 use App\Models\PaymentMethod;
 use App\Models\User;
 use App\Models\VendorProgress;
@@ -47,6 +48,7 @@ class PaymentController extends BaseController
             $coupon = $request->input('coupon');
             $plan = $request->input('plan');
             $token = $request->input('token');
+            $stripeToken = $request->input('stripeToken');
 
             $setupFee = $plan['setup'] * 100;
             $planName = strtolower($plan['name']);
@@ -65,13 +67,13 @@ class PaymentController extends BaseController
                 $customerId = null;
 
                 if(!$stripe_customer_id){
-                    $customer = $this->stripeService->createCustomer($vendor, $token);
+                    $customer = $this->stripeService->createCustomer($vendor, $stripeToken);
                     $customerId = $customer['id'];
                 }else{
                     $customerId = $user->vendor->paymentMethods()->latest('created_at')->first()->stripe_customer_id;
                 }
             }else{
-                $customer = $this->stripeService->createCustomer($vendor, $token);
+                $customer = $this->stripeService->createCustomer($vendor, $stripeToken);
                 $customerId = $customer['id'];
                 $user = $this->createUser($vendor);
                 $newVendor = $this->vendor_controller->createVendor($user, $vendor, $plan);
@@ -107,7 +109,7 @@ class PaymentController extends BaseController
 
                 $this->ghlService->updateContact($updates);
                 DB::commit();
-                return $this->sendResponse($vendor, 'Subscription successfull.');
+                return $this->sendResponse(new VendorResource($vendor), 'Subscription successfull.');
             } else {
                 return $this->sendError('Payment declined.', [], 500);
             }
