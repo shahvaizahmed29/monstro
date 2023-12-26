@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\GHLController;
 use App\Models\Location;
 use App\Models\Vendor;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -73,6 +74,25 @@ class VendorController extends BaseController
 
         } catch (\Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function createVendor($user, $vendor, $plan){
+        try{
+            $newVendor = Vendor::create([
+                'first_name' => $vendor['firstName'],
+                'last_name' => isset($vendor['lastName'])? $vendor['lastName'] : null,
+                'go_high_level_location_id' => $vendor['ghlId'],
+                'user_id' => $user->id,
+                'company_name' => $vendor['firstName'].' '.isset($vendor['lastName'])? $vendor['lastName'] : null,
+                'company_email' => $vendor['email'],
+                'plan_id' => $plan['id'],
+                'phone_number' => $vendor['phone'],
+            ]);
+
+            return $newVendor;
+        }catch (Exception $error) {
+            return $error->getMessage();
         }
     }
 

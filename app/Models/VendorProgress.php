@@ -10,6 +10,14 @@ class VendorProgress extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'progress_step_id',
+        'vendor_id',
+        'active',
+        'completed',
+        'tasks_completed',
+    ];
+
     public function vendor(){
         return $this->belongsTo(Vendor::class);
     }

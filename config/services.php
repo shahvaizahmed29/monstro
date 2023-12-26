@@ -37,8 +37,8 @@ return [
     ],
 
     'stripe' => [
-        'public_key' => config('STRIPE_KEY'),
-        'secret_key' => config('STRIPE_SECRET'),
+        'public_key' => env('STRIPE_KEY'),
+        'secret_key' => env('STRIPE_SECRET'),
     ],
 
 ];

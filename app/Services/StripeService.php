@@ -10,7 +10,8 @@ class StripeService
     protected $stripe;
 
     public function __construct(){
-        $this->stripe = new \Stripe\StripeClient(config('services.stripe.secret_key'));
+        \Stripe\Stripe::setApiKey(config('services.stripe.secret_key'));
+        $this->stripe = new \Stripe\StripeClient();
     }
 
     public function createCustomer($vendor, $token){
