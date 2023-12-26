@@ -20,19 +20,6 @@ class PlansController extends BaseController
                 return $this->sendError("No plans found", [], 400);
             }
 
-            // $data = [
-            //     'plans' => PlanResource::collection($plans),
-            //     'pagination' => [
-            //         'current_page' => $plans->currentPage(),
-            //         'per_page' => $plans->perPage(),
-            //         'total' => $plans->total(),
-            //         'prev_page_url' => $plans->previousPageUrl(),
-            //         'next_page_url' => $plans->nextPageUrl(),
-            //         'first_page_url' => $plans->url(1),
-            //         'last_page_url' => $plans->url($plans->lastPage()),
-            //     ],
-            // ];
-
             return $this->sendResponse(PlanResource::collection($plans), 'Plans fetched successfully');
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
@@ -46,19 +33,6 @@ class PlansController extends BaseController
             if($plans->isEmpty()) {
                 return $this->sendError("No plans found", [], 400);
             }
-
-            // $data = [
-            //     'plans' => PlanResource::collection($plans),
-            //     'pagination' => [
-            //         'current_page' => $plans->currentPage(),
-            //         'per_page' => $plans->perPage(),
-            //         'total' => $plans->total(),
-            //         'prev_page_url' => $plans->previousPageUrl(),
-            //         'next_page_url' => $plans->nextPageUrl(),
-            //         'first_page_url' => $plans->url(1),
-            //         'last_page_url' => $plans->url($plans->lastPage()),
-            //     ],
-            // ];
             
             return $this->sendResponse(PlanResource::collection($plans), 'Plans fetched successfully');
         } catch (Exception $error) {
