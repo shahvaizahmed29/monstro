@@ -1,4 +1,4 @@
-\<?php
+<?php
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -64,6 +64,13 @@ Route::get('/plans', [App\Http\Controllers\Api\PlansController::class, 'getPlans
 Route::get('/plans/{name}', [App\Http\Controllers\Api\PlansController::class, 'getPlansByName'])->name('get.plans.by.name');
 Route::get('/steps', [App\Http\Controllers\Api\StepsController::class, 'getSteps'])->name('get.steps');
 Route::get('/step/{step_id}', [App\Http\Controllers\Api\StepsController::class, 'getSingleStep'])->name('get.single.steps');
+
+//==================================================================================================================================================================================
+//===================================================================================== Payment Routes Below =============================================================================
+//==================================================================================================================================================================================
+
+Route::post('/deposit', [App\Http\Controllers\Api\PaymentController::class, 'deposit'])->name('payment.deposit');
+Route::post('/subscribe', [App\Http\Controllers\Api\PaymentController::class, 'subscribe'])->name('payment.subscribe');
 
 Route::get('sync-members-by-location/{locationId}', [App\Http\Controllers\Api\Vendor\PublicController::class, 'syncMembersByLocation'])->name('sync.member.by.location');
 

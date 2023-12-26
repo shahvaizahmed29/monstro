@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Enums\TicketStatus;
+use Exception;
 use Illuminate\Support\Facades\Http;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Log;
 
 class GHLService
 {
@@ -39,8 +41,8 @@ class GHLService
             $ghl_location_data = $response->json();
             return $ghl_location_data;
         } else {
-            \Log::info('==== GHL SERVICE - getGhlLocation() =====');
-            \Log::info(json_encode($response->json()));
+            Log::info('==== GHL SERVICE - getGhlLocation() =====');
+            Log::info(json_encode($response->json()));
             return null;
         }
     }
@@ -56,8 +58,8 @@ class GHLService
         if ($response->successful()) {
             return $response->json();
         } else {
-            \Log::info('==== GHL SERVICE - updateUser() =====');
-            \Log::info(json_encode($response->json()));
+            Log::info('==== GHL SERVICE - updateUser() =====');
+            Log::info(json_encode($response->json()));
             return null;
         }
     }
@@ -78,8 +80,8 @@ class GHLService
         if ($response->successful()) {
             return $response->json();
         } else {
-            \Log::info('==== GHL SERVICE - createContact() =====');
-            \Log::info(json_encode($response->json()));
+            Log::info('==== GHL SERVICE - createContact() =====');
+            Log::info(json_encode($response->json()));
             return null;
         }
     }
@@ -107,9 +109,31 @@ class GHLService
         if ($response->successful()) {
             return $response->json();
         } else {
-            \Log::info('==== GHL SERVICE - createTask() =====');
-            \Log::info(json_encode($response->json()));
+            Log::info('==== GHL SERVICE - createTask() =====');
+            Log::info(json_encode($response->json()));
             return null;
         }
     }
+
+    public function updateContact($updates){
+        try {
+            $response = Http::withHeaders([
+                'Content-type' => 'application/json',
+                'Authorization' => 'Bearer ' . $this->ghlIntegration['value'],
+                'Version' => config('services.ghl.api_version'),
+            ])->post(config('services.ghl.api_url') .`contacts`, $updates);
+
+            if ($response->successful()) {
+                return $response->json();
+            } else {
+                Log::info('==== GHL SERVICE - updateContact() =====');
+                Log::info(json_encode($response->json()));
+                return null;
+            }
+        } catch (Exception $error) {
+           return $error->getMessage();
+        }
+    }
+
+
 }
