@@ -82,7 +82,7 @@ class VendorController extends BaseController
             $newVendor = Vendor::create([
                 'first_name' => $vendor['firstName'],
                 'last_name' => isset($vendor['lastName'])? $vendor['lastName'] : null,
-                'go_high_level_location_id' => $vendor['ghlId'],
+                'go_high_level_location_id' => isset($vendor['ghlId']) ? $vendor['ghlId'] : null,
                 'user_id' => $user->id,
                 'company_name' => $vendor['firstName'].' '.isset($vendor['lastName'])? $vendor['lastName'] : null,
                 'company_email' => $vendor['email'],

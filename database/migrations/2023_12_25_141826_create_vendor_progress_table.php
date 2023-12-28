@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('vendor_progress', function (Blueprint $table) {
             $table->id(); 
-            $table->integer('progress_step_id');
+            $table->unsignedBigInteger('progress_step_id');
             $table->unsignedBigInteger('vendor_id');
             $table->boolean('active')->default(false);
             $table->boolean('completed')->default(false);
             $table->json('tasks_completed')->default('[]');
             $table->timestamps();
-
-            // $table->foreign('progress_step_id')->references('id')->on('progress_steps');
+        
+            $table->foreign('progress_step_id')->references('id')->on('progress_steps');
             $table->foreign('vendor_id')->references('id')->on('vendors');
         });        
     }

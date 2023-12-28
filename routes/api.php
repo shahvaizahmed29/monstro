@@ -68,8 +68,8 @@ Route::get('/step/{step_id}', [App\Http\Controllers\Api\StepsController::class, 
 //==================================================================================================================================================================================
 //===================================================================================== Payment Routes Below =============================================================================
 //==================================================================================================================================================================================
-Route::post('/deposit', [App\Http\Controllers\Api\PaymentController::class, 'deposit'])->name('payment.deposit');
-Route::post('/subscribe', [App\Http\Controllers\Api\PaymentController::class, 'subscribe'])->name('payment.subscribe');
+Route::post('payments/deposit', [App\Http\Controllers\Api\PaymentController::class, 'deposit'])->name('payment.deposit');
+Route::post('payments/subscribe', [App\Http\Controllers\Api\PaymentController::class, 'subscribe'])->name('payment.subscribe');
 
 
 

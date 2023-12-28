@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('vendors', function (Blueprint $table) {
             $table->string('first_name');
             $table->string('last_name')->nullable();
-            $table->string('go_high_level_location_id')->unique();
+            $table->string('go_high_level_location_id')->nullable()->unique();
             $table->foreignId('plan_id')->constrained()->onDelete('cascade');
             $table->string('pin')->nullable();
             $table->string('phone_number')->nullable();
