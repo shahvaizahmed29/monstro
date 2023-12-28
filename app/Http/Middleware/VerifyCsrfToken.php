@@ -13,6 +13,7 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         'public/store-ghl-location',
-        'api/payments/subscribe'
+        'api/payments/subscribe',
+        'api/payments/deposit'
     ];
 }

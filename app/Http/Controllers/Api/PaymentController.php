@@ -33,7 +33,7 @@ class PaymentController extends BaseController
             $vendor = $request->input('owner');
             $token = $request->input('token');
 
-            $customer = $this->stripeService->createCustomer($vendor, $token);
+            $customer = $this->stripeService->createCustomer($vendor, $token['id']);
             $this->stripeService->setupIntents($customer, $token);
 
             return $this->sendResponse('Success', 'Stripe customer created successfully.');
@@ -78,7 +78,9 @@ class PaymentController extends BaseController
                 $newVendor = $this->vendor_controller->createVendor($user, $vendor, $plan);
             }
 
-            $clientSecret = $this->stripeService->createPaymentIntent($setupFee, $customerId, $token['card']['id']);
+            $paymentMethod = $this->stripeService->getPaymentMethods($customerId);
+            $this->stripeService->attachPaymentMethod($customerId, $paymentMethod->data[0]->id);
+            $clientSecret = $this->stripeService->createPaymentIntent($setupFee, $customerId, $paymentMethod->data[0]->id);
             $subscriptionStatus = $this->stripeService->createSubscription($plan['name'], $plan['cycle'], $customerId);
 
             if ($clientSecret && $subscriptionStatus) {

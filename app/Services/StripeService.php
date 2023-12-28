@@ -26,14 +26,34 @@ class StripeService
         return $customer;
     }
 
-    public function setupIntents($customer, $token){
+    public function setupIntents($customerId, $token){
+            $stripe = new \Stripe\StripeClient(['api_key' => config('services.stripe.secret_key')]);
+            $setupIntents = $stripe->setupIntents->create([
+                'customer' => $customerId,
+                'payment_method' => $token['card']['id']
+            ]);
+
+            return $setupIntents;
+    }
+
+    public function getPaymentMethods($customerId){
         $stripe = new \Stripe\StripeClient(['api_key' => config('services.stripe.secret_key')]);
-        $setupIntents = $stripe->setupIntents->create([
-            'customer' => $customer->id,
-            'payment_method' => $token['card']['id']
+        $paymentMethod = $stripe->paymentMethods->all([
+            'type' => 'card',
+            'limit' => 1,
+            'customer' => $customerId,
         ]);
 
-        return $setupIntents;
+        return $paymentMethod;
+    }
+
+    public function attachPaymentMethod($customerId, $paymentMethodId){
+        $stripe = new \Stripe\StripeClient(['api_key' => config('services.stripe.secret_key')]);
+        $attachPaymentMethod = $stripe->paymentMethods->attach(
+            $paymentMethodId,
+            ['customer' => $customerId]
+        );
+        return $attachPaymentMethod;
     }
 
     public function createPaymentIntent($amount, $customerId, $cardId){
@@ -46,25 +66,22 @@ class StripeService
             'customer' => $customerId,
             'setup_future_usage' => 'off_session',
             'statement_descriptor' => 'mymonstro.com',
-            // 'payment_method' => $cardId,
+            'payment_method' => $cardId,
             'return_url' => 'https://mymonstro.com',
         ]);
 
         return $paymentIntent;
     }
 
-    public function createSubscription($plan, $cycle, $customer){
+    public function createSubscription($plan, $cycle, $customerId){
         try {
+            $subscriptionObject = [
+                'customer' => $customerId,
+                'description' => "Thanks for subscribing to Monstro. For support email help@mymonstro.com."
+            ];
             $subscriptionParams = $this->getSubscriptionParams($plan, $cycle);
-            $subscription = Subscription::create([
-                'customer' => $customer->id,
-                'items' => [
-                    [
-                        'price' => $subscriptionParams['price'],
-                        'quantity' => $subscriptionParams['quantity'],
-                    ],
-                ],
-            ]);
+            $subscriptionObject = [...$subscriptionObject, ...$subscriptionParams];
+            $subscription = Subscription::create($subscriptionObject);
             return $subscription;
         } catch (Exception $error) {
             return $error->getMessage();
