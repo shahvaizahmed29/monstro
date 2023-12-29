@@ -12,13 +12,21 @@ class CheckLocationId
         $requestLocationId = $request->header('Locationid');
 
         if (!$requestLocationId) {
-            return response()->json(['error' => 'Location Id not provided'], 400);
+            $response = [
+                'success' => false,
+                'message' => 'Location Id not provided in header',
+            ];
+            return response()->json($response, 400);
         }
 
         $location = Location::where('go_high_level_location_id', $requestLocationId)->first();
 
         if (!$location) {
-            return response()->json(['error' => 'Location Id not found'], 400);
+            $response = [
+                'success' => false,
+                'message' => 'Location Id not found',
+            ];
+            return response()->json($response, 400);
         }
 
         // Pass the $locationId variable to the request
