@@ -42,13 +42,13 @@ class Program extends Model
         $currentMonth = now()->startOfMonth();
         $previousMonth = now()->subMonth()->startOfMonth();
 
-        $newStudents = $this->members()
+        $newStudents = $this->programLevels()
             ->whereHas('sessions', function ($query) use ($currentMonth) {
                 $query->where('created_at', '>=', $currentMonth);
             })
             ->count();
 
-        $retainedStudents = $this->members()
+        $retainedStudents = $this->programLevels()
             ->whereHas('sessions', function ($query) use ($previousMonth) {
                 $query->where('created_at', '>=', $previousMonth);
             })
@@ -68,7 +68,7 @@ class Program extends Model
 
     public function totalActiveStudents()
     {
-        return $this->members()
+        return $this->programLevels()
             ->whereHas('sessions', function ($query) {
                 $query->where('status', Session::ACTIVE);
             })
