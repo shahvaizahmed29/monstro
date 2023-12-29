@@ -94,9 +94,9 @@ class StripeService
             'lite' => [
                 'month' => [
                     'items' => [
-                        ['price' => 'price_1ORZbhJ7qtdSRbE22L5M4wtz'],
+                        ['price' => 'price_1OSh8vJ7qtdSRbE2ODjgFPwK'],
                     ],
-                    'coupon' => '3mv0meNa',
+                    // 'coupon' => '3mv0meNa',
                 ],
             ],
             'standard' => [
@@ -110,13 +110,13 @@ class StripeService
             'scale' => [
                 'month' => [
                     'items' => [
-                        ['price' => 'price_1ORZkGJ7qtdSRbE2dMDUxAKY'],
+                        ['price' => 'price_1OSh9XJ7qtdSRbE2TaSWSGTn'],
                     ],
                     'trial_period_days' => 14,
                 ],
                 'annual' => [
                     'items' => [
-                        ['price' => 'price_1ORZkGJ7qtdSRbE2vAIsBSUG'],
+                        ['price' => 'price_1OSh9rJ7qtdSRbE2Zc8AaOcC'],
                     ],
                     'trial_period_days' => 0,
                 ],
