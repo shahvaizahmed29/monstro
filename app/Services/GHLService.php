@@ -80,6 +80,22 @@ class GHLService
         }
     }
 
+    public function upsertContact($data){
+        $locationObj = $this->generateLocationLevelKey($data['locationId']);
+        $response = Http::withHeaders([
+            'Content-type' => 'application/json',
+            'Authorization' => 'Bearer ' . $locationObj['access_token'],
+            'Version' => config('services.ghl.api_version'),
+        ])->post(config('services.ghl.api_url') .'contacts/upsert', $data);
+
+        if ($response->successful()) {
+            return $response->json();
+        } else {
+            Log::info('==== GHL SERVICE - createContact() =====');
+            Log::info($response->body());
+            return null;
+        }
+    }
 
     public function createTask($contact, $ticket){
         $response =  Http::withHeaders([
