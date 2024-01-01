@@ -45,7 +45,7 @@ class PaymentController extends BaseController
 
     public function subscribe(Request $request){
         try {
-            $vendor = $request->input('owner');
+            $vendorInput = $request->input('owner');
             $coupon = $request->input('coupon');
             $plan = $request->input('plan');
             $token = $request->input('token');
@@ -60,22 +60,33 @@ class PaymentController extends BaseController
             $setupFee = ($setupFee === 0) ? 100 : $setupFee;
             
             $stripeCustomerId = null;
+            $vendor = null;
+            $user = User::with('vendor')->where('email', $vendorInput['email'])->first();
 
             DB::beginTransaction();
-            $user = User::where('email', $vendor['email'])->first();
-
             if($user){
                 $stripeCustomerId = $user->vendor->stripe_customer_id;
-                if(!$stripeCustomerId){
-                    $stripeCustomer = $this->stripeService->createCustomer($vendor, $token['id']);
-                    $stripeCustomerId = $stripeCustomer['id'];
-                }
+                $vendor = $user->vendor;
             }else{
-                $stripeCustomer = $this->stripeService->createCustomer($vendor, $token['id']);
+                $stripeCustomer = $this->stripeService->createCustomer($vendorInput, $token['id']);
                 $stripeCustomerId = $stripeCustomer['id'];
-                $user = $this->createUser($vendor);
-                $vendor['stripe_customer_id'] = $stripeCustomerId;
-                $newVendor = $this->vendor_controller->createVendor($user, $vendor, $plan);
+                $password = str_replace(' ', '', $vendorInput['firstName']).'@'.Carbon::now()->year.'!';
+                $user = User::create([
+                    'name' => $vendorInput['firstName'] .$vendorInput['lastName'],
+                    'email' => $vendorInput['email'],
+                    'password' => bcrypt($password),
+                    'email_verified_at' => now()
+                ]);
+                
+                $vendor = Vendor::create([
+                    'go_high_level_user_id' => null,
+                    'user_id' => $user->id,
+                    'company_name' => $vendorInput['firstName'].' '.isset($vendorInput['lastName'])? $vendorInput['lastName'] : null,
+                    'company_email' => $vendorInput['email'],
+                    'plan_id' => $plan['id'],
+                    'phone_number' => $vendorInput['phone'],
+                    'stripe_customer_id' => $stripeCustomerId
+                ]);    
             }
 
             $paymentMethod = $this->stripeService->getPaymentMethods($stripeCustomerId);
@@ -84,12 +95,10 @@ class PaymentController extends BaseController
             $subscriptionStatus = $this->stripeService->createSubscription($plan['name'], $plan['cycle'], $stripeCustomerId);
 
             if ($clientSecret && $subscriptionStatus) {
-                // PaymentMethod::create(['vendor_id' => isset($newVendor->id) ? $newVendor->id : $user->vendor->id, 'stripe_customer_id' => $customerId]);
-                
                 $steps = [];
                 for ($i = 1; $i <= 5; $i++) {
                     $steps[] = [
-                        'vendor_id' => isset($newVendor->id) ? $newVendor->id : $user->vendor->id,
+                        'vendor_id' => $vendor->id,
                         'progress_step_id' => $i,
                         'active' => ($i === 1),
                     ];
@@ -98,7 +107,6 @@ class PaymentController extends BaseController
                 VendorProgress::insert($steps);
 
                 $tags = ["new lead", "booked appointment", "customer"];
-                $vendor = isset($newVendor) ? $newVendor : $user->vendor;
                 $contactData = [
                     'locationId' => 'kxsCgZcTUell5zwFkTUc', //Main Location To Manage All Users
                     'email' => $vendor->company_email,
@@ -106,15 +114,14 @@ class PaymentController extends BaseController
                     'lastName' => $vendor->last_name,
                     'tags' => $tags,
                     'customFields' => [[
-                        'plan_type' => $planName,
-                        'onboarding' => "https://join.mymonstro.com/onboarding/{$vendor->id}",
+                        'key' => 'plan_type',
+                        'field_value' => $planName
+                    ],[
+                        'key' => 'onboarding',
+                        'field_value' => "https://join.mymonstro.com/onboarding/{$vendor->id}"
                     ]],
                 ];
-
                 $ghlContact = $this->ghlService->createContact($contactData);
-                Vendor::where('id', $vendor->id)->update([
-                    'go_high_level_location_id' => $ghlContact['contact']['id']
-                ]);
                 DB::commit();
                 return $this->sendResponse($vendor->id, 'Subscription successfull.');
             } else {
@@ -125,23 +132,6 @@ class PaymentController extends BaseController
             \Log::info('===== PaymentController - subscribe() - error =====');
             \Log::info($error->getMessage());
             return $this->sendError($error->getMessage(), [], 500);
-        }
-    }
-
-    public function createUser($user){
-        try{
-            $password = str_replace(' ', '', $user['firstName']).'@'.Carbon::now()->year.'!';
-
-            $user = User::create([
-                'name' => $user['firstName'] .$user['lastName'],
-                'email' => $user['email'],
-                'password' => bcrypt($password),
-                'email_verified_at' => now()
-            ]);
-            
-            return $user;
-        }catch (Exception $error) {
-            return $error->getMessage();
         }
     }
 

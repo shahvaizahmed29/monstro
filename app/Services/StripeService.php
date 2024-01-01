@@ -16,12 +16,23 @@ class StripeService
 
     public function createCustomer($vendor, $token){
         $stripe = new \Stripe\StripeClient(['api_key' => config('services.stripe.secret_key')]);
-        $customer = $stripe->customers->create([
-            'name' => $vendor['firstName'] . ' ' . $vendor['lastName'],
-            'email' => $vendor['email'],
-            'phone' => $vendor['phone'],
-            'source' => $token
+
+        $oldCustomer = $stripe->customers->search([
+            'query' => 'email:\'' . $vendor['email'] . '\''
         ]);
+        
+      
+        if(count($oldCustomer['data'])) {
+            $customer = $oldCustomer['data'][0];
+        } else {
+            $customer = $stripe->customers->create([
+                'name' => $vendor['firstName'] . ' ' . $vendor['lastName'],
+                'email' => $vendor['email'],
+                'phone' => $vendor['phone'],
+                'source' => $token
+            ]);
+        }
+
 
         return $customer;
     }

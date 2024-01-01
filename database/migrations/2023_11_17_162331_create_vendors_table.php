@@ -14,12 +14,15 @@ return new class extends Migration
         Schema::create('vendors', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('company_name');
+            $table->string('go_high_level_user_id')->nullable()->unique();
+            $table->text('stripe_customer_id')->nullable();
+            $table->string('company_name')->nullable();
             $table->string('company_email');
             $table->longText('company_website')->nullable();
             $table->longText('company_address')->nullable();
-            $table->text('stripe_customer_id')->nullable();
             $table->string('logo')->nullable();
+            $table->foreignId('plan_id')->constrained()->onDelete('cascade');
+            $table->string('phone_number')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

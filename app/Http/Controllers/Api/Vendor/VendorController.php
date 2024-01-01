@@ -32,9 +32,7 @@ class VendorController extends BaseController
 
             $new_password = $request->input('password');
             $hashed_password = Hash::make($new_password);
-            $user->password = $hashed_password;
-            $user->save();
-
+           
             $ghl_user_response = $this->ghl_controller->getUserWithTypeAndRole($user->email,'account','admin');
             
             if(count($ghl_user_response['users']) == 0 || !isset($ghl_user_response['users'])) {
@@ -68,6 +66,13 @@ class VendorController extends BaseController
                     ]);
                 }
 
+                $vendor->company_name = $ghl_location_data['name'];
+                $vendor->company_email = $ghl_location_data['email'];
+                $vendor->company_website = isset($ghl_location_data['website']) ? $ghl_location_data['website'] : null;
+                $vendor->company_address = isset($ghl_location_data['address']) ? $ghl_location_data['address'] : null;
+                $vendor->go_high_level_user_id = $ghl_user['id'];
+                $vendor->save();
+
                 $this->ghl_controller->updateUser($ghl_user['id'], [
                     'email' => $vendor->email,
                     'password' => $new_password
@@ -75,39 +80,19 @@ class VendorController extends BaseController
                 
                 $updateContact = [
                     'locationId' => 'kxsCgZcTUell5zwFkTUc', //Main Location To Manage All Users
-                    'email' => $vendor->email,
+                    'email' => $vendor->company_email,
                     'customFields' => [[
-                        'password' => $new_password
+                        'key' => 'password',
+                        'field_value' => $new_password
                     ]],
                 ];
-                $this->ghl_controller->updateContact($vendor->go_high_level_location_id, $updateContact);
+                $this->ghl_controller->upsertContact($updateContact);
                 return $this->sendResponse('Success', 'Password set successfully');
             }else{
                 return $this->sendError('Error setting contact up your password. Please email support help@mymonstro.com', [], 400);
             }
-
         } catch (\Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
-
-    public function createVendor($user, $vendor, $plan){
-        try{
-            $newVendor = Vendor::create([
-                'first_name' => $vendor['firstName'],
-                'last_name' => isset($vendor['lastName'])? $vendor['lastName'] : null,
-                'go_high_level_location_id' => isset($vendor['ghlId']) ? $vendor['ghlId'] : null,
-                'user_id' => $user->id,
-                'company_name' => $vendor['firstName'].' '.isset($vendor['lastName'])? $vendor['lastName'] : null,
-                'company_email' => $vendor['email'],
-                'plan_id' => $plan['id'],
-                'phone_number' => $vendor['phone'],
-            ]);
-
-            return $newVendor;
-        }catch (Exception $error) {
-            return $error->getMessage();
-        }
-    }
-
 }

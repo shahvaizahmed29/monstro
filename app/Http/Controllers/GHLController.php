@@ -33,6 +33,10 @@ class GHLController extends Controller
         return $this->ghlService->createContact($data);
     }
 
+    public function upsertContact($data){
+        return $this->ghlService->upsertContact($data);
+    }
+
     public function createTask($contact, $ticket){
         return $this->ghlService->createTask($contact, $ticket);
     }
