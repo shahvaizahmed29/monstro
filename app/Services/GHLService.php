@@ -18,15 +18,13 @@ class GHLService
         $this->ghlIntegration = $ghlIntegration;
     }
 
-    public function getUserWithOwnerRole($email){
-      
-
+    public function getUserWithTypeAndRole($email,$type,$role){
+        $companyId = $this->ghlIntegration['meta_data']['companyId'];
         $response = Http::withHeaders([
             'Content-type' => 'application/json',
             'Authorization' => 'Bearer ' . $this->ghlIntegration['value'],
             'Version' => config('services.ghl.api_version'),
-        ])->get(config('services.ghl.api_url') . `users/search?query=` .$email);
-        
+        ])->get(config('services.ghl.api_url') . "users/search?companyId={$companyId}&role={$role}&type={$type}&query={$email}");
         return $response->json();
     }
 
@@ -35,11 +33,10 @@ class GHLService
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->ghlIntegration['value'],
             'Version' => config('services.ghl.api_version'),
-        ])->get(config('services.ghl.api_url') .`locations/{$location_id}`);
+        ])->get(config('services.ghl.api_url') ."locations/{$location_id}");
 
         if ($response->successful()) {
-            $ghl_location_data = $response->json();
-            return $ghl_location_data;
+            return $response->json();
         } else {
             Log::info('==== GHL SERVICE - getGhlLocation() =====');
             Log::info(json_encode($response->json()));
@@ -49,11 +46,12 @@ class GHLService
 
 
     public function updateUser($user_id, $body){
+        $body['companyId'] = $this->ghlIntegration['meta_data']['companyId'];
         $response = Http::withHeaders([
             'Content-type' => 'application/json',
             'Authorization' => 'Bearer ' . $this->ghlIntegration['value'],
             'Version' => config('services.ghl.api_version'),
-        ])->put(config('services.ghl.api_url') .`users/{$user_id}`, $body);
+        ])->put(config('services.ghl.api_url') ."users/{$user_id}", $body);
         
         if ($response->successful()) {
             return $response->json();
@@ -71,16 +69,13 @@ class GHLService
             'Content-type' => 'application/json',
             'Authorization' => 'Bearer ' . $locationObj['access_token'],
             'Version' => config('services.ghl.api_version'),
-        ])->post(config('services.ghl.api_url') .'contacts', $data);
-        
+        ])->post(config('services.ghl.api_url') .'contacts/', $data);
+
         if ($response->successful()) {
             return $response->json();
         } else {
             Log::info('==== GHL SERVICE - createContact() =====');
-            Log::info(json_encode($response->json()));
-            Log::info($locationObj['access_token']);
-            Log::info(json_encode($data));
-            Log::info(config('services.ghl.api_url') .'contacts/');
+            Log::info($response->body());
             return null;
         }
     }
@@ -91,7 +86,7 @@ class GHLService
             'Content-type' => 'application/json',
             'Authorization' => 'Bearer ' . $this->ghlIntegration['value'],
             'Version' => config('services.ghl.api_version'),
-        ])->post(config('services.ghl.api_url') .`contacts/`, [
+        ])->post(config('services.ghl.api_url') ."contacts/", [
             'name' => $contact['name'],
             'email' => $contact['email'],
             'customField' => [
@@ -114,13 +109,16 @@ class GHLService
         }
     }
 
-    public function updateContact($data, $contactId){
+    public function updateContact($id, $data){
+
         try {
+            $locationObj = $this->generateLocationLevelKey($data['locationId']);
+            unset($data['locationId']);
             $response = Http::withHeaders([
                 'Content-type' => 'application/json',
-                'Authorization' => 'Bearer ' . $this->ghlIntegration['value'],
+                'Authorization' => 'Bearer ' . $locationObj['access_token'],
                 'Version' => config('services.ghl.api_version'),
-            ])->put(config('services.ghl.api_url') .`contacts/$contactId`, $data);
+            ])->put(config('services.ghl.api_url') ."contacts/$id", $data);
 
             if ($response->successful()) {
                 return $response->json();
@@ -130,7 +128,7 @@ class GHLService
                 return null;
             }
         } catch (Exception $error) {
-           return $error->getMessage();
+           return $response->throw();
         }
     }
 

@@ -8,6 +8,7 @@ use App\Http\Requests\DepositRequest;
 use App\Http\Resources\Vendor\VendorResource;
 use App\Models\PaymentMethod;
 use App\Models\User;
+use App\Models\Vendor;
 use App\Models\VendorProgress;
 use App\Services\GHLService;
 use App\Services\StripeService;
@@ -58,40 +59,32 @@ class PaymentController extends BaseController
 
             $setupFee = ($setupFee === 0) ? 100 : $setupFee;
             
+            $stripeCustomerId = null;
+
             DB::beginTransaction();
             $user = User::where('email', $vendor['email'])->first();
 
             if($user){
-                $stripe_customer_id = $user->vendor->stripe_customer_id;
-                $customerId = null;
-
-                if(!$stripe_customer_id){
-                    $customer = $this->stripeService->createCustomer($vendor, $token['id']);
-                    $customerId = $customer['id'];
-                }else{
-                    $customerId = $user->vendor->stripe_customer_id;
+                $stripeCustomerId = $user->vendor->stripe_customer_id;
+                if(!$stripeCustomerId){
+                    $stripeCustomer = $this->stripeService->createCustomer($vendor, $token['id']);
+                    $stripeCustomerId = $stripeCustomer['id'];
                 }
             }else{
-                $customer = $this->stripeService->createCustomer($vendor, $token['id']);
-                $customerId = $customer['id'];
+                $stripeCustomer = $this->stripeService->createCustomer($vendor, $token['id']);
+                $stripeCustomerId = $stripeCustomer['id'];
                 $user = $this->createUser($vendor);
+                $vendor['stripe_customer_id'] = $stripeCustomerId;
                 $newVendor = $this->vendor_controller->createVendor($user, $vendor, $plan);
             }
 
-            $paymentMethod = $this->stripeService->getPaymentMethods($customerId);
-            $this->stripeService->attachPaymentMethod($customerId, $paymentMethod->data[0]->id);
-            $clientSecret = $this->stripeService->createPaymentIntent($setupFee, $customerId, $paymentMethod->data[0]->id);
-            $subscriptionStatus = $this->stripeService->createSubscription($plan['name'], $plan['cycle'], $customerId);
+            $paymentMethod = $this->stripeService->getPaymentMethods($stripeCustomerId);
+            $this->stripeService->attachPaymentMethod($stripeCustomerId, $paymentMethod->data[0]->id);
+            $clientSecret = $this->stripeService->createPaymentIntent($setupFee, $stripeCustomerId, $paymentMethod->data[0]->id);
+            $subscriptionStatus = $this->stripeService->createSubscription($plan['name'], $plan['cycle'], $stripeCustomerId);
 
             if ($clientSecret && $subscriptionStatus) {
                 // PaymentMethod::create(['vendor_id' => isset($newVendor->id) ? $newVendor->id : $user->vendor->id, 'stripe_customer_id' => $customerId]);
-                if($newVendor){
-                    $newVendor->stripe_customer_id = $customerId;
-                    $newVendor->save();
-                }else{
-                    $user->vendor->stripe_customer_id = $customerId;
-                    $user->vendor->save();
-                }
                 
                 $steps = [];
                 for ($i = 1; $i <= 5; $i++) {
@@ -106,9 +99,11 @@ class PaymentController extends BaseController
 
                 $tags = ["new lead", "booked appointment", "customer"];
                 $vendor = isset($newVendor) ? $newVendor : $user->vendor;
-                $updates = [
+                $contactData = [
                     'locationId' => 'kxsCgZcTUell5zwFkTUc', //Main Location To Manage All Users
                     'email' => $vendor->company_email,
+                    'firstName' => $vendor->first_name,
+                    'lastName' => $vendor->last_name,
                     'tags' => $tags,
                     'customFields' => [[
                         'plan_type' => $planName,
@@ -116,7 +111,10 @@ class PaymentController extends BaseController
                     ]],
                 ];
 
-                $this->ghlService->createContact($updates);
+                $ghlContact = $this->ghlService->createContact($contactData);
+                Vendor::where('id', $vendor->id)->update([
+                    'go_high_level_location_id' => $ghlContact['contact']['id']
+                ]);
                 DB::commit();
                 return $this->sendResponse($vendor->id, 'Subscription successfull.');
             } else {
@@ -124,6 +122,8 @@ class PaymentController extends BaseController
             }
         } catch (Exception $error) {
             DB::rollBack();
+            \Log::info('===== PaymentController - subscribe() - error =====');
+            \Log::info($error->getMessage());
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
