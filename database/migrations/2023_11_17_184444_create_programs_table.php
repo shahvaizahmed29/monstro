@@ -14,12 +14,8 @@ return new class extends Migration
         Schema::create('programs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('location_id')->constrained()->onDelete('cascade');
-            // $table->longText('custom_field_ghl_id');
             $table->string('name');
             $table->longText('description');
-            $table->double('capacity');
-            $table->integer('min_age');
-            $table->integer('max_age');
             $table->string('avatar')->nullable();
             $table->timestamps();
             $table->softDeletes();

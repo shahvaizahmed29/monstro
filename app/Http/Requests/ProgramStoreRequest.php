@@ -25,9 +25,6 @@ class ProgramStoreRequest extends FormRequest
             // 'location_id' => 'required|integer',
             'program_name' => 'required|string',
             'description' => 'required|string',
-            'capacity' => 'required|integer',
-            'min_age' => 'required|integer|min:0',
-            'max_age' => 'required|integer|gt:min_age',
             'sessions' => [
                 'required',
                 'array',
@@ -42,7 +39,10 @@ class ProgramStoreRequest extends FormRequest
                     }
                 },
             ],
-            // Other validation rules...                                                                                 
+            // Other validation rules...                             
+            'sessions.*.capacity' => 'required|integer',
+            'sessions.*.min_age' => 'required|integer|min:0',
+            'sessions.*.max_age' => 'required|integer|gt:min_age',                                                    
             'sessions.*.program_level_name' => 'required|string',
             'sessions.*.duration_time' => 'required|integer',
             'sessions.*.start_date' => 'required|date',

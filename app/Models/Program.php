@@ -12,12 +12,8 @@ class Program extends Model
 
     protected $fillable = [
         'location_id',
-        // 'custom_field_ghl_id',
         'name',
         'description',
-        'capacity',
-        'min_age',
-        'max_age',
         'avatar'
     ];
 

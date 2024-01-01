@@ -19,6 +19,9 @@ class ProgramLevelResource extends JsonResource
         $program_level = [
             'id' => $this->id,
             'name' => $this->name,
+            'capacity' => $this->capacity,
+            'minAge' => $this->min_age,
+            'maxAge' => $this->max_age,
             'programId' => $this->program_id,
             'parentId' => $this->parent_id,
             'parent' => $this->whenLoaded('parent', function () {

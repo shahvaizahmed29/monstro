@@ -64,9 +64,6 @@ class ProgramController extends BaseController
                 // 'custom_field_ghl_id' => $request->custom_field_ghl_id,
                 'name' => $request->program_name,
                 'description' => $request->description,
-                'capacity' => $request->capacity,
-                'min_age' => $request->min_age,
-                'max_age' => $request->max_age,
                 'avatar' => $request->avatar ?? null,
             ]);
 
@@ -76,7 +73,10 @@ class ProgramController extends BaseController
                 $program_level = ProgramLevel::create([
                     'name' => $session['program_level_name'],
                     'program_id' => $program->id,
-                    'parent_id' => $parent_id
+                    'parent_id' => $parent_id,
+                    'capacity' => $session['capacity'],
+                    'min_age' => $session['min_age'],
+                    'max_age' => $session['max_age'],
                 ]);
                 
                 $program_level->custom_field_ghl_value = $program->id . '_' . $program_level->id;
