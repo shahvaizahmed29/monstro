@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('company_email');
             $table->longText('company_website')->nullable();
             $table->longText('company_address')->nullable();
+            $table->text('stripe_customer_id')->nullable();
             $table->string('logo')->nullable();
             $table->timestamps();
             $table->softDeletes();
