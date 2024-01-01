@@ -25,8 +25,8 @@ class GHLController extends Controller
         return $this->ghlService->updateUser($user_id, $body);
     }
 
-    public function createContact($email, $password){
-        return $this->ghlService->createContact($email, $password);
+    public function createContact($data){
+        return $this->ghlService->createContact($data);
     }
 
     public function createTask($contact, $ticket){

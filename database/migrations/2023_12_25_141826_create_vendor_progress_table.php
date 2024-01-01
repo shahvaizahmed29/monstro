@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('vendor_id');
             $table->boolean('active')->default(false);
             $table->boolean('completed')->default(false);
-            $table->json('tasks_completed')->default('[]');
+            $table->json('tasks_completed')->nullable();
             $table->timestamps();
         
             $table->foreign('progress_step_id')->references('id')->on('progress_steps');

@@ -38,6 +38,7 @@ class PublicController extends BaseController
             'grant_type' => 'authorization_code',
             'code' => $code,
             'redirect_uri' => env('GO_HIGH_LEVEL_REDIRECT'),
+            'user_type' => 'Company'
         ]);
 
         if ($response->successful()) {

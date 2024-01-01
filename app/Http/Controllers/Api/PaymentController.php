@@ -100,15 +100,16 @@ class PaymentController extends BaseController
                 $tags = ["new lead", "booked appointment", "customer"];
                 $vendor = isset($newVendor) ? $newVendor : $user->vendor;
                 $updates = [
+                    'locationId' => 'kxsCgZcTUell5zwFkTUc', //Main Location To Manage All Users
                     'email' => $vendor->email,
                     'tags' => $tags,
-                    'customField' => [
+                    'customFields' => [[
                         'plan_type' => $planName,
                         'onboarding' => "https://join.mymonstro.com/onboarding/{$vendor->id}",
-                    ],
+                    ]],
                 ];
 
-                $this->ghlService->updateContact($updates);
+                $this->ghlService->createContact($updates);
                 DB::commit();
                 return $this->sendResponse($vendor->id, 'Subscription successfull.');
             } else {

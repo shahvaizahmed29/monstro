@@ -65,23 +65,22 @@ class GHLService
     }
 
 
-    public function createContact($email, $password){
+    public function createContact($data){
+        $locationObj = $this->generateLocationLevelKey($data['locationId']);
         $response = Http::withHeaders([
             'Content-type' => 'application/json',
-            'Authorization' => 'Bearer ' . $this->ghlIntegration['value'],
+            'Authorization' => 'Bearer ' . $locationObj['access_token'],
             'Version' => config('services.ghl.api_version'),
-        ])->post(config('services.ghl.api_url') .`contacts`, [
-            'email' => $email,
-            'customField' => [
-                'password' => $password
-            ],
-        ]);
+        ])->post(config('services.ghl.api_url') .'contacts', $data);
         
         if ($response->successful()) {
             return $response->json();
         } else {
             Log::info('==== GHL SERVICE - createContact() =====');
             Log::info(json_encode($response->json()));
+            Log::info($locationObj['access_token']);
+            Log::info(json_encode($data));
+            Log::info(config('services.ghl.api_url') .'contacts/');
             return null;
         }
     }
@@ -115,13 +114,13 @@ class GHLService
         }
     }
 
-    public function updateContact($updates){
+    public function updateContact($data, $contactId){
         try {
             $response = Http::withHeaders([
                 'Content-type' => 'application/json',
                 'Authorization' => 'Bearer ' . $this->ghlIntegration['value'],
                 'Version' => config('services.ghl.api_version'),
-            ])->post(config('services.ghl.api_url') .`contacts`, $updates);
+            ])->put(config('services.ghl.api_url') .`contacts/$contactId`, $data);
 
             if ($response->successful()) {
                 return $response->json();
@@ -135,5 +134,22 @@ class GHLService
         }
     }
 
+    public function generateLocationLevelKey($location_id) {
+        $tokenObj = Http::withHeaders([
+            'Authorization' => 'Bearer '.$this->ghlIntegration['value'],
+            'Version' => '2021-07-28'                
+        ])->asForm()->post('https://services.leadconnectorhq.com/oauth/locationToken', [
+            'companyId' => $this->ghlIntegration['meta_data']['companyId'],
+            'locationId' => $location_id,
+        ]);
+
+        if ($tokenObj->failed()) {
+            $tokenObj->throw();
+        }
+        
+        $url = 'https://services.leadconnectorhq.com/contacts/?locationId='.$location_id.'&limit=100';
+
+        return $tokenObj->json();
+    }
 
 }
