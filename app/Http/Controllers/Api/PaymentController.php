@@ -62,14 +62,14 @@ class PaymentController extends BaseController
             $user = User::where('email', $vendor['email'])->first();
 
             if($user){
-                $stripe_customer_id = $user->vendor->paymentMethods()->latest('created_at')->first()->stripe_customer_id;
+                $stripe_customer_id = $user->vendor->stripe_customer_id;
                 $customerId = null;
 
                 if(!$stripe_customer_id){
                     $customer = $this->stripeService->createCustomer($vendor, $token['id']);
                     $customerId = $customer['id'];
                 }else{
-                    $customerId = $user->vendor->paymentMethods()->latest('created_at')->first()->stripe_customer_id;
+                    $customerId = $user->vendor->stripe_customer_id;
                 }
             }else{
                 $customer = $this->stripeService->createCustomer($vendor, $token['id']);
@@ -84,7 +84,14 @@ class PaymentController extends BaseController
             $subscriptionStatus = $this->stripeService->createSubscription($plan['name'], $plan['cycle'], $customerId);
 
             if ($clientSecret && $subscriptionStatus) {
-                PaymentMethod::create(['vendor_id' => isset($newVendor->id) ? $newVendor->id : $user->vendor->id, 'stripe_customer_id' => $customerId]);
+                // PaymentMethod::create(['vendor_id' => isset($newVendor->id) ? $newVendor->id : $user->vendor->id, 'stripe_customer_id' => $customerId]);
+                if($newVendor){
+                    $newVendor->stripe_customer_id = $customerId;
+                    $newVendor->save();
+                }else{
+                    $user->vendor->stripe_customer_id = $customerId;
+                    $user->vendor->save();
+                }
                 
                 $steps = [];
                 for ($i = 1; $i <= 5; $i++) {
@@ -101,7 +108,7 @@ class PaymentController extends BaseController
                 $vendor = isset($newVendor) ? $newVendor : $user->vendor;
                 $updates = [
                     'locationId' => 'kxsCgZcTUell5zwFkTUc', //Main Location To Manage All Users
-                    'email' => $vendor->email,
+                    'email' => $vendor->company_email,
                     'tags' => $tags,
                     'customFields' => [[
                         'plan_type' => $planName,
