@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Location;
 use App\Models\Setting;
+use Exception;
 
 class SyncGhlLocationsCron extends Command
 {
@@ -105,7 +106,7 @@ class SyncGhlLocationsCron extends Command
                         continue;
                     }
                     if(!isset($location['email'])) {
-                        \Log::info(json_encode($location));
+                        Log::info(json_encode($location));
                         continue;
                     }
                     // DB::beginTransaction();
