@@ -49,30 +49,28 @@ class ProgramLevel extends Model
     
         $startDate = \Carbon\Carbon::parse($activeSession->start_date);
         $endDate = \Carbon\Carbon::parse($activeSession->end_date);
-    
-        // Check if the session is currently in progress
-        if (now()->between($startDate, $endDate)) {
-            // Iterate over the date range within the start and end dates
-            $currentDate = $startDate->copy();
-            while ($currentDate->lte($endDate)) {
-                $dayName = strtolower($currentDate->format('l'));
-    
-                // Check if the session is active on this day
-                if ($activeSession->$dayName) {
-                    $startTime = \Carbon\Carbon::parse($activeSession->$dayName); // Convert to Carbon instance
-                    $endTime = $startTime->copy()->addMinutes($activeSession->duration_time);
-    
-                    $formattedSessions[] = [
-                        'title' => $this->name,
-                        'start' => $currentDate->copy()->setTimeFrom($startTime)->format('Y-m-d\TH:i:s'),
-                        'end' => $currentDate->copy()->setTimeFrom($endTime)->format('Y-m-d\TH:i:s'),
-                    ];
-                }
-    
-                // Move to the next day
-                $currentDate->addDay();
+      
+        // Iterate over the date range within the start and end dates
+        $currentDate = $startDate->copy();
+        while ($currentDate->lte($endDate)) {
+            $dayName = strtolower($currentDate->format('l'));
+
+            // Check if the session is active on this day
+            if ($activeSession->$dayName) {
+                $startTime = \Carbon\Carbon::parse($activeSession->$dayName); // Convert to Carbon instance
+                $endTime = $startTime->copy()->addMinutes($activeSession->duration_time);
+
+                $formattedSessions[] = [
+                    'title' => $this->name,
+                    'start' => $currentDate->copy()->setTimeFrom($startTime)->format('Y-m-d\TH:i:s'),
+                    'end' => $currentDate->copy()->setTimeFrom($endTime)->format('Y-m-d\TH:i:s'),
+                ];
             }
+
+            // Move to the next day
+            $currentDate->addDay();
         }
+        
     
         return $formattedSessions;
     }

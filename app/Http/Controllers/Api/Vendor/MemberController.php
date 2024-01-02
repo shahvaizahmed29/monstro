@@ -94,8 +94,7 @@ class MemberController extends BaseController
                     continue;
                 }
                 $parts = explode('_', $customField['value']);
-                
-                if(count($parts)<2) {
+                if(count($parts) != 2) {
                     continue;
                 }
 
@@ -111,7 +110,7 @@ class MemberController extends BaseController
                             $user = User::create([
                                 'name' => isset($contact['name']) ? $contact['name'] : '',
                                 'email' => $contact['email'],
-                                'password' => bcrypt($contact['email'].'@'.'2023!!'),
+                                'password' => bcrypt($contact['email'].'@'.Carbon::now()->year.'!!'),
                                 'email_verified_at' => now()
                             ]);
                             $user->assignRole(User::MEMBER);
@@ -133,7 +132,6 @@ class MemberController extends BaseController
                             'start_date' => Carbon::today()->format('Y-m-d'),
                             'end_date' => $session->end_date
                         ]);
-                        
                         $member->locations()->attach($location->id, ['go_high_level_location_id' => $location->go_high_level_location_id, 'go_high_level_contact_id' => $contact['id']]);
                         DB::commit();
                     } catch(\Exception $error) {

@@ -72,11 +72,12 @@ class PaymentController extends BaseController
                 $stripeCustomerId = $stripeCustomer['id'];
                 $password = str_replace(' ', '', $vendorInput['firstName']).'@'.Carbon::now()->year.'!';
                 $user = User::create([
-                    'name' => $vendorInput['firstName'] .$vendorInput['lastName'],
+                    'name' => $vendorInput['firstName'] .' '. $vendorInput['lastName'],
                     'email' => $vendorInput['email'],
                     'password' => bcrypt($password),
                     'email_verified_at' => now()
                 ]);
+                $user->assignRole(\App\Models\User::VENDOR);
                 
                 $vendor = Vendor::create([
                     'go_high_level_user_id' => null,

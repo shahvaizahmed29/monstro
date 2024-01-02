@@ -79,7 +79,7 @@ class ProgramController extends BaseController
                     'max_age' => $session['max_age'],
                 ]);
                 
-                $program_level->custom_field_ghl_value = $program->id . '_' . $program_level->id;
+                $program_level->custom_field_ghl_value = $program->name . '_' . $program_level->id;
                 $program_level->save();
                 
 
@@ -132,16 +132,7 @@ class ProgramController extends BaseController
     public function programLevelActiveSessions($programLevelId){
         try{
             $programLevel = ProgramLevel::where('id', $programLevelId)->first();
-            // $currentActiveSession = $programLevel->currentActiveSession();
             $formated_sessions = $programLevel->getFormattedSessions();
-            // $startTime = Carbon::parse($activeSessions->start_date)->addHours($activeSessions->time);
-            // $endTime = $startTime->copy()->addHours($activeSessions->duration_time);
-            // $formated_sessions[] = [
-            //     'title' => $programLevel->program->name,
-            //     'start' => $startTime->format('Y-m-d\TH:i:s'),
-            //     'end' => $endTime->format('Y-m-d\TH:i:s'),
-            // ];
-
             return $formated_sessions;
         }catch(Exception $e){
             return $this->sendError($e->getMessage(), [], 500);

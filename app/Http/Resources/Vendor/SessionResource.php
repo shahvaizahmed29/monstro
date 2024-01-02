@@ -15,6 +15,10 @@ class SessionResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $timezone = $request->input('timezone', 'UTC');
+        \Log::info('=== TIMEZONE ====');
+        \Log::info(json_encode($timezone));
+
         $session = [
             'id' => $this->id,
             'programLevelId' => $this->program_level_id,
@@ -30,7 +34,7 @@ class SessionResource extends JsonResource
             'saturday' => $this->saturday,
             'sunday' => $this->sunday,
             'status' => $this->status,
-            'currentStatus' => $this->getCurrentStatusAttribute(),
+            'currentStatus' => $this->getCurrentStatusAttribute($timezone),
             'programLevel' => $this->whenLoaded('programLevel', function () {
                 return new ProgramLevelResource($this->programLevel);
             }),

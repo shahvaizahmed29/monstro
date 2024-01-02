@@ -20,7 +20,7 @@ class ReservationController extends BaseController
         $member = Member::find($member_id);
         $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->paginate(25);
         if(count($reservations) > 0) {
-            $location = $reservations[0]->session->programLevel->program->location;
+            // $location = $reservations[0]->session->programLevel->program->location;
             //Code commented out below becuase auth guard is not applied anymore.
             // if($location->vendor_id != auth()->user()->vendor->id) {
             //     return $this->sendError('Vendor not authorize, Please contact admin.', [], 403);
