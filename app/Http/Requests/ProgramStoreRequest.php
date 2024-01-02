@@ -42,7 +42,7 @@ class ProgramStoreRequest extends FormRequest
             // Other validation rules...                             
             'sessions.*.capacity' => 'required|integer',
             'sessions.*.min_age' => 'required|integer|min:0',
-            'sessions.*.max_age' => 'required|integer|gt:min_age',                                                    
+            'sessions.*.max_age' => 'required|integer|after:sessions.*.min_age',                                                    
             'sessions.*.program_level_name' => 'required|string',
             'sessions.*.duration_time' => 'required|integer',
             'sessions.*.start_date' => 'required|date',

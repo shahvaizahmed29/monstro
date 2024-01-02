@@ -32,7 +32,7 @@ class VendorController extends BaseController
 
             $new_password = $request->input('password');
             $hashed_password = Hash::make($new_password);
-           
+
             $ghl_user_response = $this->ghl_controller->getUserWithTypeAndRole($user->email,'account','admin');
             
             if(count($ghl_user_response['users']) == 0 || !isset($ghl_user_response['users'])) {
@@ -80,11 +80,19 @@ class VendorController extends BaseController
                 
                 $updateContact = [
                     'locationId' => 'kxsCgZcTUell5zwFkTUc', //Main Location To Manage All Users
-                    'email' => $vendor->company_email,
-                    'customFields' => [[
-                        'key' => 'password',
-                        'field_value' => $new_password
-                    ]],
+                    'email' => $user->email,
+                    'customFields' => [
+                        [
+                            'key' => 'password',
+                            'field_value' => $new_password
+                        ],[
+                            'key' => 'go_high_level_user_id',
+                            'field_value' => $vendor->go_high_level_user_id
+                        ],[
+                            'key' => 'paymentgateway_customer_id',
+                            'field_value' => $vendor->stripe_customer_id
+                        ]
+                    ],
                 ];
                 $this->ghl_controller->upsertContact($updateContact);
                 return $this->sendResponse('Success', 'Password set successfully');

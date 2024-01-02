@@ -16,6 +16,7 @@ class Session extends Model
 
     protected $fillable = [
         'program_level_id',
+        'program_id',
         'duration_time',
         'start_date',
         'end_date',

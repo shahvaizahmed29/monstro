@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('sessions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('program_level_id')->constrained()->onDelete('cascade');
+            $table->foreignId('program_id')->constrained()->onDelete('cascade');
             $table->integer('duration_time');
             $table->date('start_date');
             $table->date('end_date');

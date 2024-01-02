@@ -33,28 +33,38 @@ class Program extends Model
         return $this->belongsToMany(Location::class, 'member_programs', 'program_id', 'member_id');
     }
 
+    public function sessions(){
+        return $this->hasMany(Session::class);
+    }
+
+    public function activeSessions()
+    {
+        return $this->sessions()
+            ->where('status', Session::ACTIVE)->latest()->get();
+    }
+
     public function monthlyRetentionRate()
     {
         $currentMonth = now()->startOfMonth();
         $previousMonth = now()->subMonth()->startOfMonth();
 
-        $newStudents = $this->programLevels()
-            ->whereHas('sessions', function ($query) use ($currentMonth) {
-                $query->where('created_at', '>=', $currentMonth);
-            })
-            ->count();
+        $newStudents = $this->sessions()->where('status', Session::ACTIVE)
+        ->whereHas('reservations', function ($query) use ($currentMonth){
+            $query->where('status', Reservation::ACTIVE)->where('start_date', '>=', $currentMonth);
+        })
+        ->withCount('reservations')->get()
+        ->sum('reservations_count');
 
-        $retainedStudents = $this->programLevels()
-            ->whereHas('sessions', function ($query) use ($previousMonth) {
-                $query->where('created_at', '>=', $previousMonth);
-            })
-            ->whereHas('sessions', function ($query) use ($currentMonth) {
-                $query->where('created_at', '<', $currentMonth);
-            })
-            ->count();
+        $retainedStudents = $this->sessions()->where('status', Session::ACTIVE)
+        ->whereHas('reservations', function ($query) use ($previousMonth, $currentMonth) {
+            $query->where('status', Reservation::ACTIVE)
+            ->where('start_date', '>=', $previousMonth)->where('start_date', '<', $currentMonth);;
+        })
+        ->withCount('reservations')->get()
+        ->sum('reservations_count');
 
         if ($newStudents > 0) {
-            $retentionRate = ($retainedStudents / $newStudents) * 100;
+            $retentionRate = $retainedStudents ? ($retainedStudents / $newStudents) * 100 : 100;
         } else {
             $retentionRate = 0;
         }
@@ -64,11 +74,14 @@ class Program extends Model
 
     public function totalActiveStudents()
     {
-        return $this->programLevels()
-            ->whereHas('sessions', function ($query) {
-                $query->where('status', Session::ACTIVE);
-            })
-            ->count();
+        $activeReservationsCount = $this->sessions()
+        ->where('status', Session::ACTIVE)
+        ->whereHas('reservations', function ($query) {
+            $query->where('status', Reservation::ACTIVE);
+        })
+        ->withCount('reservations')->get()
+        ->sum('reservations_count');
+        return $activeReservationsCount;
     }
 
     public function totalStudents()

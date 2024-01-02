@@ -18,6 +18,7 @@ class SessionResource extends JsonResource
         $session = [
             'id' => $this->id,
             'programLevelId' => $this->program_level_id,
+            'programId' => $this->program_id,
             'durationTime' => $this->duration_time,
             'startDate' => $this->start_date,
             'endDate' => $this->end_date,

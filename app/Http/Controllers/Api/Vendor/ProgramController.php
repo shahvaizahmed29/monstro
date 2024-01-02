@@ -86,6 +86,7 @@ class ProgramController extends BaseController
                 $parent_id = $program_level->id;
 
                 $session = Session::create([
+                    'program_id' => $program->id,
                     'program_level_id' => $program_level->id,
                     'duration_time' => $session['duration_time'],
                     'start_date' => $session['start_date'],
@@ -116,48 +117,10 @@ class ProgramController extends BaseController
                 return $this->sendError('Program does not exist.', [], 400);
             }
 
-            $totalStudents = $program->totalStudents();
-            $totalActiveStudents = $program->totalActiveStudents();
-            $monthlyRetentionRate = $program->monthlyRetentionRate();
-
-            // foreach ($program->programLevels as $programLevel) {
-            //     foreach ($programLevel->sessions as $session) {
-            //         $totalEnrolledStudentsCount += $session->reservations()->where('status', \App\Models\Reservation::ACTIVE)->count();
-            //     }
-            // }
-
-            // $ProgramLevel = $program->programLevels()->first();
-         
-            // ($ProgramLevel) ? $totalSessionCount = $ProgramLevel->sessions()->count() : 0; 
-
-            // $activeStudentsCount = Program::where('id', $programId)
-            //     ->with([
-            //         'programLevels.sessions.reservations' => function ($query) {
-            //             $query->whereHas('session', function ($sessionQuery) {
-            //                 $sessionQuery->where('status', Session::ACTIVE);
-            //             });
-            //         },
-            //     ])
-            //     ->first()
-            //     ->programLevels
-            //     ->flatMap(function ($programLevel) {
-            //         return $programLevel->sessions->flatMap(function ($session) {
-            //             return $session->reservations->pluck('member_id');
-            //         });
-            //     })
-            //     ->unique()
-            //     ->count();
-            
-            // $data = [
-            //     'totalEnrolledStudentsCount' => $totalEnrolledStudentsCount,
-            //     'activeStudentsCount' => $activeStudentsCount,
-            //     'totalSessionCount' => $totalSessionCount
-            // ];
-
             $data = [
-                'totalStudents' => $totalStudents,
-                'totalActiveStudents' => $totalActiveStudents,
-                'monthlyRetentionRate' => $monthlyRetentionRate
+                'totalStudents' => $program->totalStudents(),
+                'totalActiveStudents' => $program->totalActiveStudents(),
+                'monthlyRetentionRate' => $program->monthlyRetentionRate()
             ];
 
             return $this->sendResponse($data, 'Program related information related to program and location.');
@@ -169,16 +132,15 @@ class ProgramController extends BaseController
     public function programLevelActiveSessions($programLevelId){
         try{
             $programLevel = ProgramLevel::where('id', $programLevelId)->first();
-            $activeSessions = $programLevel->activeSessions();
-            $formated_sessions = [];
-
-            $startTime = Carbon::parse($activeSessions->start_date)->addHours($activeSessions->time);
-            $endTime = $startTime->copy()->addHours($activeSessions->duration_time);
-            $formated_sessions[] = [
-                'title' => $programLevel->program->name,
-                'start' => $startTime->format('Y-m-d\TH:i:s'),
-                'end' => $endTime->format('Y-m-d\TH:i:s'),
-            ];
+            // $currentActiveSession = $programLevel->currentActiveSession();
+            $formated_sessions = $programLevel->getFormattedSessions();
+            // $startTime = Carbon::parse($activeSessions->start_date)->addHours($activeSessions->time);
+            // $endTime = $startTime->copy()->addHours($activeSessions->duration_time);
+            // $formated_sessions[] = [
+            //     'title' => $programLevel->program->name,
+            //     'start' => $startTime->format('Y-m-d\TH:i:s'),
+            //     'end' => $endTime->format('Y-m-d\TH:i:s'),
+            // ];
 
             return $formated_sessions;
         }catch(Exception $e){

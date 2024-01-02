@@ -87,7 +87,6 @@ class GHLService
             'Authorization' => 'Bearer ' . $locationObj['access_token'],
             'Version' => config('services.ghl.api_version'),
         ])->post(config('services.ghl.api_url') .'contacts/upsert', $data);
-
         if ($response->successful()) {
             return $response->json();
         } else {
