@@ -74,11 +74,12 @@ class PaymentController extends BaseController
                 $password = str_replace(' ', '', $vendorInput['firstName']).'@'.Carbon::now()->year.'!';
                 
                 $user = User::create([
-                    'name' => $vendorInput['firstName'] .$vendorInput['lastName'],
+                    'name' => $vendorInput['firstName'] .' '. $vendorInput['lastName'],
                     'email' => $vendorInput['email'],
                     'password' => bcrypt($password),
                     'email_verified_at' => now()
                 ]);
+                $user->assignRole(\App\Models\User::VENDOR);
                 
                 $vendor = Vendor::create([
                     'first_name' => $vendorInput['firstName'],

@@ -41,4 +41,7 @@ class GHLController extends Controller
         return $this->ghlService->createTask($contact, $ticket);
     }
 
+    public function getContactById($id, $locationId){
+        return $this->ghlService->getContactById($id, $locationId);
+    }
 }

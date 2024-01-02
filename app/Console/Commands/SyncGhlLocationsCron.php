@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Location;
+use App\Models\Setting;
 
 class SyncGhlLocationsCron extends Command
 {
