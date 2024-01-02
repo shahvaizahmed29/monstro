@@ -39,10 +39,8 @@ class Session extends Model
         return $this->hasMany(Reservation::class);
     }
 
-    public function getCurrentStatusAttribute()
+    public function getCurrentStatusAttribute($timezone)
     {
-        // Define your desired timezone
-        $timezone = 'Asia/Karachi'; // Change this to your preferred timezone
 
         // Convert start_date and end_date to the desired timezone
         $startDate = Carbon::parse($this->start_date);

@@ -15,9 +15,7 @@ class SessionResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $timezone = $request->input('timezone', 'UTC');
-        \Log::info('=== TIMEZONE ====');
-        \Log::info(json_encode($timezone));
+        $timezone = $request->header('Timezone', 'UTC');
 
         $session = [
             'id' => $this->id,

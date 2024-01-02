@@ -76,7 +76,7 @@ class ReservationController extends BaseController
         // if($reservation->member_id != auth()->user()->member->id) {
         //     return $this->sendError('Member not authorize, Please contact support', [], 403);
         // }
-        $checkIns = CheckIn::where('id', $reservation_id)->latest()->get();
+        $checkIns = CheckIn::where('reservation_id', $reservation_id)->latest()->get();
         return $this->sendResponse($checkIns, 'Checkins by reservation.');
     }
 
