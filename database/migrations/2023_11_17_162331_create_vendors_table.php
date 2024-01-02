@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('vendors', function (Blueprint $table) {
             $table->id();
+            $table->string('first_name');
+            $table->string('last_name')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('go_high_level_user_id')->nullable()->unique();
             $table->text('stripe_customer_id')->nullable();

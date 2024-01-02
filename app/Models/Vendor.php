@@ -11,6 +11,8 @@ class Vendor extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'first_name',
+        'last_name',
         'go_high_level_user_id',
         'stripe_customer_id',
         'plan_id',

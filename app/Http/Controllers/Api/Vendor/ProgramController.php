@@ -13,8 +13,8 @@ use App\Http\Requests\ProgramStoreRequest;
 use App\Http\Resources\Vendor\ProgramResource;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use DB;
 
 class ProgramController extends BaseController
 {
@@ -59,6 +59,7 @@ class ProgramController extends BaseController
             // if($location->vendor_id != auth()->user()->vendor->id) {
             //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
             // }
+            DB::beginTransaction();
             $program = Program::create([
                 'location_id' => $location->id,
                 // 'custom_field_ghl_id' => $request->custom_field_ghl_id,
@@ -101,9 +102,14 @@ class ProgramController extends BaseController
                     'status' => \App\Models\Session::ACTIVE
                 ]);
             }
+            DB::commit();
+            
             $program = Program::with('programLevels.sessions')->where('id', $program->id)->first();
             return $this->sendResponse(new ProgramResource($program), 'Program created successfully.');
         }catch(Exception $e){
+            DB::rollBack();
+            Log::info('===== ProgramController - addProgram() - error =====');
+            Log::info($e->getMessage());
             return $this->sendError($e->getMessage(), [], 500);
         }
     }

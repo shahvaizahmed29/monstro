@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends BaseController
 {
@@ -71,6 +72,7 @@ class PaymentController extends BaseController
                 $stripeCustomer = $this->stripeService->createCustomer($vendorInput, $token['id']);
                 $stripeCustomerId = $stripeCustomer['id'];
                 $password = str_replace(' ', '', $vendorInput['firstName']).'@'.Carbon::now()->year.'!';
+                
                 $user = User::create([
                     'name' => $vendorInput['firstName'] .$vendorInput['lastName'],
                     'email' => $vendorInput['email'],
@@ -79,6 +81,8 @@ class PaymentController extends BaseController
                 ]);
                 
                 $vendor = Vendor::create([
+                    'first_name' => $vendorInput['firstName'],
+                    'last_name' => isset($vendorInput['lastName'])? $vendorInput['lastName'] : null,
                     'go_high_level_user_id' => null,
                     'user_id' => $user->id,
                     'company_name' => $vendorInput['firstName'].' '.isset($vendorInput['lastName'])? $vendorInput['lastName'] : null,
@@ -129,8 +133,8 @@ class PaymentController extends BaseController
             }
         } catch (Exception $error) {
             DB::rollBack();
-            \Log::info('===== PaymentController - subscribe() - error =====');
-            \Log::info($error->getMessage());
+            Log::info('===== PaymentController - subscribe() - error =====');
+            Log::info($error->getMessage());
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
