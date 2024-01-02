@@ -165,4 +165,19 @@ class GHLService
         return $tokenObj->json();
     }
 
+    public function getContactById($id, $locationId) {
+        $locationObj = $this->generateLocationLevelKey($locationId);
+        $response = Http::withHeaders([
+            'Content-type' => 'application/json',
+            'Authorization' => 'Bearer ' . $locationObj['access_token'],
+            'Version' => config('services.ghl.api_version'),
+        ])->post(config('services.ghl.api_url') .'contacts/', $id);
+        if ($response->successful()) {
+            return $response->json();
+        } else {
+            Log::info('==== GHL SERVICE - getContactById() =====');
+            Log::info($response->body());
+            return null;
+        }
+    }
 }
