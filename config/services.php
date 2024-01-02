@@ -36,4 +36,9 @@ return [
         'api_version' => env('GO_HIGH_LEVEL_API_VERSION')
     ],
 
+    'stripe' => [
+        'public_key' => env('STRIPE_KEY'),
+        'secret_key' => env('STRIPE_SECRET'),
+    ],
+
 ];

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Location;
+use App\Models\Setting;
 use App\Http\Controllers\Api\Vendor\MemberController;
 
 class SyncGhlContactsCron extends Command
@@ -35,7 +36,7 @@ class SyncGhlContactsCron extends Command
         $ghl_integration = Setting::where('name', 'ghl_integration')->first();
 
         $token = $ghl_integration['value'];
-        $companyId = $ghl_integration['companyId'];
+        $companyId = $ghl_integration['meta_data']['companyId'];
         $locations = Location::all();
         // $locations = Location::where('go_high_level_location_id', 'kxsCgZcTUell5zwFkTUc')->get();
         foreach($locations as $location) {
@@ -78,8 +79,8 @@ class SyncGhlContactsCron extends Command
                     foreach($contacts as $contact) {
                         MemberController::createMemberFromGHL($contact, $location);
                     }
+                    sleep(5);
                 } while($url);
-    
             } catch(\Exception $error) {
                 Log::info($error->getMessage());
             }

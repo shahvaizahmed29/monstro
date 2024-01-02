@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\Carbon;
 
 class Session extends Model
 {
@@ -16,6 +17,7 @@ class Session extends Model
 
     protected $fillable = [
         'program_level_id',
+        'program_id',
         'duration_time',
         'start_date',
         'end_date',
@@ -37,30 +39,32 @@ class Session extends Model
         return $this->hasMany(Reservation::class);
     }
 
-    public function getCurrentStatusAttribute()
+    public function getCurrentStatusAttribute($timezone)
     {
-        $now = \Carbon\Carbon::now();
-        $startDate = \Carbon\Carbon::parse($this->start_date);
-        $endDate = \Carbon\Carbon::parse($this->end_date);
 
-        // Check if the class is currently in progress
-        if ($now->greaterThanOrEqualTo($startDate) && $now->lessThanOrEqualTo($endDate)) {
-            // Calculate the time remaining for the next class
-            $today = strtolower($now->format('l')); // Get the current day in lowercase (e.g., 'monday')         
-            $nextClassStart = \Carbon\Carbon::parse($this->{$today});
-            $nextClassStart->setDate($now->year, $now->month, $now->day); // Set the date to today
-            // If the next class has already started today, move to the next day
+        // Convert start_date and end_date to the desired timezone
+        $startDate = Carbon::parse($this->start_date);
+        $endDate = Carbon::parse($this->end_date);
+
+        $now = Carbon::now($timezone);
+
+        if ($now->lt($startDate)) {
+            return "Session Not Started";
+        } elseif ($now->gt($endDate)) {
+            return "Session Ended";
+        } else {
+            $today = strtolower($now->format('l'));
+            $nextClassStart = Carbon::parse($this->{$today}, $timezone)->setTimezone('UTC');
+            $nextClassStart->setDate($now->year, $now->month, $now->day);
+
             if ($now->greaterThanOrEqualTo($nextClassStart) && $now->lessThanOrEqualTo($nextClassStart->copy()->addMinutes($this->duration_time))) {
                 return "In Progress";
             } else {
                 $nextClassStart->addDay();
-                // Calculate the time remaining for the next class
                 $timeRemaining = $now->diff($nextClassStart);
-    
-                return "In ".$timeRemaining->format('%H:%I') . " hrs";
+
+                return "In " . $timeRemaining->format('%H:%I') . " hrs";
             }
-        } else {
-            return "Session Ended";
         }
     }
 }

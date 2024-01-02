@@ -12,12 +12,8 @@ class Program extends Model
 
     protected $fillable = [
         'location_id',
-        // 'custom_field_ghl_id',
         'name',
         'description',
-        'capacity',
-        'min_age',
-        'max_age',
         'avatar'
     ];
 
@@ -37,4 +33,59 @@ class Program extends Model
         return $this->belongsToMany(Location::class, 'member_programs', 'program_id', 'member_id');
     }
 
+    public function sessions(){
+        return $this->hasMany(Session::class);
+    }
+
+    public function activeSessions()
+    {
+        return $this->sessions()
+            ->where('status', Session::ACTIVE)->latest()->get();
+    }
+
+    public function monthlyRetentionRate()
+    {
+        $currentMonth = now()->startOfMonth();
+        $previousMonth = now()->subMonth()->startOfMonth();
+
+        $newStudents = $this->sessions()->where('status', Session::ACTIVE)
+        ->whereHas('reservations', function ($query) use ($currentMonth){
+            $query->where('status', Reservation::ACTIVE)->where('start_date', '>=', $currentMonth);
+        })
+        ->withCount('reservations')->get()
+        ->sum('reservations_count');
+
+        $retainedStudents = $this->sessions()->where('status', Session::ACTIVE)
+        ->whereHas('reservations', function ($query) use ($previousMonth, $currentMonth) {
+            $query->where('status', Reservation::ACTIVE)
+            ->where('start_date', '>=', $previousMonth)->where('start_date', '<', $currentMonth);;
+        })
+        ->withCount('reservations')->get()
+        ->sum('reservations_count');
+
+        if ($newStudents > 0) {
+            $retentionRate = $retainedStudents ? ($retainedStudents / $newStudents) * 100 : 100;
+        } else {
+            $retentionRate = 0;
+        }
+
+        return $retentionRate;
+    }
+
+    public function totalActiveStudents()
+    {
+        $activeReservationsCount = $this->sessions()
+        ->where('status', Session::ACTIVE)
+        ->whereHas('reservations', function ($query) {
+            $query->where('status', Reservation::ACTIVE);
+        })
+        ->withCount('reservations')->get()
+        ->sum('reservations_count');
+        return $activeReservationsCount;
+    }
+
+    public function totalStudents()
+    {
+        return $this->members()->count();
+    }
 }

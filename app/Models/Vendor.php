@@ -13,7 +13,8 @@ class Vendor extends Model
     protected $fillable = [
         'first_name',
         'last_name',
-        'go_high_level_location_id',
+        'go_high_level_user_id',
+        'stripe_customer_id',
         'plan_id',
         'user_id',
         'company_name',
@@ -21,7 +22,6 @@ class Vendor extends Model
         'company_website',
         'company_address',
         'logo',
-        'pin',
         'phone_number'
     ];
 
@@ -33,14 +33,20 @@ class Vendor extends Model
         return $this->hasMany(Location::class);
     }
 
-    // public function plan()
-    // {
-    //     return $this->belongsTo(Plan::class);
-    // }
+    public function plan(){
+        return $this->belongsTo(Plan::class);
+    }
 
-    // public function steps()
-    // {
-    //     return $this->hasMany(Step::class);
-    // }
+    public function steps(){
+        return $this->hasMany(ProgressStep::class);
+    }
+
+    public function paymentMethods(){
+        return $this->hasMany(PaymentMethod::class);
+    }
+
+    public function progress(){
+        return $this->hasMany(VendorProgress::class);
+    }
 
 }

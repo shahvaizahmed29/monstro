@@ -12,6 +12,8 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        'public/store-ghl-location'
+        'public/store-ghl-location',
+        'api/payments/subscribe',
+        'api/payments/deposit'
     ];
 }

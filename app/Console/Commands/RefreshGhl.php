@@ -42,6 +42,7 @@ class RefreshGhl extends Command
             $tokenObj = $response->json();
             $ghl_integration->value = $tokenObj['access_token'];
             $ghl_integration->meta_data = $tokenObj;
+            $ghl_integration->save();
         } else {
             \Log::info('==== RefreshGhl - (job) ====');
             \Log::info(json_encode($response->json()));

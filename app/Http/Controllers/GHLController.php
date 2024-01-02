@@ -13,8 +13,8 @@ class GHLController extends Controller
         $this->ghlService = $ghlService;
     }
 
-    public function getUserWithOwnerRole($email){
-        return $this->ghlService->getUserWithOwnerRole($email);
+    public function getUserWithTypeAndRole($email,$type,$role){
+        return $this->ghlService->getUserWithTypeAndRole($email,$type,$role);
     }
 
     public function getLocation($ghl_location_id){
@@ -25,12 +25,23 @@ class GHLController extends Controller
         return $this->ghlService->updateUser($user_id, $body);
     }
 
-    public function createContact($email, $password){
-        return $this->ghlService->createContact($email, $password);
+    public function updateContact($user_id, $body){
+        return $this->ghlService->updateContact($user_id, $body);
+    }
+
+    public function createContact($data){
+        return $this->ghlService->createContact($data);
+    }
+
+    public function upsertContact($data){
+        return $this->ghlService->upsertContact($data);
     }
 
     public function createTask($contact, $ticket){
         return $this->ghlService->createTask($contact, $ticket);
     }
 
+    public function getContactById($id, $locationId){
+        return $this->ghlService->getContactById($id, $locationId);
+    }
 }

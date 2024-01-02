@@ -12,14 +12,18 @@ use App\Models\ProgramLevel;
 use App\Models\Location;
 use App\Models\MemberLocation;
 use App\Models\Session;
+use App\Models\Setting;
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\GHLController;
 use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class MemberController extends BaseController
 {
+  
     public function getMembersByLocation(){
         //Code commented out below becuase auth guard is not applied anymore.
         // $location = Location::find($location_id);
@@ -94,8 +98,7 @@ class MemberController extends BaseController
                     continue;
                 }
                 $parts = explode('_', $customField['value']);
-                
-                if(count($parts)<2) {
+                if(count($parts) != 2) {
                     continue;
                 }
 
@@ -105,19 +108,33 @@ class MemberController extends BaseController
                 if($programLevel) {
                     try {
                         DB::beginTransaction();
-                        $session = Session::where('program_level_id',$programLevel->id)->latest()->first();
+                        $locationObj = MemberController::generateLocationLevelKey($location->go_high_level_location_id);
+                        $contactGHLResponse = Http::withHeaders([
+                            'Content-type' => 'application/json',
+                            'Authorization' => 'Bearer ' . $locationObj['access_token'],
+                            'Version' => config('services.ghl.api_version'),
+                        ])->get(config('services.ghl.api_url') ."contacts/{$contact['id']}");
+                        if ($contactGHLResponse->successful()) {
+                            $contact =  $contactGHLResponse->json();
+                            $contact = $contact['contact'];
+                        } else {
+                            Log::info('==== MemberController - createMemberFromGHL() =====');
+                            Log::info($contactGHLResponse->body());
+                            return null;
+                        }
+                        $session = Session::where('program_level_id',$programLevel->id)->where('status', Session::ACTIVE)->latest()->first();
                         $user = User::where('email', $contact['email'])->first();
                         if(!$user) {
                             $user = User::create([
                                 'name' => isset($contact['name']) ? $contact['name'] : '',
                                 'email' => $contact['email'],
-                                'password' => bcrypt($contact['email'].'@'.'2023!!'),
+                                'password' => bcrypt($contact['email'].'@'.Carbon::now()->year.'!!'),
                                 'email_verified_at' => now()
                             ]);
                             $user->assignRole(User::MEMBER);
                             $randomNumberMT = mt_rand(100, 999);
                             $member = Member::create([
-                                'name' => isset($contact['name']) ? $contact['name'] : '',
+                                'name' => (isset($contact['firstName']) ? $contact['firstName'] : ' ').' ' .(isset($contact['lastName']) ? $contact['lastName'] : ''),
                                 'email' =>  $contact['email'],
                                 'phone' => isset($contact['phone']) ? $contact['phone'] : '',
                                 'referral_code' => $randomNumberMT.$user->id,
@@ -126,10 +143,11 @@ class MemberController extends BaseController
                         } else {
                             $member = $user->member;
                         }
+            
                         $reservation = Reservation::create([
                             'session_id' => $session->id,
                             'member_id' =>  $member->id,
-                            'status' => \App\Models\Reservation::ACTIVE,
+                            'status' => Reservation::ACTIVE,
                             'start_date' => Carbon::today()->format('Y-m-d'),
                             'end_date' => $session->end_date
                         ]);
@@ -142,12 +160,32 @@ class MemberController extends BaseController
                             'contact' => $contact,
                             'customField' => $customField
                         ];
+                        Log::info('===== Create New Member =====');
+                        Log::info(json_encode($location));
+                        Log::info(json_encode($contact));
                         Log::info($error->getMessage());
                     }
                 }
             } 
         }
-          
+    }
+
+    public static function generateLocationLevelKey($location_id) {
+        $ghlIntegration = Setting::where('name', 'ghl_integration')->first();
+        $tokenObj = Http::withHeaders([
+            'Authorization' => 'Bearer '.$ghlIntegration['value'],
+            'Version' => '2021-07-28'                
+        ])->asForm()->post('https://services.leadconnectorhq.com/oauth/locationToken', [
+            'companyId' => $ghlIntegration['meta_data']['companyId'],
+            'locationId' => $location_id,
+        ]);
+
+        if ($tokenObj->failed()) {
+            $tokenObj->throw();
+        }
         
+        $url = 'https://services.leadconnectorhq.com/contacts/?locationId='.$location_id.'&limit=100';
+
+        return $tokenObj->json();
     }
 }

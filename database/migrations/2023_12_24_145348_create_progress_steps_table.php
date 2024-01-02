@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('programs', function (Blueprint $table) {
+        Schema::create('progress_steps', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('location_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->longText('description');
-            $table->string('avatar')->nullable();
+            $table->integer('orders');
+            $table->integer('next_step')->nullable();
+            $table->integer('prev_step')->nullable();
+            $table->string('plan')->nullable();
+            $table->text('description');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -27,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('programs');
+        Schema::dropIfExists('progress_steps');
     }
 };

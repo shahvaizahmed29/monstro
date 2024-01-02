@@ -14,6 +14,9 @@ return new class extends Migration
         Schema::create('program_levels', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->double('capacity');
+            $table->integer('min_age');
+            $table->integer('max_age');
             $table->foreignId('program_id')->constrained()->onDelete('cascade');
             $table->foreignId('parent_id')->nullable()->constrained(
                 table: 'program_levels'

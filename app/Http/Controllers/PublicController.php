@@ -23,7 +23,7 @@ class PublicController extends BaseController
                 '&scope=businesses.readonly businesses.write contacts.readonly contacts.write locations.write locations.readonly '.
                 'locations/customValues.write locations/customValues.readonly locations/customFields.readonly locations/customFields.write '.
                 'locations/tags.readonly locations/tags.write opportunities.readonly '.
-                'opportunities.write oauth.readonly';
+                'opportunities.write oauth.readonly users.readonly users.write';
         return redirect()->away($url);
     }
 
@@ -38,6 +38,7 @@ class PublicController extends BaseController
             'grant_type' => 'authorization_code',
             'code' => $code,
             'redirect_uri' => env('GO_HIGH_LEVEL_REDIRECT'),
+            'user_type' => 'Company'
         ]);
 
         if ($response->successful()) {
