@@ -10,6 +10,7 @@ use App\Models\Location;
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProgramStoreRequest;
+use App\Http\Requests\ProgramUpdateRequest;
 use App\Http\Resources\Vendor\ProgramResource;
 use Carbon\Carbon;
 use Exception;
@@ -142,6 +143,79 @@ class ProgramController extends BaseController
             return $formated_sessions;
         }catch(Exception $e){
             return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function update(ProgramUpdateRequest $request, Program $program){
+        try {
+            DB::beginTransaction();
+            $program->update([
+                'name' => $request->program_name,
+                'description' => $request->description,
+                'avatar' => $request->avatar ?? $program->avatar,
+            ]);
+
+            foreach ($request->sessions as $session) {
+                $programLevel = ProgramLevel::updateOrCreate(
+                    ['id' => $session['program_level_id']],
+                    [
+                        'name' => $session['program_level_name'],
+                        'capacity' => $session['capacity'],
+                        'min_age' => $session['min_age'],
+                        'max_age' => $session['max_age']
+                    ]
+                );
+
+                $programLevel->save();
+
+                Session::updateOrCreate(
+                    ['id' => $session['id']],
+                    [
+                        'duration_time' => $session['duration_time'],
+                        'start_date' => $session['start_date'],
+                        'end_date' => $session['end_date'],
+                        'monday' => isset($session['monday']) ? $session['monday'] : null,
+                        'tuesday' => isset($session['tuesday']) ? $session['tuesday'] : null,
+                        'wednesday' => isset($session['wednesday']) ? $session['wednesday'] : null,
+                        'thursday' => isset($session['thursday']) ? $session['thursday'] : null,
+                        'friday' => isset($session['friday']) ? $session['friday'] : null,
+                        'saturday' => isset($session['saturday']) ? $session['saturday'] : null,
+                        'sunday' => isset($session['sunday']) ? $session['sunday'] : null,
+                    ]
+                );
+            }
+
+            DB::commit();
+            $program = Program::with('programLevels.sessions')->where('id', $program->id)->first();
+            return $this->sendResponse(new ProgramResource($program), 'Program updated successfully.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::info('===== ProgramController - updateProgram() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function delete($programId){
+        try{
+            $program = Program::with('programLevels.sessions')->find($programId);
+            
+            if(!$program){
+                return $this->sendError("Program not found", [], 400);
+            }
+
+            foreach ($program->programLevels as $programLevel) {
+                foreach ($programLevel->sessions as $session) {
+                    if ($session->status === \App\Models\Session::ACTIVE) {
+                        return $this->sendError("Cannot delete program. Active sessions exist in the program.", [], 400);
+                    }
+                }
+            }
+
+            $program->delete();
+            return $this->sendResponse("Success", "Program deleted successfully");
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
