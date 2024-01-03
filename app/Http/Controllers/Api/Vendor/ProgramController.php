@@ -44,6 +44,11 @@ class ProgramController extends BaseController
     public function getProgramById($id){
         $location = request()->location;
         $program = Program::with('programLevels')->where('id',$id)->where('location_id', $location->id)->first();
+
+        if(!$program){
+            return $this->sendError("Program not found", [], 400);
+        }
+
         //Code commented out below becuase auth guard is not applied anymore.
         // $location = $program->location;
         // if($location->vendor_id != auth()->user()->vendor->id) {
@@ -63,14 +68,12 @@ class ProgramController extends BaseController
             DB::beginTransaction();
             $program = Program::create([
                 'location_id' => $location->id,
-                // 'custom_field_ghl_id' => $request->custom_field_ghl_id,
                 'name' => $request->program_name,
                 'description' => $request->description,
                 'avatar' => $request->avatar ?? null,
             ]);
 
             $parent_id = null;
-            // $randomNumberMT = mt_rand(10000, 99999);
             foreach($request->sessions as $session){
                 $program_level = ProgramLevel::create([
                     'name' => $session['program_level_name'],
