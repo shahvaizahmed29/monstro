@@ -34,9 +34,9 @@ class Reservation extends Model
         return $this->belongsTo(Session::class);
     }
 
-    public function getCurrentStatusForTodayAttribute()
+    public function getIsMarkedAttendenceTodayAttribute()
     {
         $now = \Carbon\Carbon::now();
-        return $this->checkIns()->whereDate('check_in_time', $now)->count();
+        return $this->checkIns()->whereDate('check_in_time', $now)->count() ? true : false;
     }
 }

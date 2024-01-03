@@ -28,7 +28,8 @@ class ReservationResource extends JsonResource
             }),
             'checkIns' => $this->whenLoaded('checkIns', function () {
                 return new MemberResource($this->checkIns);
-            })
+            }),
+            'isMarkedAttendence' => $this->getIsMarkedAttendenceTodayAttribute(),
         ];
 
         return $reservation;
