@@ -156,9 +156,11 @@ class ProgramController extends BaseController
             ]);
 
             foreach ($request->sessions as $session) {
+                $programLevelId = isset($session['program_level_id']) ? $session['program_level_id'] : null;
                 $programLevel = ProgramLevel::updateOrCreate(
-                    ['id' => $session['program_level_id']],
+                    ['id' => $programLevelId],
                     [
+                        'program_id' => $program->id,
                         'name' => $session['program_level_name'],
                         'capacity' => $session['capacity'],
                         'min_age' => $session['min_age'],
@@ -168,23 +170,26 @@ class ProgramController extends BaseController
 
                 $programLevel->save();
 
-                Session::updateOrCreate(
-                    ['id' => $session['id']],
-                    [
-                        'program_level_id' => $programLevel->id,
-                        'program_id' => $program->id,
-                        'duration_time' => $session['duration_time'],
-                        'start_date' => $session['start_date'],
-                        'end_date' => $session['end_date'],
-                        'monday' => isset($session['monday']) ? $session['monday'] : null,
-                        'tuesday' => isset($session['tuesday']) ? $session['tuesday'] : null,
-                        'wednesday' => isset($session['wednesday']) ? $session['wednesday'] : null,
-                        'thursday' => isset($session['thursday']) ? $session['thursday'] : null,
-                        'friday' => isset($session['friday']) ? $session['friday'] : null,
-                        'saturday' => isset($session['saturday']) ? $session['saturday'] : null,
-                        'sunday' => isset($session['sunday']) ? $session['sunday'] : null,
-                    ]
-                );
+                $sessionId = isset($session['id']) ? $session['id'] : null;
+                if(isset($session['duration_time']) && isset($session['start_date']) && isset($session['end_date'])){
+                    Session::updateOrCreate(
+                        ['id' => $sessionId],
+                        [
+                            'program_level_id' => $programLevel->id,
+                            'program_id' => $program->id,
+                            'duration_time' => $session['duration_time'],
+                            'start_date' => $session['start_date'],
+                            'end_date' => $session['end_date'],
+                            'monday' => isset($session['monday']) ? $session['monday'] : null,
+                            'tuesday' => isset($session['tuesday']) ? $session['tuesday'] : null,
+                            'wednesday' => isset($session['wednesday']) ? $session['wednesday'] : null,
+                            'thursday' => isset($session['thursday']) ? $session['thursday'] : null,
+                            'friday' => isset($session['friday']) ? $session['friday'] : null,
+                            'saturday' => isset($session['saturday']) ? $session['saturday'] : null,
+                            'sunday' => isset($session['sunday']) ? $session['sunday'] : null,
+                        ]
+                    );
+                }
             }
 
             DB::commit();
