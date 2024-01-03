@@ -171,6 +171,8 @@ class ProgramController extends BaseController
                 Session::updateOrCreate(
                     ['id' => $session['id']],
                     [
+                        'program_level_id' => $programLevel->id,
+                        'program_id' => $program->id,
                         'duration_time' => $session['duration_time'],
                         'start_date' => $session['start_date'],
                         'end_date' => $session['end_date'],
