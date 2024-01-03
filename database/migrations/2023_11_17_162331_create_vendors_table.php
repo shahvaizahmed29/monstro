@@ -23,7 +23,7 @@ return new class extends Migration
             $table->longText('company_website')->nullable();
             $table->longText('company_address')->nullable();
             $table->string('logo')->nullable();
-            $table->foreignId('plan_id')->constrained()->onDelete('cascade');
+            $table->foreignId('plan_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('phone_number')->nullable();
             $table->timestamps();
             $table->softDeletes();

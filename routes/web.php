@@ -23,3 +23,4 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 
 Route::get('public/leadconnector', [App\Http\Controllers\PublicController::class, 'redirectToGHL'])->name('redirect.ghl');
 Route::get('public/leadconnector/callback', [App\Http\Controllers\PublicController::class, 'storeGHL'])->name('ghl.callback');
+Route::post('public/create-vendor-webhook', [App\Http\Controllers\PublicController::class, 'createVendorWebhook'])->name('create.vendor.webhook');
