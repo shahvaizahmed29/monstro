@@ -218,15 +218,40 @@ class ProgramController extends BaseController
             }
 
             foreach ($program->programLevels as $programLevel) {
-                foreach ($programLevel->sessions as $session) {
-                    if ($session->status === \App\Models\Session::ACTIVE) {
-                        return $this->sendError("Cannot delete program. Active sessions exist in the program.", [], 400);
+                foreach ($programLevel->sessions as $sessions) {
+                    foreach ($sessions->reservations as $reservation) {
+                        if ($reservation->status === \App\Models\Reservation::ACTIVE) {
+                            return $this->sendError("Cannot delete program. Active reservations exist in the program sessions.", [], 400);
+                        }
                     }
                 }
             }
 
             $program->delete();
             return $this->sendResponse("Success", "Program deleted successfully");
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function deleteProgramLevel($programLevelId){
+        try{
+            $programLevel = ProgramLevel::with('sessions.reservations')->find($programLevelId);
+            
+            if(!$programLevel){
+                return $this->sendError("Program Level not exist", [], 400);
+            }
+
+            foreach ($programLevel->sessions as $sessions) {
+                foreach ($sessions->reservations as $reservation) {
+                    if ($reservation->status === \App\Models\Reservation::ACTIVE) {
+                        return $this->sendError("Cannot delete program level. Active reservations exist in the program level sessions.", [], 400);
+                    }
+                }
+            }
+
+            $programLevel->delete();
+            return $this->sendResponse("Success", "Program Level deleted successfully");
         }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }
