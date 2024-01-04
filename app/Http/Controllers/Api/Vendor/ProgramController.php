@@ -171,7 +171,9 @@ class ProgramController extends BaseController
                     ]
                 );
 
-                $programLevel->custom_field_ghl_value = $program->name . '_' . $programLevel->id;
+                if(!$programLevelId){
+                    $programLevel->custom_field_ghl_value = $program->name . '_' . $programLevel->id;
+                }
                 $programLevel->save();
 
                 $sessionId = isset($session['id']) ? $session['id'] : null;
