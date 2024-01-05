@@ -45,7 +45,7 @@ class ReservationController extends BaseController
     public function markAttendance(Request $request)
     {
         $reservation = Reservation::find($request->reservationId);
-        $location = $reservation->session->programLevel->program->location;
+        // $location = $reservation->session->programLevel->program->location;
         //Code commented out below becuase auth guard is not applied anymore.
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
