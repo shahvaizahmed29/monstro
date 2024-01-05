@@ -130,7 +130,7 @@ class PublicController extends BaseController
                     ]);
                     
                     DB::commit();
-                    Notification::route('mail', $ghl_user['email'])->notify(new NewVendorNotification($data));
+                    // Notification::route('mail', $ghl_user['email'])->notify(new NewVendorNotification($data));
                 }
 
                 return $this->sendResponse('Success', 'Vendor created successfully');
