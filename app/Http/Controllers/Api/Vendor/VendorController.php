@@ -6,6 +6,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\GHLController;
 use App\Models\Location;
+use App\Models\User;
 use App\Models\Vendor;
 use Exception;
 use Illuminate\Http\Request;
@@ -100,6 +101,23 @@ class VendorController extends BaseController
                 return $this->sendError('Error setting contact up your password. Please email support help@mymonstro.com', [], 400);
             }
         } catch (\Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function appPasswordUpdate(Request $request, $id){
+        try {
+            $user = User::find($id);;
+            if (!$user) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
+
+            $new_password = $request->input('password');
+            $user->password = $new_password;
+            $user->save();
+
+            return $this->sendResponse('Success', 'Password set successfully');
+        } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
     }

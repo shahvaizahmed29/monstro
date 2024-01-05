@@ -19,11 +19,14 @@ class ImageUploadServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        function uploadImage($userId, $img, $imgPath){
-            $fileName = $userId . '_' . time() . '.' . $img->getClientOriginalExtension();
-            $img->storeAs($imgPath, $fileName, 'public');
-            return $fileName;
-        }
+        $this->app->bind('uploadImage', function ($app) {
+            return function ($userId, $img, $imgPath) {
+                $fileName = $userId . '_' . time() . '.' . $img->getClientOriginalExtension();
+                $img->move(public_path($imgPath), $fileName);
+                $imageUrl = getenv('APP_URL') .$imgPath. $fileName;
+                return $imageUrl;
+            };
+        });
     }
 
 }

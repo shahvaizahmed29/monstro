@@ -27,6 +27,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('get-reservations-by-id/{reservation_id}', [App\Http\Controllers\Api\Member\ReservationController::class, 'getReservationById'])->name('get.reservations.by.id');
         Route::get('get-checkins/{reservation_id}', [App\Http\Controllers\Api\Member\ReservationController::class, 'getCheckInsByReservation'])->name('get.checkins.by.reservation');
         Route::post('mark-attendance', [App\Http\Controllers\Api\Member\ReservationController::class, 'markAttendance'])->name('mark.attendance');
+        Route::post('image-update/{user_id}', [App\Http\Controllers\Api\Member\MemberController::class, 'imageUpdate'])->name('image.update');
+        Route::put('profile-update/{user_id}', [App\Http\Controllers\Api\Member\MemberController::class, 'profileUpdate'])->name('profile.update');
+        Route::put('update-password/{user_id}', [App\Http\Controllers\Api\Member\MemberController::class, 'updatePassword'])->name('update.password');
     });
 
     //==================================================================================================================================================================================
@@ -34,6 +37,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //==================================================================================================================================================================================
     Route::group(['prefix' => 'vendor', 'middleware' => ['is_vendor']], function () {
         Route::post('authenticate', [App\Http\Controllers\Api\Vendor\AuthController::class, 'vendorAuthenticate'])->name('vendor.authenticate');
+        Route::put('passowrd-update/{user_id}',[App\Http\Controllers\Api\Vendor\VendorController::class, 'appPasswordUpdate'])->name('app.password.update');
     });
 
     Route::get('logout', [App\Http\Controllers\Api\Vendor\AuthController::class, 'logout'])->name('logout');

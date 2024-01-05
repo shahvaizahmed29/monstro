@@ -10,24 +10,55 @@ use Illuminate\Support\Facades\Log;
 
 class MemberController extends BaseController
 {
-    public function profileUpdate(Request $request){
+    public function profileUpdate(Request $request, $userId){
+        try{
+            $user = User::find($userId);
 
+            if(!$user){
+                return $this->sendError('User not exist.', [], 400);
+            }
+
+            $user->name = $request->name;
+            $user->save();
+            return $this->sendResponse('Success', 'User updated successfully.');
+        }catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
     }
 
-    public function imgUpdate(Request $request, $user_id){
+    public function imageUpdate(Request $request, $userId){
         try{
             $img = $request->file('image');
             $imgPath = 'user-images/';
+            $user = User::find($userId);
 
-            $uploadedImage = app('uploadImage')($user_id, $img, $imgPath);
-            $user = User::find($user_id);
-            
             if(!$user){
-                
+                return $this->sendError('User not exist.', [], 400);
             }
+
+            $uploadedFileName = app('uploadImage')($userId, $img, $imgPath);
+            $user->member->avatar = $uploadedFileName;
+            $user->member->save();
+
+            return $this->sendResponse('Success', 'Image updated successfully.');
         }catch (Exception $error) {
-            Log::info('===== MemberController - imgUpdate() - error =====');
-            Log::info($error->getMessage());
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function updatePassword(Request $request, $id){
+        try {
+            $user = User::find($id);;
+            if (!$user) {
+                return response()->json(['message' => 'User not found'], 404);
+            }
+
+            $new_password = $request->input('password');
+            $user->password = $new_password;
+            $user->save();
+
+            return $this->sendResponse('Success', 'Password set successfully');
+        } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
