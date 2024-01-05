@@ -94,6 +94,8 @@ class PublicController extends BaseController
                         'email_verified_at' => now()
                     ]);
 
+                    $user->assignRole(\App\Models\User::VENDOR);
+
                     $data =  [];
                     $data['name'] = $ghl_user['name'];
                     $data['password'] = $password;
