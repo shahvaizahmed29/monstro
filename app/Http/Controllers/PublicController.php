@@ -10,11 +10,20 @@ use App\Models\Location;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Setting;
+use App\Notifications\NewVendorNotification;
+use Carbon\Carbon;
 use Exception;
-use DB;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class PublicController extends BaseController
 {
+    protected $ghl_controller;
+
+    public function __construct(GHLController $ghl_controller){
+        $this->ghl_controller = $ghl_controller;
+    }
+
     public function redirectToGHL()
     {
         $url = 'https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri='
@@ -56,6 +65,83 @@ class PublicController extends BaseController
         } else {
             Log::info("==== Error in getting the Go High Level response=====");
             Log::info($response->json());
+        }
+    }
+
+    public function createVendorWebhook(Request $request){
+        try{
+            $ghl_user_response = $this->ghl_controller->getUserWithTypeAndRole($request->email,'account','admin');
+            
+            if(count($ghl_user_response['users']) == 0 || !isset($ghl_user_response['users'])) {
+                return $this->sendError('Error getting users from ghl. Please email support help@mymonstro.com', [], 400);
+            }
+
+            $ghl_user = $ghl_user_response['users'][0];
+
+            if ($ghl_user && isset($ghl_user['email'])) {
+                $ghl_location_id = $ghl_user['roles']['locationIds'][0];
+                if ($ghl_location_id) {
+                    $ghl_location_data = $this->ghl_controller->getLocation($ghl_location_id);
+                    $ghl_location_data = $ghl_location_data['location'];
+
+                    $password = str_replace(' ', '', $ghl_user['firstName']).'@'.Carbon::now()->year.'!';
+
+                    DB::beginTransaction();
+                    $user = User::create([
+                        'name' => $ghl_user['name'],
+                        'email' => $ghl_user['email'],
+                        'password' => $password,
+                        'email_verified_at' => now()
+                    ]);
+
+                    $data =  [];
+                    $data['name'] = $ghl_user['name'];
+                    $data['password'] = $password;
+
+                    $vendor = Vendor::create([
+                        'first_name' => $ghl_location_data['firstName'],
+                        'last_name' => isset($ghl_location_data['lastName']) ? $ghl_location_data['lastName'] : null,
+                        'company_name' => $ghl_location_data['name'],
+                        'company_email' => $ghl_location_data['email'],
+                        'company_website' => isset($ghl_location_data['website']) ? $ghl_location_data['website'] : null,
+                        'company_address' => isset($ghl_location_data['address']) ? $ghl_location_data['address'] : null,
+                        'go_high_level_user_id' => $ghl_user['id'],
+                        'user_id' => $user->id,
+                        'phone_number' => isset($ghl_location_data['phone']) ? $ghl_location_data['phone'] : null
+                    ]);
+
+                    Location::updateOrCreate([
+                        'go_high_level_location_id' => $ghl_location_id
+                    ],
+                    [
+                        'go_high_level_location_id' => $ghl_location_data['id'],
+                        'name' => $ghl_location_data['name'],
+                        'address' => isset($ghl_location_data['address']) ? $ghl_location_data['address'] : null,
+                        'city' => isset($ghl_location_data['city']) ? $ghl_location_data['city'] : $ghl_location_data['city'],
+                        'state' => isset($ghl_location_data['state']) ? $ghl_location_data['state'] : null,
+                        'logo_url' => isset($ghl_location_data['logoUrl']) ? $ghl_location_data['logoUrl'] : null,
+                        'country' => isset($ghl_location_data['country']) ? $ghl_location_data['country'] : null,
+                        'postal_code' => isset($ghl_location_data['postalCode']) ? $ghl_location_data['postalCode'] : null,
+                        'website' => isset($ghl_location_data['website']) ? $ghl_location_data['website'] : null,
+                        'email' => $ghl_location_data['email'],
+                        'phone' => isset($ghl_location_data['phone']) ? $ghl_location_data['phone'] : null,
+                        'vendor_id' => $vendor->id,
+                        'meta_data' => $ghl_location_data
+                    ]);
+                    
+                    DB::commit();
+                    Notification::route('mail', $ghl_user['email'])->notify(new NewVendorNotification($data));
+                }
+
+                return $this->sendResponse('Success', 'Vendor created successfully');
+            }else{
+                return $this->sendError('Error registering vendor. Please email support help@mymonstro.com', [], 400);
+            }
+        }catch (Exception $error) {
+            DB::rollBack();
+            Log::info('===== PublicController - createVendorWebhook() - error =====');
+            Log::info($error->getMessage());
+            return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
