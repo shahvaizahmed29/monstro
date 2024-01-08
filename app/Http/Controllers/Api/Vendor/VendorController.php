@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Vendor;
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\GHLController;
+use App\Http\Requests\PasswordUpdateRequest;
+use App\Http\Resources\Vendor\GetVendorProfile;
 use App\Models\Location;
 use App\Models\User;
 use App\Models\Vendor;
@@ -105,18 +107,33 @@ class VendorController extends BaseController
         }
     }
 
-    public function appPasswordUpdate(Request $request, $id){
+    public function vendorUpdatePassword(PasswordUpdateRequest $request, $id){
         try {
             $user = User::find($id);;
-            if (!$user) {
-                return response()->json(['message' => 'User not found'], 404);
+            
+            if (!$user || !Hash::check($request->password, $user->password)) {
+                return $this->sendError('Incorrect old password.', [], 400);
             }
 
-            $new_password = $request->input('password');
+            $new_password = $request->input('new_password');
             $user->password = $new_password;
             $user->save();
 
             return $this->sendResponse('Success', 'Password set successfully');
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getProfile($user_id){
+        try {
+            $user = User::find($user_id);
+
+            if (!$user) {
+                return $this->sendError('User not found.', [], 404);
+            }
+
+            return $this->sendResponse(new GetVendorProfile($user), 200);
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
