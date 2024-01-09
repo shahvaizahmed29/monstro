@@ -15,9 +15,9 @@ class GetVendorProfile extends JsonResource
     public function toArray(Request $request): array
     {
         $vendor = [
-            'id' => $this->id,
-            'name' => $this->name,
-            'email' => $this->email,
+            'id' => isset($this->id)? $this->id : null,
+            'name' => isset($this->name)? $this->name : null,
+            'email' => isset($this->email)? $this->email : null,
             'firstName' => isset($this->vendor->first_name)? $this->vendor->first_name : null,
             'lastName' => isset($this->vendor->last_name)? $this->vendor->last_name : null,
             'phoneNumber' => isset($this->vendor->phone_number)? $this->vendor->phone_number : null,
