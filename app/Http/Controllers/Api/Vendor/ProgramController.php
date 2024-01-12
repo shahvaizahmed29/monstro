@@ -10,6 +10,7 @@ use App\Models\Location;
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProgramStoreRequest;
+use App\Http\Requests\ProgramUpdateRequest;
 use App\Http\Resources\Vendor\ProgramResource;
 use Carbon\Carbon;
 use Exception;
@@ -70,14 +71,12 @@ class ProgramController extends BaseController
             DB::beginTransaction();
             $program = Program::create([
                 'location_id' => $location->id,
-                // 'custom_field_ghl_id' => $request->custom_field_ghl_id,
                 'name' => $request->program_name,
                 'description' => $request->description,
                 'avatar' => $request->avatar ?? null,
             ]);
 
             $parent_id = null;
-            // $randomNumberMT = mt_rand(10000, 99999);
             foreach($request->sessions as $session){
                 $program_level = ProgramLevel::create([
                     'name' => $session['program_level_name'],
@@ -150,6 +149,114 @@ class ProgramController extends BaseController
             return $formated_sessions;
         }catch(Exception $e){
             return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function update(ProgramUpdateRequest $request, Program $program){
+        try {
+            DB::beginTransaction();
+            $program->update([
+                'name' => $request->program_name,
+                'description' => $request->description,
+                'avatar' => $request->avatar ?? $program->avatar,
+            ]);
+
+            foreach ($request->sessions as $session) {
+                $programLevelId = isset($session['program_level_id']) ? $session['program_level_id'] : null;
+                $programLevel = ProgramLevel::updateOrCreate(
+                    ['id' => $programLevelId],
+                    [
+                        'program_id' => $program->id,
+                        'name' => $session['program_level_name'],
+                        'capacity' => $session['capacity'],
+                        'min_age' => $session['min_age'],
+                        'max_age' => $session['max_age']
+                    ]
+                );
+
+                if(!$programLevelId){
+                    $programLevel->custom_field_ghl_value = $program->name . '_' . $programLevel->id;
+                }
+                $programLevel->save();
+
+                $sessionId = isset($session['id']) ? $session['id'] : null;
+                if(isset($session['duration_time']) && isset($session['start_date']) && isset($session['end_date'])){
+                    Session::updateOrCreate(
+                        ['id' => $sessionId],
+                        [
+                            'program_level_id' => $programLevel->id,
+                            'program_id' => $program->id,
+                            'duration_time' => $session['duration_time'],
+                            'start_date' => $session['start_date'],
+                            'end_date' => $session['end_date'],
+                            'monday' => isset($session['monday']) ? $session['monday'] : null,
+                            'tuesday' => isset($session['tuesday']) ? $session['tuesday'] : null,
+                            'wednesday' => isset($session['wednesday']) ? $session['wednesday'] : null,
+                            'thursday' => isset($session['thursday']) ? $session['thursday'] : null,
+                            'friday' => isset($session['friday']) ? $session['friday'] : null,
+                            'saturday' => isset($session['saturday']) ? $session['saturday'] : null,
+                            'sunday' => isset($session['sunday']) ? $session['sunday'] : null,
+                        ]
+                    );
+                }
+            }
+
+            DB::commit();
+            $program = Program::with('programLevels.sessions')->where('id', $program->id)->first();
+            return $this->sendResponse(new ProgramResource($program), 'Program updated successfully.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::info('===== ProgramController - updateProgram() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function delete($programId){
+        try{
+            $program = Program::with('programLevels.sessions')->find($programId);
+            
+            if(!$program){
+                return $this->sendError("Program not found", [], 400);
+            }
+
+            foreach ($program->programLevels as $programLevel) {
+                foreach ($programLevel->sessions as $sessions) {
+                    foreach ($sessions->reservations as $reservation) {
+                        if ($reservation->status === \App\Models\Reservation::ACTIVE) {
+                            return $this->sendError("Cannot delete program. Active reservations exist in the program sessions.", [], 400);
+                        }
+                    }
+                }
+            }
+
+            $program->delete();
+            return $this->sendResponse("Success", "Program deleted successfully");
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function deleteProgramLevel($programLevelId){
+        try{
+            $programLevel = ProgramLevel::with('sessions.reservations')->find($programLevelId);
+            
+            if(!$programLevel){
+                return $this->sendError("Program Level not exist", [], 400);
+            }
+
+            foreach ($programLevel->sessions as $sessions) {
+                foreach ($sessions->reservations as $reservation) {
+                    if ($reservation->status === \App\Models\Reservation::ACTIVE) {
+                        return $this->sendError("Cannot delete program level. Active reservations exist in the program level sessions.", [], 400);
+                    }
+                }
+            }
+
+            $programLevel->delete();
+            return $this->sendResponse("Success", "Program Level deleted successfully");
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
