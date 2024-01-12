@@ -42,19 +42,22 @@ class ProgramController extends BaseController
     }
     
     public function getProgramById($id){
-        $location = request()->location;
-        $program = Program::with('programLevels')->where('id',$id)->where('location_id', $location->id)->first();
+        try{
+            $location = request()->location;
+            $program = Program::with('programLevels')->where('id',$id)->where('location_id', $location->id)->first();
 
-        if(!$program){
-            return $this->sendError("Program not found", [], 400);
+            if(!$program){
+                return $this->sendError("Program doesnot exist", [], 400);
+            }
+            //Code commented out below becuase auth guard is not applied anymore.
+            // $location = $program->location;
+            // if($location->vendor_id != auth()->user()->vendor->id) {
+            //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
+            // }
+            return $this->sendResponse(new ProgramResource($program), 'Get programs related to specific location');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
         }
-
-        //Code commented out below becuase auth guard is not applied anymore.
-        // $location = $program->location;
-        // if($location->vendor_id != auth()->user()->vendor->id) {
-        //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
-        // }
-        return $this->sendResponse(new ProgramResource($program), 'Get programs related to specific location');
     }
 
     public function addProgram(ProgramStoreRequest $request){

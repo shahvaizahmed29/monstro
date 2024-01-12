@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ImageUploadRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -65,6 +66,31 @@ class PublicController extends BaseController
         } else {
             Log::info("==== Error in getting the Go High Level response=====");
             Log::info($response->json());
+        }
+    }
+
+    public function imageUpdate(ImageUploadRequest $request, $userId){
+        try{
+            $img = $request->file('image');
+            $imgPath = 'user-images/';
+            $user = User::find($userId);
+
+            if(!$user){
+                return $this->sendError('User not exist.', [], 400);
+            }
+
+            $uploadedFileName = app('uploadImage')($userId, $img, $imgPath);
+
+            if($user->hasRole(\App\Models\User::VENDOR)) {
+                $user->vendor->logo = $uploadedFileName;
+            }else{
+                $user->member->avatar = $uploadedFileName;
+            }
+            
+            $user->member->save();
+            return $this->sendResponse('Success', 'Image updated successfully.');
+        }catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
         }
     }
 

@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Api\Vendor;
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\GHLController;
+use App\Http\Requests\PasswordUpdateRequest;
+use App\Http\Requests\Vendor\VendorProfileUpdate;
+use App\Http\Resources\Vendor\GetVendorProfile;
 use App\Models\Location;
+use App\Models\User;
 use App\Models\Vendor;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 
 class VendorController extends BaseController
 {
@@ -103,4 +106,60 @@ class VendorController extends BaseController
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
+
+    public function vendorUpdatePassword(PasswordUpdateRequest $request, $id){
+        try {
+            $user = User::find($id);;
+            
+            if (!$user || !Hash::check($request->password, $user->password)) {
+                return $this->sendError('Incorrect old password.', [], 400);
+            }
+
+            $new_password = $request->input('new_password');
+            $user->password = $new_password;
+            $user->save();
+
+            return $this->sendResponse('Success', 'Password set successfully');
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getProfile(){
+        try {
+            $user = User::find(request()->user()->id);
+
+            if (!$user) {
+                return $this->sendError('User not found.', [], 404);
+            }
+
+            return $this->sendResponse(new GetVendorProfile($user), 200);
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function updateProfile(VendorProfileUpdate $request){
+        try {
+            $user = User::find(request()->user()->id);
+
+            if (!$user) {
+                return $this->sendError('User not found.', [], 404);
+            }
+
+            $user->vendor->first_name = $request->firstName;
+            $user->vendor->last_name = $request->lastName;
+            $user->vendor->phone_number = $request->phoneNumber;
+            $user->vendor->company_name = $request->companyName;
+            $user->vendor->company_email = $request->companyEmail;
+            $user->vendor->company_website = $request->companyWebsite;
+            $user->vendor->company_address = $request->companyAddress;
+
+            $user->vendor->save();
+            return $this->sendResponse(new GetVendorProfile($user), 200);
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
 }
