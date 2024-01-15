@@ -83,11 +83,12 @@ class PublicController extends BaseController
 
             if($user->hasRole(\App\Models\User::VENDOR)) {
                 $user->vendor->logo = $uploadedFileName;
+                $user->vendor->save();
             }else{
                 $user->member->avatar = $uploadedFileName;
+                $user->member->save();
             }
             
-            $user->member->save();
             return $this->sendResponse('Success', 'Image updated successfully.');
         }catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
