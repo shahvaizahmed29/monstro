@@ -24,7 +24,6 @@ class ProgramLevelResource extends JsonResource
             'maxAge' => $this->max_age,
             'programId' => $this->program_id,
             'parentId' => $this->parent_id,
-            'custom_field_ghl_value' => $this->custom_field_ghl_value,
             'parent' => $this->whenLoaded('parent', function () {
                 return new ProgramLevelResource($this->parent);
             }),

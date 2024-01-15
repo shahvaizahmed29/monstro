@@ -135,7 +135,8 @@ class PublicController extends BaseController
                         'company_address' => isset($ghl_location_data['address']) ? $ghl_location_data['address'] : null,
                         'go_high_level_user_id' => $ghl_user['id'],
                         'user_id' => $user->id,
-                        'phone_number' => isset($ghl_location_data['phone']) ? $ghl_location_data['phone'] : null
+                        'phone_number' => isset($ghl_location_data['phone']) ? $ghl_location_data['phone'] : null,
+                        'stripe_customer_id' => isset($request->stripe_customer_id) ? $request->stripe_customer_id : null
                     ]);
 
                     Location::updateOrCreate([
