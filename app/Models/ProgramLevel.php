@@ -16,7 +16,6 @@ class ProgramLevel extends Model
         'min_age',
         'max_age',
         'program_id',
-        'custom_field_ghl_value',
         'parent_id'
     ];
 

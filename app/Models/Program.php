@@ -14,7 +14,8 @@ class Program extends Model
         'location_id',
         'name',
         'description',
-        'avatar'
+        'avatar',
+        'last_sync_at'
     ];
 
     public function location(){

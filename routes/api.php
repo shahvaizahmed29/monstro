@@ -63,6 +63,7 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::put('/program/{program}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'update'])->name('program.update');
     Route::delete('program/{program_id}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'delete'])->name('delete.program');
     Route::delete('program-level/{programLevelId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'deleteProgramLevel'])->name('delete.program.level');
+    Route::get('sync-members-by-location/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'syncMembersByLocation'])->name('sync.member.by.location');
 });
 
 Route::post('image-update/{user_id}', [App\Http\Controllers\PublicController::class, 'imageUpdate'])->name('image.update');
@@ -83,6 +84,4 @@ Route::post('payments/deposit', [App\Http\Controllers\Api\PaymentController::cla
 Route::post('payments/subscribe', [App\Http\Controllers\Api\PaymentController::class, 'subscribe'])->name('payment.subscribe');
 
 
-
-Route::get('sync-members-by-location/{locationId}', [App\Http\Controllers\Api\Vendor\PublicController::class, 'syncMembersByLocation'])->name('sync.member.by.location');
 Route::post('login', [App\Http\Controllers\Api\AuthController::class, 'login'])->name('login');

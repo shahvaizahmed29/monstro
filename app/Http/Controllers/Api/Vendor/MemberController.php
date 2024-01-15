@@ -90,83 +90,56 @@ class MemberController extends BaseController
         return $this->sendResponse($data, 'Member details with session reservations and program');
     }
 
-    public static function createMemberFromGHL($contact, $location) {
-        if(isset($contact['customFields'])) {
-            $customFields = $contact['customFields'];
-            foreach($customFields as $customField) {
-                if (strpos($customField['value'], '_') === false) {
-                    continue;
-                }
-                $parts = explode('_', $customField['value']);
-                if(count($parts) != 2) {
-                    continue;
-                }
+    public static function createMemberFromGHL($contact, $location, $programLevelId) {
+        try {
+            DB::beginTransaction();
+            $session = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->latest()->first();
+            $user = User::where('email', $contact['email'])->first();
+            if(!$user) {
+                $user = User::create([
+                    'name' => isset($contact['contactName']) ? $contact['contactName'] : '',
+                    'email' => $contact['email'],
+                    'password' => bcrypt($contact['email'].'@'.Carbon::now()->year.'!!'),
+                    'email_verified_at' => now()
+                ]);
+                $user->assignRole(User::MEMBER);
+                $randomNumberMT = mt_rand(100, 999);
+                $member = Member::create([
+                    'name' => (isset($contact['firstName']) ? $contact['firstName'] : ' ').' ' .(isset($contact['lastName']) ? $contact['lastName'] : ''),
+                    'email' =>  $contact['email'],
+                    'phone' => isset($contact['phone']) ? $contact['phone'] : '',
+                    'referral_code' => $randomNumberMT.$user->id,
+                    'user_id' => $user->id
+                ]);
+            } else {
+                $member = $user->member;
+            }
 
-                $programLevelId = $parts[1];
-                $programLevel = ProgramLevel::with(['program'])->where('id', $programLevelId)->first();
-                
-                if($programLevel) {
-                    try {
-                        DB::beginTransaction();
-                        $locationObj = MemberController::generateLocationLevelKey($location->go_high_level_location_id);
-                        $contactGHLResponse = Http::withHeaders([
-                            'Content-type' => 'application/json',
-                            'Authorization' => 'Bearer ' . $locationObj['access_token'],
-                            'Version' => config('services.ghl.api_version'),
-                        ])->get(config('services.ghl.api_url') ."contacts/{$contact['id']}");
-                        if ($contactGHLResponse->successful()) {
-                            $contact =  $contactGHLResponse->json();
-                            $contact = $contact['contact'];
-                        } else {
-                            Log::info('==== MemberController - createMemberFromGHL() =====');
-                            Log::info($contactGHLResponse->body());
-                            return null;
-                        }
-                        $session = Session::where('program_level_id',$programLevel->id)->where('status', Session::ACTIVE)->latest()->first();
-                        $user = User::where('email', $contact['email'])->first();
-                        if(!$user) {
-                            $user = User::create([
-                                'name' => isset($contact['name']) ? $contact['name'] : '',
-                                'email' => $contact['email'],
-                                'password' => bcrypt($contact['email'].'@'.Carbon::now()->year.'!!'),
-                                'email_verified_at' => now()
-                            ]);
-                            $user->assignRole(User::MEMBER);
-                            $randomNumberMT = mt_rand(100, 999);
-                            $member = Member::create([
-                                'name' => (isset($contact['firstName']) ? $contact['firstName'] : ' ').' ' .(isset($contact['lastName']) ? $contact['lastName'] : ''),
-                                'email' =>  $contact['email'],
-                                'phone' => isset($contact['phone']) ? $contact['phone'] : '',
-                                'referral_code' => $randomNumberMT.$user->id,
-                                'user_id' => $user->id
-                            ]);
-                        } else {
-                            $member = $user->member;
-                        }
+            $reservation = Reservation::updateOrCreate([
+                'session_id' => $session->id,
+                'member_id' =>  $member->id
+            ],[
+                'session_id' => $session->id,
+                'member_id' =>  $member->id,
+                'status' => Reservation::ACTIVE,
+                'start_date' => Carbon::today()->format('Y-m-d'),
+                'end_date' => $session->end_date
+            ]);
             
-                        $reservation = Reservation::create([
-                            'session_id' => $session->id,
-                            'member_id' =>  $member->id,
-                            'status' => Reservation::ACTIVE,
-                            'start_date' => Carbon::today()->format('Y-m-d'),
-                            'end_date' => $session->end_date
-                        ]);
-                        
-                        $member->locations()->attach($location->id, ['go_high_level_location_id' => $location->go_high_level_location_id, 'go_high_level_contact_id' => $contact['id']]);
-                        DB::commit();
-                    } catch(\Exception $error) {
-                        DB::rollback();
-                        $data = [
-                            'contact' => $contact,
-                            'customField' => $customField
-                        ];
-                        Log::info('===== Create New Member =====');
-                        Log::info(json_encode($location));
-                        Log::info(json_encode($contact));
-                        Log::info($error->getMessage());
-                    }
-                }
-            } 
+            $member->locations()->sync([$location->id => [
+                'go_high_level_location_id' => $location->go_high_level_location_id,
+                'go_high_level_contact_id' => $contact['id']
+            ]], false);
+
+            DB::commit();
+            return true;
+        } catch(\Exception $error) {
+            DB::rollback();
+            Log::info('===== Create New Member =====');
+            Log::info(json_encode($contact));
+            Log::info(json_encode($programLevelId));
+            Log::info($error->getMessage());
+            return false;
         }
     }
 

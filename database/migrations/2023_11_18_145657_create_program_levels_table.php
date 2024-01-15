@@ -21,7 +21,6 @@ return new class extends Migration
             $table->foreignId('parent_id')->nullable()->constrained(
                 table: 'program_levels'
             );
-            $table->longText('custom_field_ghl_value')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
