@@ -159,9 +159,7 @@ class GHLService
         if ($tokenObj->failed()) {
             $tokenObj->throw();
         }
-        
-        $url = 'https://services.leadconnectorhq.com/contacts/?locationId='.$location_id.'&limit=100';
-
+     
         return $tokenObj->json();
     }
 
@@ -175,9 +173,41 @@ class GHLService
         if ($response->successful()) {
             return $response->json();
         } else {
-            Log::info('==== GHL SERVICE - getContactById() =====');
+            Log::info('==== GHL SERVICE - Error getContactById() =====');
             Log::info($response->body());
             return null;
+        }
+    }
+
+    public function getContactsByLocation($locationId){
+        $locationObj = $this->generateLocationLevelKey($locationId);
+        $response = Http::withHeaders([
+            'Content-type' => 'application/json',
+            'Authorization' => 'Bearer ' . $locationObj['access_token'],
+            'Version' => config('services.ghl.api_version'),
+        ])->get(config('services.ghl.api_url') .'contacts/?locationId='.$locationId);
+        if ($response->successful()) {
+            return $response->json();
+        } else {
+            Log::info('==== GHL SERVICE - Error getContactsByLocation() =====');
+            Log::info($response->body());
+            return $response->body();
+        }
+    }
+
+    public function getContactsByName($locationId, $name){
+        $locationObj = $this->generateLocationLevelKey($locationId);
+        $response = Http::withHeaders([
+            'Content-type' => 'application/json',
+            'Authorization' => 'Bearer ' . $locationObj['access_token'],
+            'Version' => config('services.ghl.api_version'),
+        ])->get(config('services.ghl.api_url') .'contacts/?locationId='.$locationId.'&query='.$name);
+        if ($response->successful()) {
+            return $response->json();
+        } else {
+            Log::info('==== GHL SERVICE - Error getContactsByLocation() =====');
+            Log::info($response->body());
+            return $response->body();
         }
     }
 }
