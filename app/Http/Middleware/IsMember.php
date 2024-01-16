@@ -16,7 +16,7 @@ class IsMember
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::user()->hasRole(\App\Models\User::MEMBER)) {
+        if (!$request->user()->hasRole(\App\Models\User::MEMBER)) {
             return response()->json(['success' => false, 'status' => 401, 'message' => 'Unauthorized role']);
         } 
         return $next($request);
