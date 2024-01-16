@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('name');
             $table->longText('description');
             $table->string('avatar')->nullable();
-            $table->datetime('last_sync_at');
+            $table->datetime('last_sync_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
