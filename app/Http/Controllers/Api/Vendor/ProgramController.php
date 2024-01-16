@@ -403,56 +403,33 @@ class ProgramController extends BaseController
             }
 
             if($reqCustomField) {
-                $url = 'https://services.leadconnectorhq.com/contacts/?locationId='.$location->go_high_level_location_id.'&limit=100';
-                do {
-                    $response = Http::withHeaders([
-                        'Accept' => 'application/json',
-                        'Authorization' => 'Bearer '.$tokenObj['access_token'],
-                        'Version' => '2021-07-28'
-                    ])->get($url);
-        
-                    if ($response->failed()) {
-                        $response->throw();    
-                    }
-                    $response = $response->json();
-                    $contact = $request;
-                    $url = null;
-                    if(isset($response['meta'])) {
-                        if(isset($response['meta']['nextPageUrl'])) {
-                            $url = $response['meta']['nextPageUrl'];
-                            $url = str_replace('http://', 'https://', $url);
+                $contact = $request;
+                $programLevelId = null;
+                foreach($contact['customFields'] as $customField) {
+                    
+                    if($customField['id'] == $reqCustomField['id']) {
+                        if (strpos($customField['value'], '_') === false) {
+                            continue;
                         }
-                    }
+                        $parts = explode('_', $customField['value']);
+                        if(count($parts) != 2) {
+                            continue;
+                        }
 
-                    $programLevelId = null;
-                    foreach($contact['customFields'] as $customField) {
-                        
-                        if($customField['id'] == $reqCustomField['id']) {
-                            if (strpos($customField['value'], '_') === false) {
-                                continue;
-                            }
-                            $parts = explode('_', $customField['value']);
-                            if(count($parts) != 2) {
-                                continue;
-                            }
+                        $programLevelName = $parts[1];
+                        $programName = $parts[0];
 
-                            $programLevelName = $parts[1];
-                            $programName = $parts[0];
-
-                            if($programName == $program->name) {
-                                foreach($program->programLevels as $programLevel) {
-                                    if($programLevelName == $programLevel->name) {
-                                        $programLevelId = $programLevel->id;
-                                        MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
-                                    }
+                        if($programName == $program->name) {
+                            foreach($program->programLevels as $programLevel) {
+                                if($programLevelName == $programLevel->name) {
+                                    $programLevelId = $programLevel->id;
+                                    MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
                                 }
                             }
                         }
                     }
-                } while($url);
+                }
             }
-            $program->last_sync_at = now();
-            $program->save();
             return $this->sendResponse('Success', 'Member synced successfully');
         } catch(Exception $error) {
             return $this->sendError('Something went wrong!', $error->getMessage());
