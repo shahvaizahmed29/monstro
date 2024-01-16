@@ -18,12 +18,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\GHLController;
 use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
+use App\Services\GHLService;
+use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
 class MemberController extends BaseController
 {
-  
+    
+    protected $ghlService;
+
+    public function __construct(GHLService $ghlService){
+        $this->ghlService = $ghlService;
+    }
+
     public function getMembersByLocation(){
         //Code commented out below becuase auth guard is not applied anymore.
         // $location = Location::find($location_id);
@@ -161,4 +169,16 @@ class MemberController extends BaseController
 
         return $tokenObj->json();
     }
+
+    public function getContacts(){
+        try{
+            $location = request()->location;
+            $name = request()->name;
+            $locationId = $location->go_high_level_location_id;
+            return $this->ghlService->getContactsByName($locationId,$name);
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
 }
