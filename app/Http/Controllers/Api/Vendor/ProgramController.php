@@ -430,8 +430,6 @@ class ProgramController extends BaseController
                     }
                 }
             }
-            $program->last_sync_at = now();
-            $program->save();
             return $this->sendResponse('Success', 'Member synced successfully');
         } catch(Exception $error) {
             return $this->sendError('Something went wrong!', $error->getMessage());
