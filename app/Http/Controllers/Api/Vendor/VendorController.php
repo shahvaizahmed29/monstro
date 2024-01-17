@@ -151,7 +151,7 @@ class VendorController extends BaseController
             $user->vendor->last_name = $request->lastName;
             $user->vendor->phone_number = $request->phoneNumber;
             $user->vendor->company_name = $request->companyName;
-            $user->vendor->company_email = $request->companyEmail;
+            // $user->vendor->company_email = $request->companyEmail;
             $user->vendor->company_website = $request->companyWebsite;
             $user->vendor->company_address = $request->companyAddress;
 

@@ -24,7 +24,7 @@ class VendorProfileUpdate extends FormRequest
         return [
             'firstName' => ['required', 'string'],
             'companyName' => ['required', 'string'],
-            'companyEmail' => ['required', 'string'],
+            // 'companyEmail' => ['required', 'string'],
         ];
     }
 }
