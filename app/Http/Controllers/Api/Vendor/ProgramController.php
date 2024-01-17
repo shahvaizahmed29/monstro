@@ -358,7 +358,7 @@ class ProgramController extends BaseController
             }
             return $this->sendResponse([], 'Members synced successfully');
         } else {
-            return $this->sendError('Resync again in about '. $delayTimeForEachLocation - Carbon::now()->diffInMinutes($program->last_sync_at), []);
+            return $this->sendError('Resync again in about '. $delayTimeForEachLocation - Carbon::now()->diffInMinutes($program->last_sync_at).' mins', []);
         }
     }
 
