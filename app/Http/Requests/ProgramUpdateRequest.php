@@ -23,12 +23,7 @@ class ProgramUpdateRequest extends FormRequest
     {
         return [
             'program_name' => 'required|string',
-            'description' => 'required|string',                     
-            'sessions.*.capacity' => 'required|integer',
-            'sessions.*.min_age' => 'required|integer|min:0',
-            'sessions.*.max_age' => 'required|integer|gt:sessions.*.min_age',                                                    
-            'sessions.*.program_level_name' => 'required|string',
-            'sessions.*.duration_time' => 'required|integer'
+            'description' => 'required|string'
         ];
     }
 }

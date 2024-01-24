@@ -160,6 +160,38 @@ class ProgramController extends BaseController
     }
 
     public function update(ProgramUpdateRequest $request, Program $program){
+        try{
+            DB::beginTransaction();
+            
+            $program->update([
+                'name' => $request->program_name,
+                'description' => $request->description,
+                'avatar' => $request->avatar ?? $program->avatar,
+            ]);
+
+            DB::commit();
+            $program = Program::where('id', $program->id)->first();
+            return $this->sendResponse(new ProgramResource($program), 'Program updated successfully.');
+        }catch (Exception $e) {
+            DB::rollBack();
+            Log::info('===== ProgramController - programUpdate() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function porgramLevelUpdate(ProgramUpdateRequest $request, Program $program){
+        try{
+
+        }catch (Exception $e) {
+            DB::rollBack();
+            Log::info('===== ProgramController - programUpdate() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function oldUpdate(ProgramUpdateRequest $request, Program $program){
         try {
             DB::beginTransaction();
             $program->update([
