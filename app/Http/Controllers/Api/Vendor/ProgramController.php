@@ -161,16 +161,25 @@ class ProgramController extends BaseController
 
     public function update(ProgramUpdateRequest $request, Program $program){
         try{
+            $avatar = $request->file('avatar');
+            $imgPath = 'program-images/';
+            $imageUrl = null;
+
+            if($avatar){
+                $fileName = $program->id . '_' . time() . '.' . $avatar->getClientOriginalExtension();
+                $avatar->move(public_path($imgPath), $fileName);
+                $imageUrl = getenv('APP_URL') .$imgPath. $fileName;
+            }
+
             DB::beginTransaction();
-            
+
             $program->update([
                 'name' => $request->program_name,
                 'description' => $request->description,
-                'avatar' => $request->avatar ?? $program->avatar,
+                'avatar' => isset($imageUrl) ? $imageUrl : $program->avatar,
             ]);
 
             DB::commit();
-            $program = Program::where('id', $program->id)->first();
             return $this->sendResponse(new ProgramResource($program), 'Program updated successfully.');
         }catch (Exception $e) {
             DB::rollBack();
