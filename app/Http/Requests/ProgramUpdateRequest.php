@@ -22,7 +22,7 @@ class ProgramUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'program_name' => 'required|string',
+            'name' => 'required|string',
             'description' => 'required|string'
         ];
     }

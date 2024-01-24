@@ -174,7 +174,7 @@ class ProgramController extends BaseController
             DB::beginTransaction();
 
             $program->update([
-                'name' => $request->program_name,
+                'name' => $request->name,
                 'description' => $request->description,
                 'avatar' => isset($imageUrl) ? $imageUrl : $program->avatar,
             ]);
