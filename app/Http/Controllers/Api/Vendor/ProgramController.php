@@ -11,8 +11,10 @@ use App\Models\Setting;
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\Vendor\MemberController;
+use App\Http\Requests\ProgramLevelUpdateRequest;
 use App\Http\Requests\ProgramStoreRequest;
 use App\Http\Requests\ProgramUpdateRequest;
+use App\Http\Resources\Vendor\ProgramLevelResource;
 use App\Http\Resources\Vendor\ProgramResource;
 use Carbon\Carbon;
 use Exception;
@@ -189,12 +191,46 @@ class ProgramController extends BaseController
         }
     }
 
-    public function porgramLevelUpdate(ProgramUpdateRequest $request, Program $program){
+    public function programLevelUpdate(ProgramLevelUpdateRequest $request, ProgramLevel $programLevel){
         try{
+            DB::beginTransaction();
 
+            $programLevel->update([
+                'program_id' => $programLevel->program->id,
+                'name' => $request->name,
+                'capacity' => $request->capacity,
+                'min_age' => $request->min_age,
+                'max_age' => $request->max_age
+            ]);
+            
+            foreach ($request->sessions as $session) {
+                $sessionId = isset($session['id']) ? $session['id'] : null;
+                if(isset($session['duration_time']) && isset($session['start_date']) && isset($session['end_date'])){
+                    Session::updateOrCreate(
+                        ['id' => $sessionId],
+                        [
+                            'program_level_id' => $programLevel->id,
+                            'program_id' => $programLevel->program->id,
+                            'duration_time' => $session['duration_time'],
+                            'start_date' => $session['start_date'],
+                            'end_date' => $session['end_date'],
+                            'monday' => isset($session['monday']) ? $session['monday'] : null,
+                            'tuesday' => isset($session['tuesday']) ? $session['tuesday'] : null,
+                            'wednesday' => isset($session['wednesday']) ? $session['wednesday'] : null,
+                            'thursday' => isset($session['thursday']) ? $session['thursday'] : null,
+                            'friday' => isset($session['friday']) ? $session['friday'] : null,
+                            'saturday' => isset($session['saturday']) ? $session['saturday'] : null,
+                            'sunday' => isset($session['sunday']) ? $session['sunday'] : null,
+                        ]
+                    );
+                }
+            }
+
+            DB::commit();
+            return $this->sendResponse(new ProgramLevelResource($programLevel), 'Program level updated successfully.');
         }catch (Exception $e) {
             DB::rollBack();
-            Log::info('===== ProgramController - programUpdate() - error =====');
+            Log::info('===== ProgramController - programLevelUpdate() - error =====');
             Log::info($e->getMessage());
             return $this->sendError($e->getMessage(), [], 500);
         }
