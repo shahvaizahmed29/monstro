@@ -11,6 +11,7 @@ use App\Models\Setting;
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\Vendor\MemberController;
+use App\Http\Requests\ProgramLevelRequest;
 use App\Http\Requests\ProgramLevelUpdateRequest;
 use App\Http\Requests\ProgramStoreRequest;
 use App\Http\Requests\ProgramUpdateRequest;
@@ -125,6 +126,62 @@ class ProgramController extends BaseController
         }catch(Exception $e){
             DB::rollBack();
             Log::info('===== ProgramController - addProgram() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function addProgramLevel(ProgramLevelRequest $request){
+        try{
+            DB::beginTransaction();
+            $parent_id = null;
+            $programId = $request->program_id;
+            $oldProgramLevelId = ProgramLevel::where('program_id', $programId)->latest()->first();
+            
+            if($oldProgramLevelId){
+                $parent_id = $oldProgramLevelId->id;
+            }
+
+            $program_level = ProgramLevel::create([
+                'name' => $request->name,
+                'program_id' => $programId,
+                'parent_id' => $parent_id,
+                'capacity' => $request->capacity,
+                'min_age' => $request->min_age,
+                'max_age' => $request->max_age,
+            ]);
+
+            $program_level->save();
+
+            foreach($request->sessions as $session){
+                $tomorrow = Carbon::tomorrow();
+                $formattedTomorrow = $tomorrow->format('Y-m-d');
+
+                $twoYearsLater = $tomorrow->addYears(2);
+                $twoYearsLaterformattedDate = $twoYearsLater->format('Y-m-d');
+
+                $session = Session::create([
+                    'program_id' => $programId,
+                    'program_level_id' => $program_level->id,
+                    'duration_time' => $session['duration_time'],
+                    'start_date' => $formattedTomorrow,
+                    'end_date' => $twoYearsLaterformattedDate,
+                    'monday' => $session['monday'] ?? null,
+                    'tuesday' => $session['tuesday'] ?? null,
+                    'wednesday' => $session['wednesday'] ?? null,
+                    'thursday' => $session['thursday'] ?? null,
+                    'friday' => $session['friday'] ?? null,
+                    'saturday' => $session['saturday'] ?? null,
+                    'sunday' => $session['sunday'] ?? null,
+                    'status' => \App\Models\Session::ACTIVE
+                ]);
+            }
+            DB::commit();
+            
+            return $this->sendResponse(new ProgramLevelResource($program_level), 'Program Level created successfully.');
+        }catch(Exception $e){
+            DB::rollBack();
+            Log::info('===== ProgramController - addProgramLevel() - error =====');
             Log::info($e->getMessage());
             return $this->sendError($e->getMessage(), [], 500);
         }
