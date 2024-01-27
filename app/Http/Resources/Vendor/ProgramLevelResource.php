@@ -24,6 +24,7 @@ class ProgramLevelResource extends JsonResource
             'maxAge' => $this->max_age,
             'programId' => $this->program_id,
             'parentId' => $this->parent_id,
+            'status' => ($this->status == 1) ? 'Active' : 'Archived',
             'parent' => $this->whenLoaded('parent', function () {
                 return new ProgramLevelResource($this->parent);
             }),

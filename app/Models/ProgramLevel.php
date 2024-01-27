@@ -10,13 +10,17 @@ class ProgramLevel extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const ACTIVE = 1; 
+    public const ARCHIVED = 2;
+
     protected $fillable = [
         'name',
         'capacity',
         'min_age',
         'max_age',
         'program_id',
-        'parent_id'
+        'parent_id',
+        'status'
     ];
 
     public function program(){

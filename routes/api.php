@@ -68,6 +68,7 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::get('sync-members-by-location/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'syncMembersByLocation'])->name('sync.member.by.location');
     Route::get('get-contacts', [App\Http\Controllers\Api\Vendor\MemberController::class, 'getContacts'])->name('get.contacts');
     Route::post('add-member/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addMemberManually'])->name('add.member.manually');
+    Route::put('/program-level-archive/{programLevelId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'programLevelArchive'])->name('program.level.archive');
 });
 
 Route::post('image-update/{user_id}', [App\Http\Controllers\PublicController::class, 'imageUpdate'])->name('image.update');
