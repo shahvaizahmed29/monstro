@@ -10,13 +10,17 @@ class Member extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const ACTIVE = 1; 
+    public const INACTIVE = 2;
+
     protected $fillable = [
         'user_id',
         'name',
         'email',
         'phone',
         'referral_code',
-        'avatar'
+        'avatar',
+        'status'
     ];
 
     public function locations(){

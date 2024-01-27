@@ -2,24 +2,18 @@
 
 namespace App\Http\Controllers\Api\Vendor;
 
-use Illuminate\Http\Request;
 use Carbon\Carbon;
-use DB;
 use App\Models\User;
 use App\Models\Member;
 use App\Models\Reservation;
-use App\Models\ProgramLevel;
-use App\Models\Location;
-use App\Models\MemberLocation;
 use App\Models\Session;
 use App\Models\Setting;
 use App\Http\Controllers\BaseController;
-use App\Http\Controllers\Controller;
-use App\Http\Controllers\GHLController;
 use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
 use App\Services\GHLService;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
@@ -96,6 +90,23 @@ class MemberController extends BaseController
             'reservations' => ReservationResource::collection($reservations)
         ];
         return $this->sendResponse($data, 'Member details with session reservations and program');
+    }
+
+    public function memberInactive($member_id){
+        try{ 
+            $member = Member::find($member_id);
+
+            if(!$member){
+                return $this->sendError('Member does not exist.', [], 400);
+            }
+
+            $member->status = \App\Models\Member::INACTIVE;
+            $member->save();
+
+            return $this->sendResponse(new MemberResource($member), 'Member status updated to inactive successfully.');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
     }
 
     public static function createMemberFromGHL($contact, $location, $programLevelId) {
