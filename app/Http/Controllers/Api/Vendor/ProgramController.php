@@ -15,8 +15,10 @@ use App\Http\Requests\ProgramLevelRequest;
 use App\Http\Requests\ProgramLevelUpdateRequest;
 use App\Http\Requests\ProgramStoreRequest;
 use App\Http\Requests\ProgramUpdateRequest;
+use App\Http\Resources\Member\CheckInResource;
 use App\Http\Resources\Vendor\ProgramLevelResource;
 use App\Http\Resources\Vendor\ProgramResource;
+use App\Models\CheckIn;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +47,26 @@ class ProgramController extends BaseController
             ],
         ];
         return $this->sendResponse($data, 'Get programs related to specific location');
+    }
+
+
+    public function lastTenAttendance($member_id, $program_id){
+        try{
+            $attendances = CheckIn::whereHas('reservation', function($query) use ($member_id){
+                $query->where('member_id', $member_id);
+            })
+            ->whereHas('reservation.session', function($query) use ($program_id){
+                $query->where('program_id', $program_id);
+            })
+            ->with(['reservation.session'])
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+            return $this->sendResponse(CheckInResource::collection($attendances), 'Get attendances related to member and program.');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
     }
     
     public function getProgramById($id){

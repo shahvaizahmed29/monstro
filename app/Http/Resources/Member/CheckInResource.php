@@ -18,7 +18,10 @@ class CheckInResource extends JsonResource
             'id' => $this->id,
             'reservationId' => $this->reservation_id,
             'checkInTime' => $this->check_in_time,
-            'checkOutTime' => $this->check_out_time
+            'checkOutTime' => $this->check_out_time,
+            'reservation' => $this->whenLoaded('reservation', function () {
+                return new ReservationResource($this->reservation);
+            }),
         ];
 
         return $check_ins;
