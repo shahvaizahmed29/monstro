@@ -22,7 +22,9 @@ class MemberResource extends JsonResource
             'referralCode' => $this->referral_code,
             'avatar' => $this->avatar,
             'status' => ($this->status == 1) ? 'Active' : 'In Active',
-            // 'activeStatus' => $this->isActive() ? 'Active' : 'Not Active',
+            'currentProgram' => $this->currentProgram(),
+            'currentProgramLevel' => $this->currentProgramLevel(),
+            'activityStatus' => $this->isActive() ? 'Active' : 'Not Active',
             'reservations' => $this->whenLoaded('reservations', function () {
                 return new ReservationResource($this->reservations);
             }),
