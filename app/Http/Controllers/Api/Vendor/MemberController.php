@@ -70,13 +70,9 @@ class MemberController extends BaseController
     public function getMemberDetails($member_id){
         $location = request()->location;
         $locationId = $location->id;
-        $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->get();
-        if(count($reservations)) {
-            $memberLocationId = $reservations[0]->session->programLevel->program->location_id;
-            if($memberLocationId != $locationId) {
-                return $this->sendError('Member doesnot exist');
-            }
-        }
+        
+        $reservations = Reservation::with(['checkIns', 'session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->get();
+      
         $member_details = Member::where('id', $member_id)->first();
         
         $go_high_level_contact_id = DB::table('member_locations')
@@ -86,6 +82,18 @@ class MemberController extends BaseController
             ->first();
 
         $member_details['go_high_level_contact_id'] = $go_high_level_contact_id;
+
+        if(count($reservations)) {
+           $latestCheckInTime = $reservations->checkIns->latest()->first();
+           if ($latestCheckInTime) {
+                $carbonInstance = Carbon::parse($latestCheckInTime);
+                $member_details['last_seen'] = $carbonInstance->diffForHumans();
+            } else {
+                $member_details['last_seen'] = null;
+            }
+        } else {
+            $member_details['last_seen'] = null;
+        }
 
         $data = [
             'memberDetails' => new MemberResource($member_details),
