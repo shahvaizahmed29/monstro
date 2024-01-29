@@ -9,6 +9,7 @@ use App\Models\Reservation;
 use App\Models\Session;
 use App\Models\Setting;
 use App\Models\Program;
+use App\Models\CheckIn;
 use App\Http\Controllers\BaseController;
 use App\Http\Resources\Vendor\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
@@ -40,15 +41,13 @@ class MemberController extends BaseController
             $query->where('locations.id', $locationId);
         })->whereHas("user.roles", function ($q){
             $q->where('name', \App\Models\User::MEMBER);
-        })->with([
-            'reservations.checkIns' => function ($query) {
-                $query->latest('check_in_time');
-            }
-        ])->get();
+        })->with(['reservations','reservations.checkIns'])->get();
 
         $members = $membersByLocation->map(function ($membersByLocation) {
-            $latestCheckInTime = $membersByLocation->reservations->pluck('checkIns.0.check_in_time')->first();
-        
+            $reservations = $membersByLocation->reservations;
+            $reservationIds = $reservations->pluck('id')->toArray();
+            $latestCheckInTime = CheckIn::whereIn('reservation_id', $reservationIds)->latest()->first();
+
             if ($latestCheckInTime) {
                 $carbonInstance = Carbon::parse($latestCheckInTime);
                 $membersByLocation->last_seen = $carbonInstance->diffForHumans();
@@ -72,7 +71,7 @@ class MemberController extends BaseController
         $locationId = $location->id;
         
         $reservations = Reservation::with(['checkIns', 'session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->get();
-      
+        
         $member_details = Member::where('id', $member_id)->first();
         
         $go_high_level_contact_id = DB::table('member_locations')
@@ -84,9 +83,10 @@ class MemberController extends BaseController
         $member_details['go_high_level_contact_id'] = $go_high_level_contact_id;
 
         if(count($reservations)) {
-           $latestCheckInTime = $reservations->checkIns->latest()->first();
-           if ($latestCheckInTime) {
-                $carbonInstance = Carbon::parse($latestCheckInTime);
+            $reservationIds = $reservations->pluck('id')->toArray();
+            $latestCheckInTime = CheckIn::whereIn('reservation_id', $reservationIds)->latest()->first();
+            if ($latestCheckInTime) {
+                $carbonInstance = Carbon::parse($latestCheckInTime->check_in_time);
                 $member_details['last_seen'] = $carbonInstance->diffForHumans();
             } else {
                 $member_details['last_seen'] = null;
