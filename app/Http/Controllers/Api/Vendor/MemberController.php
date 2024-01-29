@@ -8,6 +8,7 @@ use App\Models\Member;
 use App\Models\Reservation;
 use App\Models\Session;
 use App\Models\Setting;
+use App\Models\Program;
 use App\Http\Controllers\BaseController;
 use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
@@ -92,7 +93,7 @@ class MemberController extends BaseController
         return $this->sendResponse($data, 'Member details with session reservations and program');
     }
 
-    public function memberInactive($member_id){
+    public function memberStatusUpdate($member_id){
         try{ 
             $member = Member::find($member_id);
 
@@ -192,4 +193,10 @@ class MemberController extends BaseController
         }
     }
 
+    public function getMembersByProgram($id) {
+        $location = request()->location;
+        $locationId = $location->id;
+        $program = Program::where('activeSessions')->where('id', $id)->where('location_id', $locationId)->get();
+        return $this->sendResponse(ReservationResource::collection($program->activeSessions()), 'Members with details for the location.');
+    }
 }

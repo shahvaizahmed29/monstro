@@ -27,6 +27,9 @@ class ReservationResource extends JsonResource
             'session' => $this->whenLoaded('session', function () {
                 return new SessionResource($this->session);
             }),
+            'member' => $this->whenLoaded('member', function () {
+                return new MemberResource($this->member);
+            }),
             // 'checkIns' => $this->whenLoaded('checkIns', function () {
             //     return new CheckInResource($this->checkIns);
             // })
