@@ -40,7 +40,7 @@ class Program extends Model
 
     public function activeSessions()
     {
-        return $this->sessions()->with(['reservations','reservations.member'])
+        return $this->sessions()->with(['reservations', 'reservations.member'])
             ->where('status', Session::ACTIVE)->latest()->get();
     }
 

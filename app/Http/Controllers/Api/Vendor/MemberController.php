@@ -10,8 +10,9 @@ use App\Models\Session;
 use App\Models\Setting;
 use App\Models\Program;
 use App\Http\Controllers\BaseController;
-use App\Http\Resources\Member\ReservationResource;
+use App\Http\Resources\Vendor\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
+use App\Http\Resources\Vendor\SessionResource;
 use App\Services\GHLService;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -196,7 +197,13 @@ class MemberController extends BaseController
     public function getMembersByProgram($id) {
         $location = request()->location;
         $locationId = $location->id;
-        $program = Program::where('activeSessions')->where('id', $id)->where('location_id', $locationId)->get();
-        return $this->sendResponse(ReservationResource::collection($program->activeSessions()), 'Members with details for the location.');
+        $program = Program::where('id', $id)->where('location_id', $locationId)->first();
+        if ($program) {
+            $activeSessions = $program->activeSessions();
+            return $this->sendResponse(SessionResource::collection($activeSessions), 'program active members.');
+        } else {
+            return $this->sendError('Program not found.', 404);
+        }
+        
     }
 }
