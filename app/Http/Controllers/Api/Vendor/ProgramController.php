@@ -540,74 +540,82 @@ class ProgramController extends BaseController
         }
     }
 
-    public function addMemberManually($programId, Request $request){
+    public function addMemberManually($programLevelId, Request $request){
         try {
             $reqCustomField = null;
             $location = request()->location;
-            $program = Program::with('programLevels')->where('id',$programId)->first();
-            $ghl_integration = Setting::where('name', 'ghl_integration')->first();
-            $token = $ghl_integration['value'];
-            $companyId = $ghl_integration['meta_data']['companyId'];
+            $programLevel = ProgramLevel::with('program')->where('id',$programLevelId)->first();
+            // $ghl_integration = Setting::where('name', 'ghl_integration')->first();
+            // $token = $ghl_integration['value'];
+            // $companyId = $ghl_integration['meta_data']['companyId'];
 
-            $tokenObj = Http::withHeaders([
-                'Authorization' => 'Bearer '.$token,
-                'Version' => '2021-07-28'                
-            ])->asForm()->post('https://services.leadconnectorhq.com/oauth/locationToken', [
-                'companyId' => $companyId,
-                'locationId' => $location->go_high_level_location_id,
-            ]);
+            // $tokenObj = Http::withHeaders([
+            //     'Authorization' => 'Bearer '.$token,
+            //     'Version' => '2021-07-28'                
+            // ])->asForm()->post('https://services.leadconnectorhq.com/oauth/locationToken', [
+            //     'companyId' => $companyId,
+            //     'locationId' => $location->go_high_level_location_id,
+            // ]);
     
-            if ($tokenObj->failed()) {
-                return $this->sendError('Something went wrong!', json_encode($tokenObj->json()));
-            }
+            // if ($tokenObj->failed()) {
+            //     return $this->sendError('Something went wrong!', json_encode($tokenObj->json()));
+            // }
 
-            $tokenObj = $tokenObj->json();
+            // $tokenObj = $tokenObj->json();
             
-            $responseCustomField = Http::withHeaders([
-                'Accept' => 'application/json',
-                'Authorization' => 'Bearer '.$tokenObj['access_token'],
-                'Version' => '2021-07-28'
-            ])->get('https://services.leadconnectorhq.com/locations/'.$location->go_high_level_location_id.'/customFields');
+            // $responseCustomField = Http::withHeaders([
+            //     'Accept' => 'application/json',
+            //     'Authorization' => 'Bearer '.$tokenObj['access_token'],
+            //     'Version' => '2021-07-28'
+            // ])->get('https://services.leadconnectorhq.com/locations/'.$location->go_high_level_location_id.'/customFields');
 
-            if ($responseCustomField->failed()) {
-                $responseCustomField->throw();    
-            }
-            $responseCustomField = $responseCustomField->json();
+            // if ($responseCustomField->failed()) {
+            //     $responseCustomField->throw();    
+            // }
+            // $responseCustomField = $responseCustomField->json();
 
-            foreach($responseCustomField['customFields'] as $customField) {
-                if($customField['name'] == 'Program Level') {
-                    $reqCustomField = $customField;
-                }
-            }
+            // foreach($responseCustomField['customFields'] as $customField) {
+            //     if($customField['name'] == 'Program Level') {
+            //         $reqCustomField = $customField;
+            //     }
+            // }
 
-            if($reqCustomField) {
-                $contact = $request;
-                $programLevelId = null;
-                foreach($contact['customFields'] as $customField) {
+            // if($reqCustomField) {
+            //     $contact = $request;
+            //     $programLevelId = null;
+            //     foreach($contact['customFields'] as $customField) {
                     
-                    if($customField['id'] == $reqCustomField['id']) {
-                        if (strpos($customField['value'], '_') === false) {
-                            continue;
-                        }
-                        $parts = explode('_', $customField['value']);
-                        if(count($parts) != 2) {
-                            continue;
-                        }
+            //         if($customField['id'] == $reqCustomField['id']) {
+            //             if (strpos($customField['value'], '_') === false) {
+            //                 continue;
+            //             }
+            //             $parts = explode('_', $customField['value']);
+            //             if(count($parts) != 2) {
+            //                 continue;
+            //             }
 
-                        $programLevelName = $parts[1];
-                        $programName = $parts[0];
+            //             $programLevelName = $parts[1];
+            //             $programName = $parts[0];
 
-                        if($programName == $program->name) {
-                            foreach($program->programLevels as $programLevel) {
-                                if($programLevelName == $programLevel->name) {
-                                    $programLevelId = $programLevel->id;
-                                    MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
-                                }
-                            }
-                        }
-                    }
-                }
+            //             if($programName == $program->name) {
+            //                 foreach($program->programLevels as $programLevel) {
+            //                     if($programLevelName == $programLevel->name) {
+            //                         $programLevelId = $programLevel->id;
+            //                         MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
+            //                     }
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+
+            $contact = $request->all();
+            if(!isset($contact['email'])) {
+                return $this->sendError('No email found against the contact!', json_encode($tokenObj->json()));
+            } else {
+                MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
             }
+
             return $this->sendResponse('Success', 'Member synced successfully');
         } catch(Exception $error) {
             return $this->sendError('Something went wrong!', $error->getMessage());
