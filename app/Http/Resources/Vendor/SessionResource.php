@@ -16,11 +16,15 @@ class SessionResource extends JsonResource
     public function toArray(Request $request): array
     {
         $timezone = $request->header('Timezone', 'UTC');
+        $program = $this->program()->first();
+        $programLevel = $this->programLevel()->first();
 
         $session = [
             'id' => $this->id,
-            'programLevelId' => $this->program_level_id,
-            'programId' => $this->program_id,
+            'programLevelId' => $programLevel->id,
+            'programLevelName' => $programLevel->name,
+            'programId' => $program->id,
+            'programName' => $program->name,
             'durationTime' => $this->duration_time,
             'startDate' => $this->start_date,
             'endDate' => $this->end_date,
