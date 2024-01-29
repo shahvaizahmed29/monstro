@@ -5,6 +5,7 @@ namespace App\Http\Resources\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\Vendor\ProgramLevelResource;
+use App\Http\Resources\Vendor\ReservationResource;
 
 class SessionResource extends JsonResource
 {
@@ -40,7 +41,9 @@ class SessionResource extends JsonResource
             'programLevel' => $this->whenLoaded('programLevel', function () {
                 return new ProgramLevelResource($this->programLevel);
             }),
-            'reservations' => ReservationResource::collection($this->whenLoaded('reservations')),
+            'reservations' => $this->whenLoaded('reservations', function () {
+                return ReservationResource::collection($this->reservations);
+            })
         ];
 
 
