@@ -49,7 +49,7 @@ class MemberController extends BaseController
             $latestCheckInTime = CheckIn::whereIn('reservation_id', $reservationIds)->latest()->first();
 
             if ($latestCheckInTime) {
-                $carbonInstance = Carbon::parse($latestCheckInTime);
+                $carbonInstance = Carbon::parse($latestCheckInTime->check_in_time);
                 $membersByLocation->last_seen = $carbonInstance->diffForHumans();
             } else {
                 $membersByLocation->last_seen = null;
