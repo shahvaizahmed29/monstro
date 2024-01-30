@@ -5,6 +5,7 @@ namespace App\Http\Resources\Vendor;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\Vendor\ProgramLevelResource;
+use App\Http\Resources\Vendor\ProgramResource;
 use App\Http\Resources\Vendor\ReservationResource;
 
 class SessionResource extends JsonResource
@@ -17,8 +18,8 @@ class SessionResource extends JsonResource
     public function toArray(Request $request): array
     {
         $timezone = $request->header('Timezone', 'UTC');
-        $program = $this->program()->first();
-        $programLevel = $this->programLevel()->first();
+        $program = $this->program()->withTrashed()->first();
+        $programLevel =  $this->programLevel()->withTrashed()->first();
 
         $session = [
             'id' => $this->id,
@@ -38,6 +39,9 @@ class SessionResource extends JsonResource
             'sunday' => $this->sunday,
             'status' => $this->status,
             'currentStatus' => $this->getCurrentStatusAttribute($timezone),
+            'program' => $this->whenLoaded('program', function () {
+                return new ProgramResource($this->program);
+            }),
             'programLevel' => $this->whenLoaded('programLevel', function () {
                 return new ProgramLevelResource($this->programLevel);
             }),

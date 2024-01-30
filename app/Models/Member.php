@@ -54,27 +54,4 @@ class Member extends Model
         return $activeReservationsCount > 0 ? true : false;
     }
 
-    public function currentProgram(){
-        $session = $this->getCurrentProgramAndLevelCode();
-        return ($session) ? $session->programLevel->program->name : null;
-    }
-
-    public function currentProgramLevel(){
-        $session = $this->getCurrentProgramAndLevelCode();
-        return ($session) ? $session->programLevel->name : null;
-    }
-
-    public function getCurrentProgramAndLevelCode(){
-        $reservations = $this->reservations()->where('status', Reservation::ACTIVE)->get();
-
-        if ($reservations->isEmpty()) {
-            return null;
-        }
-
-        $latestReservation = $reservations->sortByDesc('created_at')->first();
-        $session = $latestReservation->session;
-
-        return $session;
-    }
-
 }

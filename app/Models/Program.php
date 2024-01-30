@@ -40,8 +40,10 @@ class Program extends Model
 
     public function activeSessions()
     {
-        return $this->sessions()->with(['reservations', 'reservations.member'])
-            ->where('status', Session::ACTIVE)->latest()->get();
+        return $this->sessions()->with(['reservations', 'reservations.member','programLevel'])
+        ->whereHas('programLevel', function ($query) {
+            return $query->whereNull('deleted_at');
+        })->where('status', Session::ACTIVE)->latest()->get();
     }
 
     public function monthlyRetentionRate()
