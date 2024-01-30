@@ -18,8 +18,8 @@ class SessionResource extends JsonResource
     public function toArray(Request $request): array
     {
         $timezone = $request->header('Timezone', 'UTC');
-        $program = $this->program()->withTrashed()->first();
-        $programLevel =  $this->programLevel()->withTrashed()->first();
+        $program = $this->program()->first();
+        $programLevel =  $this->programLevel()->first();
 
         $session = [
             'id' => $this->id,

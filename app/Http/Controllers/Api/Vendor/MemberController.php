@@ -70,7 +70,13 @@ class MemberController extends BaseController
         $location = request()->location;
         $locationId = $location->id;
         
-        $reservations = Reservation::with(['checkIns', 'session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->get();
+        $reservations = Reservation::with(['checkIns', 'session', 'session.programLevel','session.programLevel.program'])
+        ->whereHas('session.programLevel', function ($query) {
+            return $query->whereNull('deleted_at');
+        })->whereHas('session.program', function ($query) {
+            return $query->whereNull('deleted_at');
+        })
+        ->where('member_id', $member_id)->get();
         
         $member_details = Member::where('id', $member_id)->first();
         
