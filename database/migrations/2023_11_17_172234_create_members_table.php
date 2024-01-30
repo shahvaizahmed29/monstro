@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('phone');
             $table->string('referral_code')->nullable();
             $table->string('avatar')->nullable();
-            $table->tinyInteger('status')->default(1);
             $table->timestamps();
             $table->softDeletes();
         });

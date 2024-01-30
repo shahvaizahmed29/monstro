@@ -23,9 +23,7 @@ class ReservationResource extends JsonResource
             'startDate' => $this->start_date,
             'endDate' => $this->end_date,
             'status' => $this->status,
-            'isMarkedAttendence' => $this->whenLoaded('checkIns', function () {
-                return $this->getIsMarkedAttendenceTodayAttribute();
-            }),
+            'isMarkedAttendence' => $this->getIsMarkedAttendenceTodayAttribute(),
             'session' => $this->whenLoaded('session', function () {
                 return new SessionResource($this->session);
             }),

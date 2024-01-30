@@ -19,8 +19,7 @@ class Member extends Model
         'email',
         'phone',
         'referral_code',
-        'avatar',
-        'status'
+        'avatar'
     ];
 
     public function locations(){
