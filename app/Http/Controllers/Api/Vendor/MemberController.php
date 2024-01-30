@@ -2,24 +2,21 @@
 
 namespace App\Http\Controllers\Api\Vendor;
 
-use Illuminate\Http\Request;
 use Carbon\Carbon;
-use DB;
 use App\Models\User;
 use App\Models\Member;
 use App\Models\Reservation;
-use App\Models\ProgramLevel;
-use App\Models\Location;
-use App\Models\MemberLocation;
 use App\Models\Session;
 use App\Models\Setting;
+use App\Models\Program;
+use App\Models\CheckIn;
 use App\Http\Controllers\BaseController;
-use App\Http\Controllers\Controller;
-use App\Http\Controllers\GHLController;
-use App\Http\Resources\Member\ReservationResource;
+use App\Http\Resources\Vendor\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
+use App\Http\Resources\Vendor\SessionResource;
 use App\Services\GHLService;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
@@ -44,17 +41,15 @@ class MemberController extends BaseController
             $query->where('locations.id', $locationId);
         })->whereHas("user.roles", function ($q){
             $q->where('name', \App\Models\User::MEMBER);
-        })->with([
-            'reservations.checkIns' => function ($query) {
-                $query->latest('check_in_time');
-            }
-        ])->get();
+        })->with(['reservations','reservations.checkIns'])->get();
 
         $members = $membersByLocation->map(function ($membersByLocation) {
-            $latestCheckInTime = $membersByLocation->reservations->pluck('checkIns.0.check_in_time')->first();
-        
+            $reservations = $membersByLocation->reservations;
+            $reservationIds = $reservations->pluck('id')->toArray();
+            $latestCheckInTime = CheckIn::whereIn('reservation_id', $reservationIds)->latest()->first();
+
             if ($latestCheckInTime) {
-                $carbonInstance = Carbon::parse($latestCheckInTime);
+                $carbonInstance = Carbon::parse($latestCheckInTime->check_in_time);
                 $membersByLocation->last_seen = $carbonInstance->diffForHumans();
             } else {
                 $membersByLocation->last_seen = null;
@@ -74,13 +69,15 @@ class MemberController extends BaseController
     public function getMemberDetails($member_id){
         $location = request()->location;
         $locationId = $location->id;
-        $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->get();
-        if(count($reservations)) {
-            $memberLocationId = $reservations[0]->session->programLevel->program->location_id;
-            if($memberLocationId != $locationId) {
-                return $this->sendError('Member doesnot exist');
-            }
-        }
+        
+        $reservations = Reservation::with(['checkIns', 'session', 'session.programLevel','session.programLevel.program'])
+        ->whereHas('session.programLevel', function ($query) {
+            return $query->whereNull('deleted_at');
+        })->whereHas('session.program', function ($query) {
+            return $query->whereNull('deleted_at');
+        })
+        ->where('member_id', $member_id)->get();
+        
         $member_details = Member::where('id', $member_id)->first();
         
         $go_high_level_contact_id = DB::table('member_locations')
@@ -91,11 +88,41 @@ class MemberController extends BaseController
 
         $member_details['go_high_level_contact_id'] = $go_high_level_contact_id;
 
+        if(count($reservations)) {
+            $reservationIds = $reservations->pluck('id')->toArray();
+            $latestCheckInTime = CheckIn::whereIn('reservation_id', $reservationIds)->latest()->first();
+            if ($latestCheckInTime) {
+                $carbonInstance = Carbon::parse($latestCheckInTime->check_in_time);
+                $member_details['last_seen'] = $carbonInstance->diffForHumans();
+            } else {
+                $member_details['last_seen'] = null;
+            }
+        } else {
+            $member_details['last_seen'] = null;
+        }
+
         $data = [
             'memberDetails' => new MemberResource($member_details),
             'reservations' => ReservationResource::collection($reservations)
         ];
         return $this->sendResponse($data, 'Member details with session reservations and program');
+    }
+
+    public function memberStatusUpdate($member_id){
+        try{ 
+            $member = Member::find($member_id);
+
+            if(!$member){
+                return $this->sendError('Member does not exist.', [], 400);
+            }
+
+            $member->status = \App\Models\Member::INACTIVE;
+            $member->save();
+
+            return $this->sendResponse(new MemberResource($member), 'Member status updated to inactive successfully.');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
     }
 
     public static function createMemberFromGHL($contact, $location, $programLevelId) {
@@ -181,4 +208,16 @@ class MemberController extends BaseController
         }
     }
 
+    public function getMembersByProgram($id) {
+        $location = request()->location;
+        $locationId = $location->id;
+        $program = Program::where('id', $id)->where('location_id', $locationId)->first();
+        if ($program) {
+            $activeSessions = $program->activeSessions();
+            return $this->sendResponse(SessionResource::collection($activeSessions), 'program active members.');
+        } else {
+            return $this->sendError('Program not found.', 404);
+        }
+        
+    }
 }

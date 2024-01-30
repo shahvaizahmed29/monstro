@@ -15,8 +15,10 @@ use App\Http\Requests\ProgramLevelRequest;
 use App\Http\Requests\ProgramLevelUpdateRequest;
 use App\Http\Requests\ProgramStoreRequest;
 use App\Http\Requests\ProgramUpdateRequest;
+use App\Http\Resources\Member\CheckInResource;
 use App\Http\Resources\Vendor\ProgramLevelResource;
 use App\Http\Resources\Vendor\ProgramResource;
+use App\Models\CheckIn;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +47,26 @@ class ProgramController extends BaseController
             ],
         ];
         return $this->sendResponse($data, 'Get programs related to specific location');
+    }
+
+
+    public function lastTenAttendance($member_id, $program_id){
+        try{
+            $attendances = CheckIn::whereHas('reservation', function($query) use ($member_id){
+                $query->where('member_id', $member_id);
+            })
+            ->whereHas('reservation.session', function($query) use ($program_id){
+                $query->where('program_id', $program_id);
+            })
+            ->with(['reservation.session'])
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+            return $this->sendResponse(CheckInResource::collection($attendances), 'Get attendances related to member and program.');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
     }
     
     public function getProgramById($id){
@@ -187,6 +209,26 @@ class ProgramController extends BaseController
         }
     }
 
+    public function programLevelArchive($programLevelId){
+        try{ 
+            $programLevel = ProgramLevel::where('id',$programLevelId)->first();
+
+            if(!$programLevel){
+                return $this->sendError('Program level does not exist.', [], 400);
+            }
+
+            Session::where('program_level_id', $programLevel->id)->update([
+                'status' => Session::INACTIVE
+            ]);
+
+            $programLevel->delete();
+            
+            return $this->sendResponse(['id' => $programLevelId], 'Program level archived successfully.');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
     public function getProgramDetails($programId){
         try{
             $location = request()->location;
@@ -230,15 +272,14 @@ class ProgramController extends BaseController
                 $imageUrl = getenv('APP_URL') .$imgPath. $fileName;
             }
 
-            DB::beginTransaction();
-
             $program->update([
                 'name' => $request->name,
                 'description' => $request->description,
                 'avatar' => isset($imageUrl) ? $imageUrl : $program->avatar,
             ]);
 
-            DB::commit();
+            $program = Program::with('programLevels')->where('id',$program->id)->first();
+
             return $this->sendResponse(new ProgramResource($program), 'Program updated successfully.');
         }catch (Exception $e) {
             DB::rollBack();
@@ -253,7 +294,6 @@ class ProgramController extends BaseController
             DB::beginTransaction();
 
             $programLevel->update([
-                'program_id' => $programLevel->program->id,
                 'name' => $request->name,
                 'capacity' => $request->capacity,
                 'min_age' => $request->min_age,
@@ -262,15 +302,11 @@ class ProgramController extends BaseController
             
             foreach ($request->sessions as $session) {
                 $sessionId = isset($session['id']) ? $session['id'] : null;
-                if(isset($session['duration_time']) && isset($session['start_date']) && isset($session['end_date'])){
+                if(isset($session['duration_time'])){
                     Session::updateOrCreate(
                         ['id' => $sessionId],
                         [
-                            'program_level_id' => $programLevel->id,
-                            'program_id' => $programLevel->program->id,
                             'duration_time' => $session['duration_time'],
-                            'start_date' => $session['start_date'],
-                            'end_date' => $session['end_date'],
                             'monday' => isset($session['monday']) ? $session['monday'] : null,
                             'tuesday' => isset($session['tuesday']) ? $session['tuesday'] : null,
                             'wednesday' => isset($session['wednesday']) ? $session['wednesday'] : null,
@@ -501,74 +537,18 @@ class ProgramController extends BaseController
         }
     }
 
-    public function addMemberManually($programId, Request $request){
+    public function addMemberManually($programLevelId, Request $request){
         try {
             $reqCustomField = null;
             $location = request()->location;
-            $program = Program::with('programLevels')->where('id',$programId)->first();
-            $ghl_integration = Setting::where('name', 'ghl_integration')->first();
-            $token = $ghl_integration['value'];
-            $companyId = $ghl_integration['meta_data']['companyId'];
-
-            $tokenObj = Http::withHeaders([
-                'Authorization' => 'Bearer '.$token,
-                'Version' => '2021-07-28'                
-            ])->asForm()->post('https://services.leadconnectorhq.com/oauth/locationToken', [
-                'companyId' => $companyId,
-                'locationId' => $location->go_high_level_location_id,
-            ]);
-    
-            if ($tokenObj->failed()) {
-                return $this->sendError('Something went wrong!', json_encode($tokenObj->json()));
+            $programLevel = ProgramLevel::with('program')->where('id',$programLevelId)->first();
+            $contact = $request->all();
+            if(!isset($contact['email'])) {
+                return $this->sendError('No email found against the contact!', json_encode($tokenObj->json()));
+            } else {
+                MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
             }
 
-            $tokenObj = $tokenObj->json();
-            
-            $responseCustomField = Http::withHeaders([
-                'Accept' => 'application/json',
-                'Authorization' => 'Bearer '.$tokenObj['access_token'],
-                'Version' => '2021-07-28'
-            ])->get('https://services.leadconnectorhq.com/locations/'.$location->go_high_level_location_id.'/customFields');
-
-            if ($responseCustomField->failed()) {
-                $responseCustomField->throw();    
-            }
-            $responseCustomField = $responseCustomField->json();
-
-            foreach($responseCustomField['customFields'] as $customField) {
-                if($customField['name'] == 'Program Level') {
-                    $reqCustomField = $customField;
-                }
-            }
-
-            if($reqCustomField) {
-                $contact = $request;
-                $programLevelId = null;
-                foreach($contact['customFields'] as $customField) {
-                    
-                    if($customField['id'] == $reqCustomField['id']) {
-                        if (strpos($customField['value'], '_') === false) {
-                            continue;
-                        }
-                        $parts = explode('_', $customField['value']);
-                        if(count($parts) != 2) {
-                            continue;
-                        }
-
-                        $programLevelName = $parts[1];
-                        $programName = $parts[0];
-
-                        if($programName == $program->name) {
-                            foreach($program->programLevels as $programLevel) {
-                                if($programLevelName == $programLevel->name) {
-                                    $programLevelId = $programLevel->id;
-                                    MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
             return $this->sendResponse('Success', 'Member synced successfully');
         } catch(Exception $error) {
             return $this->sendError('Something went wrong!', $error->getMessage());

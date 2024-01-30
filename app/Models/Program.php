@@ -40,8 +40,10 @@ class Program extends Model
 
     public function activeSessions()
     {
-        return $this->sessions()
-            ->where('status', Session::ACTIVE)->latest()->get();
+        return $this->sessions()->with(['reservations', 'reservations.member','programLevel'])
+        ->whereHas('programLevel', function ($query) {
+            return $query->whereNull('deleted_at');
+        })->where('status', Session::ACTIVE)->latest()->get();
     }
 
     public function monthlyRetentionRate()
@@ -89,10 +91,10 @@ class Program extends Model
     {
         // Need to fix this afterwards
         $activeReservationsCount = $this->sessions()
-        ->where('status', Session::ACTIVE)
-        ->whereHas('reservations', function ($query) {
-            $query->where('status', Reservation::ACTIVE);
-        })
+        // ->where('status', Session::ACTIVE)
+        // ->whereHas('reservations', function ($query) {
+        //     $query->where('status', Reservation::ACTIVE);
+        // })
         ->withCount('reservations')->get()
         ->sum('reservations_count');
         return $activeReservationsCount;

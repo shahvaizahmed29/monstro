@@ -31,6 +31,10 @@ class Session extends Model
         'status'
     ];
 
+    public function program(){
+        return $this->belongsTo(Program::class);
+    }
+
     public function programLevel(){
         return $this->belongsTo(ProgramLevel::class);
     }

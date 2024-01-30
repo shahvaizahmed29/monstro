@@ -18,7 +18,13 @@ class ReservationController extends BaseController
 {
     public function getReservationsByMember($member_id) {
         $member = Member::find($member_id);
-        $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])->where('member_id', $member_id)->paginate(25);
+        $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])
+        ->whereHas('session.programLevel', function ($query) {
+            return $query->whereNull('deleted_at');
+        })->whereHas('session.program', function ($query) {
+            return $query->whereNull('deleted_at');
+        })
+        ->where('member_id', $member_id)->paginate(25);
         if(count($reservations) > 0) {
             // $location = $reservations[0]->session->programLevel->program->location;
             //Code commented out below becuase auth guard is not applied anymore.

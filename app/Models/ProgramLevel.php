@@ -16,7 +16,7 @@ class ProgramLevel extends Model
         'min_age',
         'max_age',
         'program_id',
-        'parent_id'
+        'parent_id',
     ];
 
     public function program(){
