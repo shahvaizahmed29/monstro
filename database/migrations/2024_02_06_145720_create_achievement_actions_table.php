@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('achievement_requirements', function (Blueprint $table) {
-            $table->id();
+        Schema::create('achievement_actions', function (Blueprint $table) {
             $table->unsignedBigInteger('action_id');
-            $table->double('count')->default(0);
             $table->unsignedBigInteger('achievement_id');
+            $table->double('count')->default(0);
             $table->timestamps();
+            
+            $table->foreign('action_id')->references('id')->on('actions')->onDelete('cascade');
+            $table->foreign('achievement_id')->references('id')->on('achievements')->onDelete('cascade');
         });
     }
 
@@ -25,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('achievement_requirements');
+        Schema::dropIfExists('achievement_actions');
     }
 };
