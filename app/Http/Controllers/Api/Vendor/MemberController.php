@@ -14,11 +14,13 @@ use App\Http\Controllers\BaseController;
 use App\Http\Resources\Vendor\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
 use App\Http\Resources\Vendor\SessionResource;
+use App\Models\ProgramLevel;
 use App\Services\GHLService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Request;
 
 class MemberController extends BaseController
 {
@@ -219,5 +221,128 @@ class MemberController extends BaseController
             return $this->sendError('Program not found.', 404);
         }
         
+    }
+
+    public function syncMembersByLocation($programId) {
+        $delayTimeForEachLocation = 60;
+        $reqCustomField = null;
+        $location = request()->location;
+        $program = Program::with('programLevels')->where('id',$programId)->first();
+        $ghl_integration = Setting::where('name', 'ghl_integration')->first();
+        $token = $ghl_integration['value'];
+        $companyId = $ghl_integration['meta_data']['companyId'];
+        if((Carbon::now()->diffInMinutes($program->last_sync_at) >= $delayTimeForEachLocation) || !$program->last_sync_at) {
+            try {
+                $tokenObj = Http::withHeaders([
+                    'Authorization' => 'Bearer '.$token,
+                    'Version' => '2021-07-28'                
+                ])->asForm()->post('https://services.leadconnectorhq.com/oauth/locationToken', [
+                    'companyId' => $companyId,
+                    'locationId' => $location->go_high_level_location_id,
+                ]);
+        
+                if ($tokenObj->failed()) {
+                    return $this->sendError('Something went wrong!', json_encode($tokenObj->json()));
+                }
+    
+                $tokenObj = $tokenObj->json();
+                
+                $responseCustomField = Http::withHeaders([
+                    'Accept' => 'application/json',
+                    'Authorization' => 'Bearer '.$tokenObj['access_token'],
+                    'Version' => '2021-07-28'
+                ])->get('https://services.leadconnectorhq.com/locations/'.$location->go_high_level_location_id.'/customFields');
+    
+                if ($responseCustomField->failed()) {
+                    $responseCustomField->throw();    
+                }
+                $responseCustomField = $responseCustomField->json();
+    
+                foreach($responseCustomField['customFields'] as $customField) {
+                    if($customField['name'] == 'Program Level') {
+                        $reqCustomField = $customField;
+                    }
+                }
+    
+                if($reqCustomField) {
+                    $url = 'https://services.leadconnectorhq.com/contacts/?locationId='.$location->go_high_level_location_id.'&limit=100';
+                    do {
+                        $response = Http::withHeaders([
+                            'Accept' => 'application/json',
+                            'Authorization' => 'Bearer '.$tokenObj['access_token'],
+                            'Version' => '2021-07-28'
+                        ])->get($url);
+            
+                        if ($response->failed()) {
+                            $response->throw();    
+                        }
+                        $response = $response->json();
+                        $contacts = $response['contacts'];
+                        $url = null;
+                        if(isset($response['meta'])) {
+                            if(isset($response['meta']['nextPageUrl'])) {
+                                $url = $response['meta']['nextPageUrl'];
+                                $url = str_replace('http://', 'https://', $url);
+                            }
+                        }
+                        foreach($contacts as $contact) {
+                            $programLevelId = null;
+                            foreach($contact['customFields'] as $customField) {
+                              
+                                if($customField['id'] == $reqCustomField['id']) {
+                                    if (strpos($customField['value'], '_') === false) {
+                                        continue;
+                                    }
+                                    $parts = explode('_', $customField['value']);
+                                    if(count($parts) != 2) {
+                                        continue;
+                                    }
+    
+                                    $programLevelName = $parts[1];
+                                    $programName = $parts[0];
+    
+                                    if($programName == $program->name) {
+                                        foreach($program->programLevels as $programLevel) {
+                                            if($programLevelName == $programLevel->name) {
+                                                $programLevelId = $programLevel->id;
+                                                MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } while($url);
+                }
+                $program->last_sync_at = now();
+                $program->save();
+    
+            } catch(\Exception $error) {
+                return $this->sendError('Something went wrong!', $error->getMessage());
+            }
+            return $this->sendResponse([], 'Members synced successfully');
+        } else {
+            return $this->sendError('Resync again in about '. $delayTimeForEachLocation - Carbon::now()->diffInMinutes($program->last_sync_at).' mins', []);
+        }
+    }
+
+    public function addMemberManually($programLevelId, Request $request){
+        try {
+            $reqCustomField = null;
+            $location = request()->location;
+            $tokenObj = $this->generateLocationLevelKey($location->id);
+            $programLevel = ProgramLevel::with('program')->where('id',$programLevelId)->first();
+            $contact = $request->all();
+            if(!isset($contact['email'])) {
+                return $this->sendError('No email found against the contact!', json_encode($tokenObj->json()));
+            } else {
+                MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
+            }
+
+            return $this->sendResponse('Success', 'Member synced successfully');
+        } catch(Exception $error) {
+            return $this->sendError('Something went wrong!', $error->getMessage());
+        }
+
     }
 }
