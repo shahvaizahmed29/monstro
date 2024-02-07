@@ -125,6 +125,7 @@ class PublicController extends BaseController
 
                     $data =  [];
                     $data['name'] = $ghl_user['name'];
+                    $data['email'] = $ghl_user['email'];
                     $data['password'] = $password;
 
                     $vendor = Vendor::create([

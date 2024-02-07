@@ -27,7 +27,7 @@ class Member extends Model
     }    
 
     public function achievements(){
-        return $this->belongsToMany(MemberAchievement::class, 'member_achievements', 'member_id', 'achievement_id');
+        return $this->belongsToMany(Achievement::class, 'member_achievements', 'member_id', 'achievement_id');
     }
 
     public function rewardClaims(){

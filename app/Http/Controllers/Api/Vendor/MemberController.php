@@ -152,21 +152,29 @@ class MemberController extends BaseController
                 $member = $user->member;
             }
 
-            $reservation = Reservation::updateOrCreate([
-                'session_id' => $session->id,
-                'member_id' =>  $member->id
-            ],[
-                'session_id' => $session->id,
-                'member_id' =>  $member->id,
-                'status' => Reservation::ACTIVE,
-                'start_date' => Carbon::today()->format('Y-m-d'),
-                'end_date' => $session->end_date
-            ]);
-            
-            $member->locations()->sync([$location->id => [
-                'go_high_level_location_id' => $location->go_high_level_location_id,
-                'go_high_level_contact_id' => $contact['id']
-            ]], false);
+            $alreadyEnrolledInProgramLevel = $member->reservations()->whereHas('session.programLevel', function ($query) use ($programLevelId) {
+                $query->where('id', '!=', $programLevelId);
+            })->count();
+
+            if($alreadyEnrolledInProgramLevel > 0){
+                return response()->json(['message' => 'Member is already enrolled in another program level.'], 400);
+            }else{
+                $reservation = Reservation::updateOrCreate([
+                    'session_id' => $session->id,
+                    'member_id' =>  $member->id
+                ],[
+                    'session_id' => $session->id,
+                    'member_id' =>  $member->id,
+                    'status' => Reservation::ACTIVE,
+                    'start_date' => Carbon::today()->format('Y-m-d'),
+                    'end_date' => $session->end_date
+                ]);
+
+                $member->locations()->sync([$location->id => [
+                    'go_high_level_location_id' => $location->go_high_level_location_id,
+                    'go_high_level_contact_id' => $contact['id']
+                ]], false);
+            }
 
             DB::commit();
             return true;

@@ -11,8 +11,12 @@ use App\Http\Resources\Member\CheckInResource;
 use App\Http\Resources\Vendor\MeetingResource;
 use App\Http\Resources\Vendor\MemberResource;
 use App\Http\Resources\Vendor\ReservationResource;
+use App\Models\Achievement;
+use App\Models\AchievementActions;
 use App\Models\Member;
+use App\Models\MemberAchievement;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class ReservationController extends BaseController
 {
@@ -25,13 +29,13 @@ class ReservationController extends BaseController
             return $query->whereNull('deleted_at');
         })
         ->where('member_id', $member_id)->paginate(25);
-        if(count($reservations) > 0) {
+        // if(count($reservations) > 0) {
             // $location = $reservations[0]->session->programLevel->program->location;
             //Code commented out below becuase auth guard is not applied anymore.
             // if($location->vendor_id != auth()->user()->vendor->id) {
             //     return $this->sendError('Vendor not authorize, Please contact admin.', [], 403);
             // }
-        }
+        // }
         $data = [
             'reservations' => ReservationResource::collection($reservations),
             'memberDetails' => new MemberResource($member),
@@ -72,6 +76,27 @@ class ReservationController extends BaseController
             'reservation_id' => $reservation->id,
             'check_in_time' => now()->format('Y-m-d H:i:s')
         ]);
+
+        $achievement_action = AchievementActions::with(['achievement'])->whereHas('achievement' , function ($q) use ($reservation){
+            $q->where('program_id', $reservation->session->program->id);
+        })->where('action_id', 1)->first();
+
+        $eligibilityCriteria = $achievement_action->count;
+        $attendanceCount = $reservation->checkIns->count();
+        
+        if($attendanceCount >= $eligibilityCriteria){
+            $existingMemberAchievement = MemberAchievement::where('achievement_id', $achievement_action->achievement->id)
+                ->where('member_id', $reservation->member_id)->first();
+            
+            if(!$existingMemberAchievement){
+                MemberAchievement::create([
+                    'achievement_id' => $achievement_action->achievement->id, 
+                    'member_id' => $reservation->member_id, 
+                    'status' => 1, 'note' => 'Achievement accomplished on number of classes completion', 
+                    'date_achieved' => now()
+                ]);
+            }
+        }
 
         return $this->sendResponse(new CheckInResource($checkIn), 'Attendance marked.');
     }

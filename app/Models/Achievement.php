@@ -23,11 +23,11 @@ class Achievement extends Model
     }
 
     public function actions(){
-        return $this->belongsToMany(Action::class, 'achievement_actions', 'achievement_id', 'action_id');
+        return $this->belongsToMany(Action::class, 'achievement_actions', 'achievement_id', 'action_id')->withPivot('count');
     }    
 
-    public function memberAchievements(){
-        return $this->belongsToMany(MemberAchievement::class, 'member_achievements', 'achievement_id', 'member_id');
+    public function members(){
+        return $this->belongsToMany(Member::class, 'member_achievements', 'achievement_id', 'member_id');
     }
 
 }

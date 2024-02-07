@@ -39,8 +39,9 @@ class NewVendorNotification extends Notification
             ->from(env('NO_REPLY_EMAIL'), env('APP_NAME'))
             ->greeting('Dear '.$this->details['name'].',')
             ->line('You have successfully registrered on '.env('APP_NAME'))
-            ->line('Below is the password to login into '.env('APP_NAME'))
-            ->line($this->details['password'])
+            ->line('Below are the credentials to log into '.env('APP_NAME'))
+            ->line('Email: '.$this->details['email'])
+            ->line('Password: '.$this->details['password'])
             ->action('Login Now', url(env('LOGIN_URL')))
             ->line('Thankyou for using '.env('APP_NAME').'!');
     }
