@@ -10,19 +10,46 @@ use App\Models\AchievementActions;
 use App\Models\AchievementRequirements;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AchievementController extends BaseController
 {
-    public function createAchievement(Request $request){
+    public function index(){
         try{
+            $achievements = Achievement::with(['actions'])->paginate(25);
+
+            $data = [
+                'achievements' => AchievementResource::collection($achievements),
+                'pagination' => [
+                    'current_page' => $achievements->currentPage(),
+                    'per_page' => $achievements->perPage(),
+                    'total' => $achievements->total(),
+                    'prev_page_url' => $achievements->previousPageUrl(),
+                    'next_page_url' => $achievements->nextPageUrl(),
+                    'first_page_url' => $achievements->url(1),
+                    'last_page_url' => $achievements->url($achievements->lastPage()),
+                ],
+            ];
+
+            return $this->sendResponse($data, 'Achievements fetched successfully');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function create(Request $request){
+        try{
+            DB::beginTransaction();
             $achievement = Achievement::create($request->all());
             AchievementActions::create(['action_id' => $request->action_id, 'count' => $request->action_count, 'achievement_id' => $achievement->id]);
-    
+            DB::commit();
+
             $achievement = Achievement::with(['actions'])->find($achievement->id);
 
             return $this->sendResponse(new AchievementResource($achievement), 'Achievement created successfully');
         }catch(Exception $error){
+            DB::rollBack();
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
@@ -40,4 +67,22 @@ class AchievementController extends BaseController
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
+
+    public function delete($id){
+        try{
+            $achievement = Achievement::find($id);
+
+            if(!$achievement){
+                return $this->sendError('Achievement not found', [], 400);
+            }
+
+            $achievement->delete();
+
+            return $this->sendResponse('Success', 'Achievement deleted successfully');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+
 }
