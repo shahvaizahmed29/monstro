@@ -8,14 +8,15 @@ use App\Models\Reservation;
 use App\Models\CheckIn;
 use App\Http\Controllers\BaseController;
 use App\Http\Resources\Member\CheckInResource;
-use App\Http\Resources\Vendor\MeetingResource;
 use App\Http\Resources\Vendor\MemberResource;
 use App\Http\Resources\Vendor\ReservationResource;
-use App\Models\Achievement;
 use App\Models\AchievementActions;
+use App\Models\Action;
 use App\Models\Member;
 use App\Models\MemberAchievement;
+use App\Models\Reward;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ReservationController extends BaseController
@@ -54,51 +55,87 @@ class ReservationController extends BaseController
 
     public function markAttendance(Request $request)
     {
-        $reservation = Reservation::find($request->reservationId);
-        // $location = $reservation->session->programLevel->program->location;
-        //Code commented out below becuase auth guard is not applied anymore.
-        // if($location->vendor_id != auth()->user()->vendor->id) {
-        //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
-        // }
+        try{
+            DB::beginTransaction();
+            $reservation = Reservation::find($request->reservationId);
 
-        // Check if a check-in record already exists for the given reservation and today's date
-        $existingCheckIn = CheckIn::where('reservation_id', $reservation->id)
-            ->whereDate('check_in_time', Carbon::today())
-            ->first();
+            //Code commented out below becuase auth guard is not applied anymore.
+            // $location = $reservation->session->programLevel->program->location;
+            // if($location->vendor_id != auth()->user()->vendor->id) {
+            //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
+            // }
 
-        if ($existingCheckIn) {
-            // If a record already exists, you can return an appropriate response
-            return $this->sendError('Attendence for today already recorded for this program.');
-        }
+            // Check if a check-in record already exists for the given reservation and today's date
+            $existingCheckIn = CheckIn::where('reservation_id', $reservation->id)
+                ->whereDate('check_in_time', Carbon::today())
+                ->first();
 
-        // Create a new check-in record
-        $checkIn = CheckIn::create([
-            'reservation_id' => $reservation->id,
-            'check_in_time' => now()->format('Y-m-d H:i:s')
-        ]);
-
-        $achievement_action = AchievementActions::with(['achievement'])->whereHas('achievement' , function ($q) use ($reservation){
-            $q->where('program_id', $reservation->session->program->id);
-        })->where('action_id', 1)->first();
-
-        $eligibilityCriteria = $achievement_action->count;
-        $attendanceCount = $reservation->checkIns->count();
-        
-        if($attendanceCount >= $eligibilityCriteria){
-            $existingMemberAchievement = MemberAchievement::where('achievement_id', $achievement_action->achievement->id)
-                ->where('member_id', $reservation->member_id)->first();
-            
-            if(!$existingMemberAchievement){
-                MemberAchievement::create([
-                    'achievement_id' => $achievement_action->achievement->id, 
-                    'member_id' => $reservation->member_id, 
-                    'status' => 1, 'note' => 'Achievement accomplished on number of classes completion', 
-                    'date_achieved' => now()
-                ]);
+            if ($existingCheckIn) {
+                // If a record already exists, you can return an appropriate response
+                return $this->sendError('Attendence for today already recorded for this program.');
             }
-        }
 
-        return $this->sendResponse(new CheckInResource($checkIn), 'Attendance marked.');
+            // Create a new check-in record
+            $checkIn = CheckIn::create([
+                'reservation_id' => $reservation->id,
+                'check_in_time' => now()->format('Y-m-d H:i:s')
+            ]);
+
+            // Finding a achivement action related to defined no of classes attendented  
+            $action = Action::where('name', Action::NO_OF_CLASSES)->first();
+
+            $achievement_action = AchievementActions::with(['achievement'])->whereHas('achievement' , function ($q) use ($reservation){
+                $q->where('program_id', $reservation->session->program->id);
+            })->where('action_id', $action->id)->first();
+
+            // Checking criteria count
+            $eligibilityCriteria = $achievement_action->count;
+            $attendanceCount = $reservation->checkIns->count();
+            
+            // Checking for eligibility
+            if($attendanceCount >= $eligibilityCriteria){
+                $existingMemberAchievement = MemberAchievement::where('achievement_id', $achievement_action->achievement->id)
+                    ->where('member_id', $reservation->member_id)->first();
+                
+                // Check for if member achievment is already exist
+                if(!$existingMemberAchievement){
+                    //Creating a new achievment for member
+                    MemberAchievement::create([
+                        'achievement_id' => $achievement_action->achievement->id, 
+                        'member_id' => $reservation->member_id, 
+                        'status' => 1, 
+                        'note' => 'Achievement accomplished on number of classes completion', 
+                        'date_achieved' => now()
+                    ]);
+
+                    // Fidning member in order to get the current member achieved points
+                    $member = Member::find($reservation->member_id);
+                    $currentPoints = $member->current_points;
+
+                    // Creating reward for a member if member has a new achievement only otherwise no reward
+                    $reward = Reward::create([
+                        'member_id' => $member->id,
+                        'points_claimed' => $achievement_action->achievement->reward_points,
+                        'date_claimed' => now(),
+                    ]);
+
+                    if($reward){
+                        // Updating mmeber overall points
+                        $currentPoints = $currentPoints + $achievement_action->achievement->reward_points;
+                    }
+
+                    $member->current_points = $currentPoints;
+                    $member->save();
+                }
+            }
+
+            DB::commit();
+            return $this->sendResponse(new CheckInResource($checkIn), 'Attendance marked.');
+        }catch(Exception $e){
+            DB::rollBack();
+            Log::info('===== ReservationController - markAttendance() - error =====');
+            return $this->sendError($e->getMessage(), [], 500);
+        }
     }
 
     public function getCheckInsByReservation($reservation_id) {

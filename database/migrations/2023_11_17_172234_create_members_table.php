@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('email');
             $table->string('phone');
             $table->string('referral_code')->nullable();
+            $table->double('current_points')->default(0)->nullable();
             $table->string('avatar')->nullable();
             $table->timestamps();
             $table->softDeletes();
