@@ -8,6 +8,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Vendor\LocationResource;
 use App\Models\Location;
+use Exception;
 
 class LocationsController extends BaseController
 {
@@ -27,6 +28,22 @@ class LocationsController extends BaseController
         ];
 
         return $this->sendResponse($data, 'Vendor locations.');
+    }
+
+    public function checkLocationStatus(){
+        try{
+            $location = request()->location;
+            $location = Location::find($location->id);
+
+            if(!$location){
+                return $this->sendError("Location doesnot exist", [], 400);
+            }
+
+            return $this->sendResponse(new LocationResource($location), 'Location fetched successfully');
+
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
     }
 
 }
