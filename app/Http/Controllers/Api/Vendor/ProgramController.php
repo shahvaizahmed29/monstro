@@ -393,8 +393,8 @@ class ProgramController extends BaseController
                 return $this->sendError('Program level does not exist. Cannot assign a level to member', [], 400);
             }
 
-            // Getting reservations for the mmebers
-            $reservations = Reservation::where('member_id', $memberId)->get();
+            // Getting current reservations for the members
+            $reservations = Reservation::where('member_id', $memberId)->where('status', Reservation::ACTIVE)->get();
             
             //Checking for reservations
             if(count($reservations) > 0){
@@ -434,19 +434,28 @@ class ProgramController extends BaseController
                         Reservation::where('session_id', $currentSession)->update(['status' => Session::INACTIVE]);
                     }
 
+                    return $this->sendResponse("Success", "Member assigned to next level successfully");
+
                 }else{
                     // Getting old level sessions
                     $oldSessions = Session::where('program_level_id', $programLevelId)->get();
-
+                    
                     foreach($oldSessions as $oldSession){
                         // Updating old sessions status to active
                         $oldSession->status = Session::ACTIVE;
                         $oldSession->save();
 
                         // Updating old reservations status to active
-                        $reservation = Reservation::where('session_id', $oldSession->id)->where('member_id', $memberId)->first();
-                        $reservation->status = Reservation::ACTIVE;
-                        $reservation->save();
+                        Reservation::updateOrCreate([
+                            'session_id' => $oldSession->id,
+                            'member_id' =>  $memberId
+                        ],[
+                            'session_id' => $oldSession->id,
+                            'member_id' =>  $memberId,
+                            'status' => Reservation::ACTIVE,
+                            'start_date' => Carbon::today()->format('Y-m-d'),
+                            'end_date' => $oldSession->end_date
+                        ]);
                     }
 
                     // Getting current sessions 
@@ -463,6 +472,8 @@ class ProgramController extends BaseController
                         $reservation->save();
                     }
                 }
+
+                return $this->sendResponse("Success", "Member assigned to previous level successfully");
             }
 
             DB::commit();
