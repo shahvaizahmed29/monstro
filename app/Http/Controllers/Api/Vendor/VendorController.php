@@ -176,6 +176,9 @@ class VendorController extends BaseController
             $user->password = $request->password;
             $user->save();
 
+            $location->is_new = false;
+            $location->save();
+
             return $this->sendResponse('Success', 'Password updated successfully');
 
         }catch(Exception $error){
