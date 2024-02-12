@@ -162,4 +162,25 @@ class VendorController extends BaseController
         }
     }
 
+    public function passwordReset(Request $request){
+        try{
+            $location = request()->location;
+            $location = Location::find($location->id);
+
+            $user = User::find($location->vendor->user->id);
+
+            if(!$user){
+                return $this->sendError("No user found for this location", [], 400);
+            }
+
+            $user->password = $request->password;
+            $user->save();
+
+            return $this->sendResponse('Success', 'Password updated successfully');
+
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
 }
