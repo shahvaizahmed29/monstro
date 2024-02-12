@@ -15,6 +15,7 @@ use App\Http\Resources\Member\CheckInResource;
 use App\Http\Resources\Vendor\ProgramLevelResource;
 use App\Http\Resources\Vendor\ProgramResource;
 use App\Models\CheckIn;
+use App\Models\Reservation;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -376,6 +377,98 @@ class ProgramController extends BaseController
         } catch (Exception $e) {
             DB::rollBack();
             Log::info('===== ProgramController - updateProgram() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function assignProgramLevelToMember($programLevelId, $memberId){
+        try{
+            DB::beginTransaction();
+
+            // Finding Program Level
+            $programLevelCheck = ProgramLevel::find($programLevelId);
+
+            if(!$programLevelCheck){
+                return $this->sendError('Program level does not exist. Cannot assign a level to member', [], 400);
+            }
+
+            // Getting reservations for the mmebers
+            $reservations = Reservation::where('member_id', $memberId)->get();
+            
+            //Checking for reservations
+            if(count($reservations) > 0){
+                // Getting program level id
+                $currentProgramLevelId = $reservations[0]->session->programLevel->id;
+                
+                //Checking if program level is bigger than the current enrolled program or not
+                if($currentProgramLevelId > $programLevelId){
+                    //Getting next level sessions
+                    $nextLevelSessions = Session::where('program_level_id', $programLevelId)->get();
+
+                    // Create reservation if not present or update if already present
+                    foreach($nextLevelSessions as $nextLevelSession){
+                        Reservation::updateOrCreate([
+                            'session_id' => $nextLevelSession->id,
+                            'member_id' =>  $memberId
+                        ],[
+                            'session_id' => $nextLevelSession->id,
+                            'member_id' =>  $memberId,
+                            'status' => Reservation::ACTIVE,
+                            'start_date' => Carbon::today()->format('Y-m-d'),
+                            'end_date' => $nextLevelSession->end_date
+                        ]);
+
+                        // Updating sessions status to active 
+                        $nextLevelSession->status = Session::ACTIVE;
+                        $nextLevelSession->save();
+                    }
+
+                    // Session::where('program_level_id', $currentProgramLevelId)->update(['status' => Session::INACTIVE]);
+                    $currentSessions = Session::where('program_level_id', $currentProgramLevelId)->get();
+
+                    foreach($currentSessions as $currentSession){
+                        // Updating current sessions status to inactive
+                        $currentSession->update(['status' => Session::INACTIVE]);
+                        // Updating current reservations sessions status to inactive
+                        Reservation::where('session_id', $currentSession)->update(['status' => Session::INACTIVE]);
+                    }
+
+                }else{
+                    // Getting old level sessions
+                    $oldSessions = Session::where('program_level_id', $programLevelId)->get();
+
+                    foreach($oldSessions as $oldSession){
+                        // Updating old sessions status to active
+                        $oldSession->status = Session::ACTIVE;
+                        $oldSession->save();
+
+                        // Updating old reservations status to active
+                        $reservation = Reservation::where('session_id', $oldSession->id)->where('member_id', $memberId)->first();
+                        $reservation->status = Reservation::ACTIVE;
+                        $reservation->save();
+                    }
+
+                    // Getting current sessions 
+                    $currentSessions = Session::where('program_level_id', $currentProgramLevelId)->get();
+                    
+                    foreach($currentSessions as $currentSession){
+                        // Updating current sessions status to inactive
+                        $currentSession->status = Session::INACTIVE;
+                        $currentSession->save();
+
+                        // Updating current reservations sessions status to inactive
+                        $reservation = Reservation::where('session_id', $currentSession->id)->where('member_id', $memberId)->first();
+                        $reservation->status = Reservation::INACTIVE;
+                        $reservation->save();
+                    }
+                }
+            }
+
+            DB::commit();
+        }catch (Exception $e) {
+            DB::rollBack();
+            Log::info('===== ProgramController - assignProgramLevelToMember() - error =====');
             Log::info($e->getMessage());
             return $this->sendError($e->getMessage(), [], 500);
         }
