@@ -88,44 +88,46 @@ class ReservationController extends BaseController
                 $q->where('program_id', $reservation->session->program->id);
             })->where('action_id', $action->id)->first();
 
-            // Checking criteria count
-            $eligibilityCriteria = $achievement_action->count;
-            $attendanceCount = $reservation->checkIns->count();
-            
-            // Checking for eligibility
-            if($attendanceCount >= $eligibilityCriteria){
-                $existingMemberAchievement = MemberAchievement::where('achievement_id', $achievement_action->achievement->id)
-                    ->where('member_id', $reservation->member_id)->first();
+            if($achievement_action){
+                // Checking criteria count
+                $eligibilityCriteria = $achievement_action->count;
+                $attendanceCount = $reservation->checkIns->count();
                 
-                // Check for if member achievment is already exist
-                if(!$existingMemberAchievement){
-                    //Creating a new achievment for member
-                    MemberAchievement::create([
-                        'achievement_id' => $achievement_action->achievement->id, 
-                        'member_id' => $reservation->member_id, 
-                        'status' => 1, 
-                        'note' => 'Achievement accomplished on number of classes completion', 
-                        'date_achieved' => now()
-                    ]);
+                // Checking for eligibility
+                if($attendanceCount >= $eligibilityCriteria){
+                    $existingMemberAchievement = MemberAchievement::where('achievement_id', $achievement_action->achievement->id)
+                        ->where('member_id', $reservation->member_id)->first();
+                    
+                    // Check for if member achievment is already exist
+                    if(!$existingMemberAchievement){
+                        //Creating a new achievment for member
+                        MemberAchievement::create([
+                            'achievement_id' => $achievement_action->achievement->id, 
+                            'member_id' => $reservation->member_id, 
+                            'status' => 1, 
+                            'note' => 'Achievement accomplished on number of classes completion', 
+                            'date_achieved' => now()
+                        ]);
 
-                    // Fidning member in order to get the current member achieved points
-                    $member = Member::find($reservation->member_id);
-                    $currentPoints = $member->current_points;
+                        // Fidning member in order to get the current member achieved points
+                        $member = Member::find($reservation->member_id);
+                        $currentPoints = $member->current_points;
 
-                    // Creating reward for a member if member has a new achievement only otherwise no reward
-                    $reward = Reward::create([
-                        'member_id' => $member->id,
-                        'points_claimed' => $achievement_action->achievement->reward_points,
-                        'date_claimed' => now(),
-                    ]);
+                        // Creating reward for a member if member has a new achievement only otherwise no reward
+                        $reward = Reward::create([
+                            'member_id' => $member->id,
+                            'points_claimed' => $achievement_action->achievement->reward_points,
+                            'date_claimed' => now(),
+                        ]);
 
-                    if($reward){
-                        // Updating mmeber overall points
-                        $currentPoints = $currentPoints + $achievement_action->achievement->reward_points;
+                        if($reward){
+                            // Updating mmeber overall points
+                            $currentPoints = $currentPoints + $achievement_action->achievement->reward_points;
+                        }
+
+                        $member->current_points = $currentPoints;
+                        $member->save();
                     }
-
-                    $member->current_points = $currentPoints;
-                    $member->save();
                 }
             }
 
