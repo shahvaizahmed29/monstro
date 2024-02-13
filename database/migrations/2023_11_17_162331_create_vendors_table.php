@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('logo')->nullable();
             $table->foreignId('plan_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('phone_number')->nullable();
+            $table->boolean('is_new')->default(1);
             $table->timestamps();
             $table->softDeletes();
         });

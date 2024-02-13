@@ -385,7 +385,7 @@ class ProgramController extends BaseController
         }
     }
 
-    public function assignProgramLevelToMember($programLevelId, $memberId){
+    public function assignProgramLevelToMember($programLevelId, $memberId, $status){
         try{
             // Finding Program Level
             $programLevelCheck = ProgramLevel::find($programLevelId);
@@ -435,9 +435,9 @@ class ProgramController extends BaseController
 
                     foreach($currentSessions as $currentSession){
                         // Updating current sessions status to completed
-                        $currentSession->update(['status' => Session::COMPLETED]);
+                        $currentSession->update(['status' => $status]);
                         // Updating current reservations sessions status to completed
-                        Reservation::where('session_id', $currentSession->id)->update(['status' => Session::COMPLETED]);
+                        Reservation::where('session_id', $currentSession->id)->update(['status' => $status]);
                     }
 
                     DB::commit();
@@ -471,18 +471,20 @@ class ProgramController extends BaseController
                     
                     foreach($currentSessions as $currentSession){
                         // Updating current sessions status to inactive
-                        $currentSession->status = Session::INACTIVE;
+                        $currentSession->status = $status;
                         $currentSession->save();
 
                         // Updating current reservations sessions status to inactive
                         $reservation = Reservation::where('session_id', $currentSession->id)->where('member_id', $memberId)->first();
-                        $reservation->status = Reservation::INACTIVE;
+                        $reservation->status = $status;
                         $reservation->save();
                     }
                     DB::commit();
 
                     return $this->sendResponse("Success", "Member assigned to previous level successfully");
                 }
+            }else{
+                return $this->sendError('No active reservations found for this program level', [], 400);
             }
         }catch (Exception $e) {
             DB::rollBack();
