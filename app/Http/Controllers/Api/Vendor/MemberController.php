@@ -339,7 +339,7 @@ class MemberController extends BaseController
         try {
             $reqCustomField = null;
             $location = request()->location;
-            $tokenObj = $this->generateLocationLevelKey($location->id);
+            $tokenObj = $this->generateLocationLevelKey($location->go_high_level_location_id);
             $programLevel = ProgramLevel::with('program')->where('id',$programLevelId)->first();
             $contact = $request->all();
             if(!isset($contact['email'])) {

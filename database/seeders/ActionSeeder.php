@@ -13,8 +13,8 @@ class ActionSeeder extends Seeder
      */
     public function run(): void
     {
-        Action::create(['name' => 'No of classes']);
-        Action::create(['name' => 'Level achieved']);
-        Action::create(['name' => 'No of Referrals']);
+        Action::create(['name' => Action::NO_OF_CLASSES]);
+        Action::create(['name' => Action::LEVEL_ACHIEVED]);
+        Action::create(['name' => Action::No_OF_REFERRALS]);
     }
 }

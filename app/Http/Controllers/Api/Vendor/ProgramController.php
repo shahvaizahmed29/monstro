@@ -14,7 +14,10 @@ use App\Http\Requests\ProgramUpdateRequest;
 use App\Http\Resources\Member\CheckInResource;
 use App\Http\Resources\Vendor\ProgramLevelResource;
 use App\Http\Resources\Vendor\ProgramResource;
+use App\Models\AchievementActions;
+use App\Models\Action;
 use App\Models\CheckIn;
+use App\Models\Member;
 use App\Models\Reservation;
 use Carbon\Carbon;
 use Exception;
@@ -431,10 +434,10 @@ class ProgramController extends BaseController
                     $currentSessions = Session::where('program_level_id', $currentProgramLevelId)->get();
 
                     foreach($currentSessions as $currentSession){
-                        // Updating current sessions status to inactive
-                        $currentSession->update(['status' => Session::INACTIVE]);
-                        // Updating current reservations sessions status to inactive
-                        Reservation::where('session_id', $currentSession->id)->update(['status' => Session::INACTIVE]);
+                        // Updating current sessions status to completed
+                        $currentSession->update(['status' => Session::COMPLETED]);
+                        // Updating current reservations sessions status to completed
+                        Reservation::where('session_id', $currentSession->id)->update(['status' => Session::COMPLETED]);
                     }
 
                     DB::commit();
