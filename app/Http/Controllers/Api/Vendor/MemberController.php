@@ -69,45 +69,54 @@ class MemberController extends BaseController
     }
 
     public function getMemberDetails($member_id){
-        $location = request()->location;
-        $locationId = $location->id;
-        
-        $reservations = Reservation::with(['checkIns', 'session', 'session.programLevel','session.programLevel.program'])
-        ->whereHas('session.programLevel', function ($query) {
-            return $query->whereNull('deleted_at');
-        })->whereHas('session.program', function ($query) {
-            return $query->whereNull('deleted_at');
-        })
-        ->where('member_id', $member_id)->get();
-        
-        $member_details = Member::where('id', $member_id)->first();
-        
-        $go_high_level_contact_id = DB::table('member_locations')
-            ->where('member_id', $member_id)
-            ->where('go_high_level_location_id', $location->go_high_level_location_id)
-            ->pluck('go_high_level_contact_id')
-            ->first();
+        try{
+            $location = request()->location;
+            $locationId = $location->id;
+            
+            $reservations = Reservation::with(['checkIns', 'session', 'session.programLevel','session.programLevel.program'])
+            ->whereHas('session.programLevel', function ($query) {
+                return $query->whereNull('deleted_at');
+            })->whereHas('session.program', function ($query) {
+                return $query->whereNull('deleted_at');
+            })
+            ->where('member_id', $member_id)->get();
+            
+            $member_details = Member::where('id', $member_id)->first();
+            
+            if(!$member_details){
+                return $this->sendError('Member and reservations does not exist.', [], 400);
+            }
 
-        $member_details['go_high_level_contact_id'] = $go_high_level_contact_id;
+            $go_high_level_contact_id = DB::table('member_locations')
+                ->where('member_id', $member_id)
+                ->where('go_high_level_location_id', $location->go_high_level_location_id)
+                ->pluck('go_high_level_contact_id')
+                ->first();
 
-        if(count($reservations)) {
-            $reservationIds = $reservations->pluck('id')->toArray();
-            $latestCheckInTime = CheckIn::whereIn('reservation_id', $reservationIds)->latest()->first();
-            if ($latestCheckInTime) {
-                $carbonInstance = Carbon::parse($latestCheckInTime->check_in_time);
-                $member_details['last_seen'] = $carbonInstance->diffForHumans();
+            $member_details['go_high_level_contact_id'] = $go_high_level_contact_id;
+
+            if(count($reservations)) {
+                $reservationIds = $reservations->pluck('id')->toArray();
+                $latestCheckInTime = CheckIn::whereIn('reservation_id', $reservationIds)->latest()->first();
+                if ($latestCheckInTime) {
+                    $carbonInstance = Carbon::parse($latestCheckInTime->check_in_time);
+                    $member_details['last_seen'] = $carbonInstance->diffForHumans();
+                } else {
+                    $member_details['last_seen'] = null;
+                }
             } else {
                 $member_details['last_seen'] = null;
             }
-        } else {
-            $member_details['last_seen'] = null;
-        }
 
-        $data = [
-            'memberDetails' => new MemberResource($member_details),
-            'reservations' => ReservationResource::collection($reservations)
-        ];
-        return $this->sendResponse($data, 'Member details with session reservations and program');
+            $data = [
+                'memberDetails' => new MemberResource($member_details),
+                'reservations' => ReservationResource::collection($reservations)
+            ];
+            
+            return $this->sendResponse($data, 'Member details with session reservations and program');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
     }
 
     public function memberStatusUpdate($member_id){
