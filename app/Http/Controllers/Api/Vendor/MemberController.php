@@ -11,6 +11,7 @@ use App\Models\Setting;
 use App\Models\Program;
 use App\Models\CheckIn;
 use App\Http\Controllers\BaseController;
+use App\Http\Resources\Member\ProgramResource;
 use App\Http\Resources\Vendor\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
 use App\Http\Resources\Vendor\SessionResource;
@@ -352,5 +353,30 @@ class MemberController extends BaseController
             return $this->sendError('Something went wrong!', $error->getMessage());
         }
 
+    }
+
+    public function getMemberPrograms($member_id){
+        try{
+            $reservations = Reservation::where('member_id', $member_id)
+                ->with('session.programLevel.program')
+                ->get();
+
+            $programs = [];
+
+            foreach ($reservations as $reservation) {
+                $session = $reservation->session;
+                $programLevel = $session->programLevel;
+    
+                $program = $programLevel->program;
+    
+                if (!isset($programs[$program->id])) {
+                    $programs[$program->id] = $program;
+                }
+            }
+
+            return $this->sendResponse(ProgramResource::collection($programs), 'Get programs related to specific member');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
     }
 }

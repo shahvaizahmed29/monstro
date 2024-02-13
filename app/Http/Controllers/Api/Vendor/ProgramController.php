@@ -533,4 +533,18 @@ class ProgramController extends BaseController
         }
     }
 
+    public function getProgramLevels($programId){
+        try{
+            $programLevels = ProgramLevel::where('program_id', $programId)->get();
+
+            if(count($programLevels) > 0){
+                return $this->sendResponse(ProgramLevelResource::collection($programLevels), 'Program levels related to specific program');
+            }else{
+                return $this->sendError('No program levels found for this program', [], 400);
+            }
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
 }
