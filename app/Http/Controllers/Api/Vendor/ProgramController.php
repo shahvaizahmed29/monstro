@@ -384,8 +384,6 @@ class ProgramController extends BaseController
 
     public function assignProgramLevelToMember($programLevelId, $memberId){
         try{
-            DB::beginTransaction();
-
             // Finding Program Level
             $programLevelCheck = ProgramLevel::find($programLevelId);
 
@@ -394,18 +392,24 @@ class ProgramController extends BaseController
             }
 
             // Getting current reservations for the members
-            $reservations = Reservation::where('member_id', $memberId)->where('status', Reservation::ACTIVE)->get();
-            
+            $reservations = Reservation::with('session')->whereHas('session', function ($query) {
+                $query->where('status', Session::ACTIVE);
+            })->where('member_id', $memberId)->where('status', Reservation::ACTIVE)->get();
+
             //Checking for reservations
             if(count($reservations) > 0){
                 // Getting program level id
                 $currentProgramLevelId = $reservations[0]->session->programLevel->id;
                 
-                //Checking if program level is bigger than the current enrolled program or not
-                if($currentProgramLevelId > $programLevelId){
+                // Checking if member is currently enrolled in this program level or not
+                if($currentProgramLevelId == $programLevelId){
+                    // If member is already enrolled return back with a message
+                    return $this->sendError('Member already assigned to this level.', [], 400);
+                }elseif($currentProgramLevelId < $programLevelId){ // Checking if program level is bigger than the current enrolled program or not
+                    DB::beginTransaction();
                     //Getting next level sessions
                     $nextLevelSessions = Session::where('program_level_id', $programLevelId)->get();
-
+                    
                     // Create reservation if not present or update if already present
                     foreach($nextLevelSessions as $nextLevelSession){
                         Reservation::updateOrCreate([
@@ -423,20 +427,21 @@ class ProgramController extends BaseController
                         $nextLevelSession->status = Session::ACTIVE;
                         $nextLevelSession->save();
                     }
-
-                    // Session::where('program_level_id', $currentProgramLevelId)->update(['status' => Session::INACTIVE]);
+                    
                     $currentSessions = Session::where('program_level_id', $currentProgramLevelId)->get();
 
                     foreach($currentSessions as $currentSession){
                         // Updating current sessions status to inactive
                         $currentSession->update(['status' => Session::INACTIVE]);
                         // Updating current reservations sessions status to inactive
-                        Reservation::where('session_id', $currentSession)->update(['status' => Session::INACTIVE]);
+                        Reservation::where('session_id', $currentSession->id)->update(['status' => Session::INACTIVE]);
                     }
 
+                    DB::commit();
                     return $this->sendResponse("Success", "Member assigned to next level successfully");
 
                 }else{
+                    DB::beginTransaction();
                     // Getting old level sessions
                     $oldSessions = Session::where('program_level_id', $programLevelId)->get();
                     
@@ -457,7 +462,7 @@ class ProgramController extends BaseController
                             'end_date' => $oldSession->end_date
                         ]);
                     }
-
+                    
                     // Getting current sessions 
                     $currentSessions = Session::where('program_level_id', $currentProgramLevelId)->get();
                     
@@ -471,12 +476,11 @@ class ProgramController extends BaseController
                         $reservation->status = Reservation::INACTIVE;
                         $reservation->save();
                     }
+                    DB::commit();
+
+                    return $this->sendResponse("Success", "Member assigned to previous level successfully");
                 }
-
-                return $this->sendResponse("Success", "Member assigned to previous level successfully");
             }
-
-            DB::commit();
         }catch (Exception $e) {
             DB::rollBack();
             Log::info('===== ProgramController - assignProgramLevelToMember() - error =====');
