@@ -132,6 +132,7 @@ class MemberController extends BaseController
         try {
             DB::beginTransaction();
             $session = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->latest()->first();
+
             $user = User::where('email', $contact['email'])->first();
             if(!$user) {
                 $user = User::create([
@@ -158,7 +159,7 @@ class MemberController extends BaseController
             })->count();
 
             if($alreadyEnrolledInProgramLevel > 0){
-                return response()->json(['message' => 'Member is already enrolled in another program level.'], 400);
+                return false;
             }else{
                 $reservation = Reservation::updateOrCreate([
                     'session_id' => $session->id,
@@ -175,10 +176,11 @@ class MemberController extends BaseController
                     'go_high_level_location_id' => $location->go_high_level_location_id,
                     'go_high_level_contact_id' => $contact['id']
                 ]], false);
-            }
 
-            DB::commit();
-            return true;
+                DB::commit();
+                return true;
+            }
+           
         } catch(\Exception $error) {
             DB::rollback();
             Log::info('===== Create New Member =====');
@@ -345,14 +347,17 @@ class MemberController extends BaseController
             if(!isset($contact['email'])) {
                 return $this->sendError('No email found against the contact!', json_encode($tokenObj->json()));
             } else {
-                MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
+                $addMember = MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
+                
+                if($addMember == true){
+                    return $this->sendResponse('Success', 'Member synced successfully');
+                }else{
+                    return $this->sendError('Member is already enrolled in another program level', [], 400);
+                }
             }
-
-            return $this->sendResponse('Success', 'Member synced successfully');
         } catch(Exception $error) {
             return $this->sendError('Something went wrong!', $error->getMessage());
         }
-
     }
 
     public function getMemberPrograms($member_id){
