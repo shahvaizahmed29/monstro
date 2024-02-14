@@ -18,7 +18,9 @@ use App\Models\AchievementActions;
 use App\Models\Action;
 use App\Models\CheckIn;
 use App\Models\Member;
+use App\Models\MemberAchievement;
 use App\Models\Reservation;
+use App\Models\Reward;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -441,6 +443,7 @@ class ProgramController extends BaseController
                     }
 
                     DB::commit();
+                    $this->levelCompletionReward($memberId);
                     return $this->sendResponse("Success", "Member assigned to next level successfully");
 
                 }else{
@@ -480,7 +483,7 @@ class ProgramController extends BaseController
                         $reservation->save();
                     }
                     DB::commit();
-
+                    $this->levelCompletionReward($memberId);
                     return $this->sendResponse("Success", "Member assigned to previous level successfully");
                 }
             }else{
@@ -491,6 +494,64 @@ class ProgramController extends BaseController
             Log::info('===== ProgramController - assignProgramLevelToMember() - error =====');
             Log::info($e->getMessage());
             return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function levelCompletionReward($member_id){
+        // Finding a achivement action related to defined no of level cleared
+        $action = Action::where('name', Action::LEVEL_ACHIEVED)->first();
+        $member = Member::find($member_id);
+
+        // Getting achievement action
+        $achievement_action = AchievementActions::with(['achievement'])->whereHas('achievement' , function ($q) use ($member){
+            $q->where('program_id', $member->reservations[0]->session->program->id);
+        })->where('action_id', $action->id)->first();
+
+        // If achievement action present
+        if($achievement_action){
+            // Checking criteria count
+            $eligibilityCriteria = $achievement_action->count;
+            $completedProgramLevels = Reservation::where('member_id', $member_id)->where('status', Reservation::COMPLETED)
+            ->with('session.programLevel')->get()->pluck('session.programLevel') // Extract programLevel from reservations
+            ->unique('id') // Ensure unique programLevel instances
+            ->count();
+
+            // Checking for eligibility
+            if($completedProgramLevels >= $eligibilityCriteria){
+                $existingMemberAchievement = MemberAchievement::where('achievement_id', $achievement_action->achievement->id)
+                    ->where('member_id', $member_id)->first();
+
+                // Check for if member achievment is already exist
+                if(!$existingMemberAchievement){
+                    //Creating a new achievment for member
+                    MemberAchievement::create([
+                        'achievement_id' => $achievement_action->achievement->id, 
+                        'member_id' => $member_id, 
+                        'status' => 1, 
+                        'note' => 'Achievement accomplished on number of levels completion', 
+                        'date_achieved' => now()
+                    ]);
+
+                    // Fidning member in order to get the current member achieved points
+                    $member = Member::find($member_id);
+                    $currentPoints = $member->current_points;
+
+                    // Creating reward for a member if member has a new achievement only otherwise no reward
+                    $reward = Reward::create([
+                        'member_id' => $member->id,
+                        'points_claimed' => $achievement_action->achievement->reward_points,
+                        'date_claimed' => now(),
+                    ]);
+
+                    if($reward){
+                        // Updating mmeber overall points
+                        $currentPoints = $currentPoints + $achievement_action->achievement->reward_points;
+                    }
+
+                    $member->current_points = $currentPoints;
+                    $member->save();
+                }
+            }
         }
     }
 
