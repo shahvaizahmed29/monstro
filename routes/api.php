@@ -89,7 +89,7 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     
     Route::get('member/{memberId}/get-programs', [App\Http\Controllers\Api\Vendor\MemberController::class, 'getMemberPrograms'])->name('get.member.programs');
     Route::get('program-level/program/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramLevels'])->name('get.program.levels');
-
+    Route::post('member/create', [App\Http\Controllers\Api\Vendor\MemberController::class, 'createMember'])->name('create.member');
 });
 
 Route::post('image-update/{user_id}', [App\Http\Controllers\PublicController::class, 'imageUpdate'])->name('image.update');

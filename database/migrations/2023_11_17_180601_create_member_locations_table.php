@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('member_locations', function (Blueprint $table) {
             $table->foreignId('location_id')->constrained()->onDelete('cascade');
             $table->foreignId('member_id')->constrained()->onDelete('cascade');
-            $table->string('go_high_level_location_id');
-            $table->string('go_high_level_contact_id');
+            $table->string('go_high_level_location_id')->nullable();
+            $table->string('go_high_level_contact_id')->nullable();
             $table->timestamps();
         });
     }

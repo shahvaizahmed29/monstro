@@ -11,17 +11,21 @@ use App\Models\Setting;
 use App\Models\Program;
 use App\Models\CheckIn;
 use App\Http\Controllers\BaseController;
+use App\Http\Requests\Vendor\CreateMemberResource;
 use App\Http\Resources\Member\ProgramResource;
 use App\Http\Resources\Vendor\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
 use App\Http\Resources\Vendor\SessionResource;
 use App\Models\ProgramLevel;
+use App\Notifications\NewMemberNotification;
 use App\Services\GHLService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 
 class MemberController extends BaseController
 {
@@ -109,6 +113,39 @@ class MemberController extends BaseController
             'reservations' => ReservationResource::collection($reservations)
         ];
         return $this->sendResponse($data, 'Member details with session reservations and program');
+    }
+
+    public function createMember(CreateMemberResource $request){
+        try{
+            $password = Str::random(8);
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => bcrypt($password),
+                'email_verified_at' => now()
+            ]);
+
+            $user->assignRole(User::MEMBER);
+            $randomNumberMT = mt_rand(100, 999);
+
+            $member = Member::create([
+                'name' => $request->name,
+                'email' =>  $request->email,
+                'phone' => $request->phone,
+                'referral_code' => $randomNumberMT.$user->id,
+                'user_id' => $user->id
+            ]);
+
+            $data =  [];
+            $data['name'] = $request->name;
+            $data['email'] = $request->email;
+            $data['password'] = $password;
+            // Notification::route('mail', $user->email)->notify(new NewMemberNotification($data));
+
+            return $this->sendResponse(new MemberResource($member), 'Member created successfully.');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
     }
 
     public function memberStatusUpdate($member_id){
