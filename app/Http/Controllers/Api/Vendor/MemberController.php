@@ -272,7 +272,7 @@ class MemberController extends BaseController
     }
 
     public function syncMembersByLocation($programId) {
-        $delayTimeForEachLocation = 60;
+        $delayTimeForEachLocation = 15;
         $reqCustomField = null;
         $location = request()->location;
         $program = Program::with('programLevels')->where('id',$programId)->first();
@@ -335,26 +335,26 @@ class MemberController extends BaseController
                         }
                         foreach($contacts as $contact) {
                             $programLevelId = null;
-                            foreach($contact['customFields'] as $customField) {
-                              
-                                if($customField['id'] == $reqCustomField['id']) {
-                                    if (strpos($customField['value'], '_') === false) {
-                                        continue;
-                                    }
-                                    $parts = explode('_', $customField['value']);
-                                    if(count($parts) != 2) {
-                                        continue;
-                                    }
-    
-                                    $programLevelName = $parts[1];
-                                    $programName = $parts[0];
-    
-                                    if($programName == $program->name) {
-                                        foreach($program->programLevels as $programLevel) {
-                                            if($programLevelName == $programLevel->name) {
-                                                $programLevelId = $programLevel->id;
-                                                MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
-                                            }
+
+                            $custom_field_index = array_search($reqCustomField['id'], array_column($contact['customFields'], 'id'));
+
+                            if($custom_field_index !== false) {
+                                if (strpos($contact['customFields'][$custom_field_index]['value'], '_') === false) {
+                                    continue;
+                                }
+                                $parts = explode('_', $contact['customFields'][$custom_field_index]['value']);
+                                if(count($parts) != 2) {
+                                    continue;
+                                }
+
+                                $programLevelName = $parts[1];
+                                $programName = $parts[0];
+
+                                if($programName == $program->name) {
+                                    foreach($program->programLevels as $programLevel) {
+                                        if($programLevelName == $programLevel->name) {
+                                            $programLevelId = $programLevel->id;
+                                            MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
                                         }
                                     }
                                 }
