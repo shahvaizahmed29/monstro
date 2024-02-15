@@ -6,13 +6,10 @@ use App\Http\Requests\ImageUploadRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
-use App\Jobs\SycnGHLLocations;
 use App\Models\Location;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Setting;
-use App\Notifications\NewVendorNotification;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -111,7 +108,8 @@ class PublicController extends BaseController
                     $ghl_location_data = $this->ghl_controller->getLocation($ghl_location_id);
                     $ghl_location_data = $ghl_location_data['location'];
 
-                    $password = str_replace(' ', '', $ghl_user['firstName']).'@'.Carbon::now()->year.'!';
+                    // $password = str_replace(' ', '', $ghl_user['firstName']).'@'.Carbon::now()->year.'!';
+                    $password = 'Monstro2024Welcome';
 
                     DB::beginTransaction();
 
@@ -121,7 +119,7 @@ class PublicController extends BaseController
                         $user = User::create([
                             'name' => $ghl_user['name'],
                             'email' => $ghl_user['email'],
-                            'password' => $password,
+                            'password' => bcrypt($password),
                             'email_verified_at' => now()
                         ]);
     

@@ -60,7 +60,7 @@ class ProgramLevel extends Model
                 $endTime = $startTime->copy()->addMinutes($activeSession->duration_time);
 
                 $formattedSessions[] = [
-                    'title' => $this->name,
+                    'title' => '',
                     'start' => $currentDate->copy()->setTimeFrom($startTime)->format('Y-m-d\TH:i:s'),
                     'end' => $currentDate->copy()->setTimeFrom($endTime)->format('Y-m-d\TH:i:s'),
                 ];

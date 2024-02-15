@@ -79,9 +79,7 @@ class ProgramController extends BaseController
     public function getProgramById($id){
         try{
             $location = request()->location;
-            $program = Program::with(['programLevels' => function($query) {
-                $query->withTrashed();
-            }])->where('id',$id)->where('location_id', $location->id)->first();
+            $program = Program::with(['programLevels'])->where('id',$id)->where('location_id', $location->id)->first();
 
             if(!$program){
                 return $this->sendError("Program doesnot exist", [], 400);
@@ -92,6 +90,20 @@ class ProgramController extends BaseController
             //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
             // }
             return $this->sendResponse(new ProgramResource($program), 'Get programs related to specific location');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getArchiveProgramLevelsWithSession($programId){
+        try{
+            $location = request()->location;
+            $program = Program::with(['programLevels' => function ($query) {
+                $query->withTrashed();
+            }])->where('id',$programId)->first();
+
+
+            return $this->sendResponse($program, 'Getting archived levels related to program');
         }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }
@@ -227,7 +239,7 @@ class ProgramController extends BaseController
             }
 
             Session::where('program_level_id', $programLevel->id)->update([
-                'status' => Session::INACTIVE
+                'status' => ProgramLevel::ARCHIVE
             ]);
 
             $programLevel->delete();

@@ -91,10 +91,10 @@ class Program extends Model
     {
         // Need to fix this afterwards
         $activeReservationsCount = $this->sessions()
-        // ->where('status', Session::ACTIVE)
-        // ->whereHas('reservations', function ($query) {
-        //     $query->where('status', Reservation::ACTIVE);
-        // })
+        ->where('status', Session::ACTIVE)
+        ->whereHas('reservations', function ($query) {
+            $query->where('status', Reservation::ACTIVE);
+        })
         ->withCount('reservations')->get()
         ->sum('reservations_count');
         return $activeReservationsCount;

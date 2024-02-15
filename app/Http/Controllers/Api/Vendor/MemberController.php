@@ -182,12 +182,14 @@ class MemberController extends BaseController
             DB::beginTransaction();
             $session = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->latest()->first();
 
+            $password = 'Monstro2024Welcome';
             $user = User::where('email', $contact['email'])->first();
             if(!$user) {
                 $user = User::create([
                     'name' => isset($contact['contactName']) ? $contact['contactName'] : '',
                     'email' => $contact['email'],
-                    'password' => bcrypt($contact['email'].'@'.Carbon::now()->year.'!!'),
+                    // 'password' => bcrypt($contact['email'].'@'.Carbon::now()->year.'!!'),
+                    'password' => bcrypt($password),
                     'email_verified_at' => now()
                 ]);
                 $user->assignRole(User::MEMBER);
@@ -275,7 +277,9 @@ class MemberController extends BaseController
         $locationId = $location->id;
         $program = Program::where('id', $id)->where('location_id', $locationId)->first();
         if ($program) {
-            $activeSessions = $program->activeSessions();
+            $activeSessions = Session::with(['reservations', 'reservations.member','programLevel','program'])->whereHas('reservations', function($q) {
+                $q->where('status', Reservation::ACTIVE);
+            })->where('program_id', $program->id)->get();
             return $this->sendResponse(SessionResource::collection($activeSessions), 'program active members.');
         } else {
             return $this->sendError('Program not found.', 404);
@@ -394,7 +398,7 @@ class MemberController extends BaseController
             $programLevel = ProgramLevel::with('program')->where('id',$programLevelId)->first();
             $contact = $request->all();
             if(!isset($contact['email'])) {
-                return $this->sendError('No email found against the contact!', json_encode($tokenObj->json()));
+                return $this->sendError('No email found against the contact!', json_encode($tokenObj));
             } else {
                 $addMember = MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
                 
