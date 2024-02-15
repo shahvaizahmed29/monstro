@@ -37,7 +37,7 @@ class ProgramController extends BaseController
         $programs = Program::where('location_id', $location->id);
         if(isset(request()->type)) {
             if(request()->type == 0) {
-                $programs = $programs->withTrashed();
+                $programs = $programs->whereNotNull('deleted_at');
             }
         }
         $programs = $programs->paginate(25);
