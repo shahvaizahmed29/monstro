@@ -277,9 +277,13 @@ class MemberController extends BaseController
         $locationId = $location->id;
         $program = Program::where('id', $id)->where('location_id', $locationId)->first();
         if ($program) {
-            $activeSessions = Session::with(['reservations', 'reservations.member','programLevel','program'])->whereHas('reservations', function($q) {
+            
+            $activeSessions = Session::with(['reservations' => function($q) {
+                $q->where('status', Reservation::ACTIVE);
+            }, 'reservations.member','programLevel','program'])->whereHas('reservations', function($q) {
                 $q->where('status', Reservation::ACTIVE);
             })->where('program_id', $program->id)->get();
+
             return $this->sendResponse(SessionResource::collection($activeSessions), 'program active members.');
         } else {
             return $this->sendError('Program not found.', 404);
