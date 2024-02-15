@@ -34,7 +34,13 @@ class ProgramController extends BaseController
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
         // }
-        $programs = Program::where('location_id', $location->id)->paginate(25);
+        $programs = Program::where('location_id', $location->id);
+        if(isset(request()->type)) {
+            if(request()->type == 0) {
+                $programs = $programs->withTrashed();
+            }
+        }
+        $programs = $programs->paginate(25);
         $data = [
             'programs' => ProgramResource::collection($programs),
             'pagination' => [
