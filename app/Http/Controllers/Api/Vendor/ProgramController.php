@@ -395,7 +395,7 @@ class ProgramController extends BaseController
         }
     }
 
-    public function assignProgramLevelToMember($programLevelId, $memberId, $status){
+    public function assignProgramLevelToMember($programLevelId, $memberId){
         try{
             // Finding Program Level
             $programLevelCheck = ProgramLevel::find($programLevelId);
