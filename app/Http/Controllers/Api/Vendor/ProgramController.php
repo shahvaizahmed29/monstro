@@ -483,7 +483,27 @@ class ProgramController extends BaseController
                     return $this->sendResponse("Success", "Member assigned to previous level successfully");
                 }
             }else{
-                return $this->sendError('No active reservations found for this program level', [], 400);
+                $programLevel = ProgramLevel::find($programLevelId);
+
+                if(!$programLevel){
+                    return $this->sendError('Program level does not exist. Cannot assign a level to member', [], 400);
+                }
+
+                $session = $programLevel->sessions[0];
+
+                Reservation::updateOrCreate([
+                    'session_id' => $session->id,
+                    'member_id' =>  $memberId
+                ],[
+                    'session_id' => $session->id,
+                    'member_id' =>  $memberId,
+                    'status' => Reservation::ACTIVE,
+                    'start_date' => Carbon::today()->format('Y-m-d'),
+                    'end_date' => $session->end_date
+                ]);
+                
+                $this->levelCompletionReward($memberId);
+                return $this->sendResponse("Success", "Member assigned to program level and reservation created successfully");
             }
         }catch (Exception $e) {
             DB::rollBack();
