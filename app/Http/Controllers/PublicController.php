@@ -114,54 +114,65 @@ class PublicController extends BaseController
                     $password = str_replace(' ', '', $ghl_user['firstName']).'@'.Carbon::now()->year.'!';
 
                     DB::beginTransaction();
-                    $user = User::create([
-                        'name' => $ghl_user['name'],
-                        'email' => $ghl_user['email'],
-                        'password' => $password,
-                        'email_verified_at' => now()
-                    ]);
 
-                    $user->assignRole(\App\Models\User::VENDOR);
+                    $user = User::where('email', $ghl_user['email'])->first();
 
-                    $data =  [];
-                    $data['name'] = $ghl_user['name'];
-                    $data['email'] = $ghl_user['email'];
-                    $data['password'] = $password;
+                    if(!$user) {
+                        $user = User::create([
+                            'name' => $ghl_user['name'],
+                            'email' => $ghl_user['email'],
+                            'password' => $password,
+                            'email_verified_at' => now()
+                        ]);
+    
+                        $user->assignRole(\App\Models\User::VENDOR);
+    
+                        $data =  [];
+                        $data['name'] = $ghl_user['name'];
+                        $data['email'] = $ghl_user['email'];
+                        $data['password'] = $password;
 
-                    $vendor = Vendor::create([
-                        'first_name' => $ghl_location_data['firstName'],
-                        'last_name' => isset($ghl_location_data['lastName']) ? $ghl_location_data['lastName'] : null,
-                        'company_name' => $ghl_location_data['name'],
-                        'company_email' => $ghl_location_data['email'],
-                        'company_website' => isset($ghl_location_data['website']) ? $ghl_location_data['website'] : null,
-                        'company_address' => isset($ghl_location_data['address']) ? $ghl_location_data['address'] : null,
-                        'go_high_level_user_id' => $ghl_user['id'],
-                        'user_id' => $user->id,
-                        'phone_number' => isset($ghl_location_data['phone']) ? $ghl_location_data['phone'] : null,
-                        'stripe_customer_id' => isset($request->stripe_customer_id) ? $request->stripe_customer_id : null
-                    ]);
+                        $vendor = Vendor::where('user_id', $user->id)->first();
 
-                    Location::updateOrCreate([
-                        'go_high_level_location_id' => $ghl_location_id
-                    ],
-                    [
-                        'go_high_level_location_id' => $ghl_location_data['id'],
-                        'name' => $ghl_location_data['name'],
-                        'address' => isset($ghl_location_data['address']) ? $ghl_location_data['address'] : null,
-                        'city' => isset($ghl_location_data['city']) ? $ghl_location_data['city'] : $ghl_location_data['city'],
-                        'state' => isset($ghl_location_data['state']) ? $ghl_location_data['state'] : null,
-                        'logo_url' => isset($ghl_location_data['logoUrl']) ? $ghl_location_data['logoUrl'] : null,
-                        'country' => isset($ghl_location_data['country']) ? $ghl_location_data['country'] : null,
-                        'postal_code' => isset($ghl_location_data['postalCode']) ? $ghl_location_data['postalCode'] : null,
-                        'website' => isset($ghl_location_data['website']) ? $ghl_location_data['website'] : null,
-                        'email' => $ghl_location_data['email'],
-                        'phone' => isset($ghl_location_data['phone']) ? $ghl_location_data['phone'] : null,
-                        'vendor_id' => $vendor->id,
-                        'meta_data' => $ghl_location_data
-                    ]);
-                    
-                    DB::commit();
-                    // Notification::route('mail', $ghl_user['email'])->notify(new NewVendorNotification($data));
+                        if(!$vendor){
+                            $vendor = Vendor::create([
+                                'first_name' => $ghl_location_data['firstName'],
+                                'last_name' => isset($ghl_location_data['lastName']) ? $ghl_location_data['lastName'] : null,
+                                'company_name' => $ghl_location_data['name'],
+                                'company_email' => $ghl_location_data['email'],
+                                'company_website' => isset($ghl_location_data['website']) ? $ghl_location_data['website'] : null,
+                                'company_address' => isset($ghl_location_data['address']) ? $ghl_location_data['address'] : null,
+                                'go_high_level_user_id' => $ghl_user['id'],
+                                'user_id' => $user->id,
+                                'phone_number' => isset($ghl_location_data['phone']) ? $ghl_location_data['phone'] : null,
+                                'stripe_customer_id' => isset($request->stripe_customer_id) ? $request->stripe_customer_id : null
+                            ]);
+
+                            Location::updateOrCreate([
+                                'go_high_level_location_id' => $ghl_location_id
+                            ],
+                            [
+                                'go_high_level_location_id' => $ghl_location_data['id'],
+                                'name' => $ghl_location_data['name'],
+                                'address' => isset($ghl_location_data['address']) ? $ghl_location_data['address'] : null,
+                                'city' => isset($ghl_location_data['city']) ? $ghl_location_data['city'] : $ghl_location_data['city'],
+                                'state' => isset($ghl_location_data['state']) ? $ghl_location_data['state'] : null,
+                                'logo_url' => isset($ghl_location_data['logoUrl']) ? $ghl_location_data['logoUrl'] : null,
+                                'country' => isset($ghl_location_data['country']) ? $ghl_location_data['country'] : null,
+                                'postal_code' => isset($ghl_location_data['postalCode']) ? $ghl_location_data['postalCode'] : null,
+                                'website' => isset($ghl_location_data['website']) ? $ghl_location_data['website'] : null,
+                                'email' => $ghl_location_data['email'],
+                                'phone' => isset($ghl_location_data['phone']) ? $ghl_location_data['phone'] : null,
+                                'vendor_id' => $vendor->id,
+                                'meta_data' => $ghl_location_data
+                            ]);
+                            
+                            DB::commit();
+                            // Notification::route('mail', $ghl_user['email'])->notify(new NewVendorNotification($data));
+                        }
+                    }else{
+                        return $this->sendError('A vendor already registered with this email.', [], 400);
+                    }
                 }
 
                 return $this->sendResponse('Success', 'Vendor created successfully');
