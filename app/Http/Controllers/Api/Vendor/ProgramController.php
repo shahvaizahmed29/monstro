@@ -421,29 +421,26 @@ class ProgramController extends BaseController
                 }elseif($currentProgramLevelId < $programLevelId){ // Checking if program level is bigger than the current enrolled program or not
                     DB::beginTransaction();
                     //Getting next level sessions
-                    $nextLevelSessions = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->get();
-                    if($nextLevelSessions) {
+                    $nextLevelSession = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->first();
+                    if($nextLevelSession) {
                         // Create reservation if not present or update if already present
-                        foreach($nextLevelSessions as $nextLevelSession){
-                            Reservation::updateOrCreate([
-                                'session_id' => $nextLevelSession->id,
-                                'member_id' =>  $memberId
-                            ],[
-                                'session_id' => $nextLevelSession->id,
-                                'member_id' =>  $memberId,
-                                'status' => Reservation::ACTIVE,
-                                'start_date' => Carbon::today()->format('Y-m-d'),
-                                'end_date' => $nextLevelSession->end_date
-                            ]);
-                        }
+                        Reservation::updateOrCreate([
+                            'session_id' => $nextLevelSession->id,
+                            'member_id' =>  $memberId
+                        ],[
+                            'session_id' => $nextLevelSession->id,
+                            'member_id' =>  $memberId,
+                            'status' => Reservation::ACTIVE,
+                            'start_date' => Carbon::today()->format('Y-m-d'),
+                            'end_date' => $nextLevelSession->end_date
+                        ]);
+                        
                     }
                     
-                    $currentSessions = Session::where('program_level_id', $currentProgramLevelId)->where('status', Session::ACTIVE)->get();
-                    if($currentSessions) {
-                        foreach($currentSessions as $currentSession){
-                            // Updating current reservations sessions status to completed
-                            Reservation::where('session_id', $currentSession->id)->update(['status' => Reservation::COMPLETED]);
-                        }
+                    $currentSession = Session::where('program_level_id', $currentProgramLevelId)->where('status', Session::ACTIVE)->first();
+                    if($currentSession) {
+                        // Updating current reservations sessions status to completed
+                        Reservation::where('session_id', $currentSession->id)->update(['status' => Reservation::COMPLETED]);
                     }
                     DB::commit();
                     $this->levelCompletionReward($memberId);
@@ -451,32 +448,28 @@ class ProgramController extends BaseController
                 }else{
                     DB::beginTransaction();
                     // Getting old level sessions
-                    $oldSessions = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->get();
-                    if($oldSessions) {
-                        foreach($oldSessions as $oldSession){
-                            // Updating old reservations status to active
-                            Reservation::updateOrCreate([
-                                'session_id' => $oldSession->id,
-                                'member_id' =>  $memberId
-                            ],[
-                                'session_id' => $oldSession->id,
-                                'member_id' =>  $memberId,
-                                'status' => Reservation::ACTIVE,
-                                'start_date' => Carbon::today()->format('Y-m-d'),
-                                'end_date' => $oldSession->end_date
-                            ]);
-                        }
+                    $oldSession = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->first();
+                    if($oldSession) {
+                        // Updating old reservations status to active
+                        Reservation::updateOrCreate([
+                            'session_id' => $oldSession->id,
+                            'member_id' =>  $memberId
+                        ],[
+                            'session_id' => $oldSession->id,
+                            'member_id' =>  $memberId,
+                            'status' => Reservation::ACTIVE,
+                            'start_date' => Carbon::today()->format('Y-m-d'),
+                            'end_date' => $oldSession->end_date
+                        ]);
                     }
                     
                     // Getting current sessions 
-                    $currentSessions = Session::where('program_level_id', $currentProgramLevelId)->where('status', Session::ACTIVE)->get();
-                    if($currentSessions) {
-                        foreach($currentSessions as $currentSession){
-                            // Updating current reservations sessions status to inactive
-                            $reservation = Reservation::where('session_id', $currentSession->id)->where('member_id', $memberId)->first();
-                            $reservation->status = Reservation::INACTIVE;
-                            $reservation->save();
-                        }
+                    $currentSession = Session::where('program_level_id', $currentProgramLevelId)->where('status', Session::ACTIVE)->first();
+                    if($currentSession) {
+                        // Updating current reservations sessions status to inactive
+                        $reservation = Reservation::where('session_id', $currentSession->id)->where('member_id', $memberId)->first();
+                        $reservation->status = Reservation::INACTIVE;
+                        $reservation->save();
                     }
                     DB::commit();
                     $this->levelCompletionReward($memberId);
