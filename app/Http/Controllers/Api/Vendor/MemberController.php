@@ -117,32 +117,44 @@ class MemberController extends BaseController
 
     public function createMember(CreateMemberResource $request){
         try{
+            $location = request()->location;
             $password = Str::random(8);
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => bcrypt($password),
-                'email_verified_at' => now()
-            ]);
 
-            $user->assignRole(User::MEMBER);
-            $randomNumberMT = mt_rand(100, 999);
+            $user = User::where('email', $request->email)->first();
 
-            $member = Member::create([
-                'name' => $request->name,
-                'email' =>  $request->email,
-                'phone' => $request->phone,
-                'referral_code' => $randomNumberMT.$user->id,
-                'user_id' => $user->id
-            ]);
-
-            $data =  [];
-            $data['name'] = $request->name;
-            $data['email'] = $request->email;
-            $data['password'] = $password;
-            // Notification::route('mail', $user->email)->notify(new NewMemberNotification($data));
-
-            return $this->sendResponse(new MemberResource($member), 'Member created successfully.');
+            if(!$user){
+                $user = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'password' => bcrypt($password),
+                    'email_verified_at' => now()
+                ]);
+    
+                $user->assignRole(User::MEMBER);
+                $randomNumberMT = mt_rand(100, 999);
+    
+                $member = Member::create([
+                    'name' => $request->name,
+                    'email' =>  $request->email,
+                    'phone' => $request->phone,
+                    'referral_code' => $randomNumberMT.$user->id,
+                    'user_id' => $user->id
+                ]);
+    
+                $member->locations()->sync([$location->id => [
+                    'go_high_level_location_id' => $location->go_high_level_location_id
+                ]], false);
+    
+                $data =  [];
+                $data['name'] = $request->name;
+                $data['email'] = $request->email;
+                $data['password'] = $password;
+                // Notification::route('mail', $user->email)->notify(new NewMemberNotification($data));
+    
+                return $this->sendResponse(new MemberResource($member), 'Member created successfully.');
+            }else{
+                return $this->sendError('Member already registered with this email', [], 400);
+            }
         }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }
@@ -190,7 +202,7 @@ class MemberController extends BaseController
             } else {
                 $member = $user->member;
             }
-
+            
             $alreadyEnrolledInProgramLevel = $member->reservations()->whereHas('session.programLevel', function ($query) use ($programLevelId) {
                 $query->where('id', '!=', $programLevelId);
             })->count();
