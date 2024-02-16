@@ -230,26 +230,6 @@ class ProgramController extends BaseController
         }
     }
 
-    public function programLevelArchive($programLevelId){
-        try{ 
-            $programLevel = ProgramLevel::where('id',$programLevelId)->first();
-
-            if(!$programLevel){
-                return $this->sendError('Program level does not exist.', [], 400);
-            }
-
-            Session::where('program_level_id', $programLevel->id)->update([
-                'status' => ProgramLevel::ARCHIVE
-            ]);
-
-            $programLevel->delete();
-            
-            return $this->sendResponse(['id' => $programLevelId], 'Program level archived successfully.');
-        }catch(Exception $error){
-            return $this->sendError($error->getMessage(), [], 500);
-        }
-    }
-
     public function getProgramDetails($programId){
         try{
             $location = request()->location;
