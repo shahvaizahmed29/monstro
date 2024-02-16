@@ -432,7 +432,7 @@ class ProgramController extends BaseController
                     $currentSession = Session::where('program_level_id', $currentProgramLevelId)->where('status', Session::ACTIVE)->first();
                     if($currentSession) {
                         // Updating current reservations sessions status to completed
-                        Reservation::where('session_id', $currentSession->id)->update(['status' => Reservation::COMPLETED]);
+                        Reservation::where('session_id', $currentSession->id)->where('member_id', $memberId)->update(['status' => Reservation::COMPLETED]);
                     }
                     DB::commit();
                     $this->levelCompletionReward($memberId);
