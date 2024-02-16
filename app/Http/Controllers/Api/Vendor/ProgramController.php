@@ -140,17 +140,17 @@ class ProgramController extends BaseController
                 
                 $parent_id = $program_level->id;
 
-                $tomorrow = Carbon::tomorrow();
-                $formattedTomorrow = $tomorrow->format('Y-m-d');
+                $now = Carbon::now();
+                $formattedNow = $now->format('Y-m-d');
 
-                $twoYearsLater = $tomorrow->addYears(2);
+                $twoYearsLater = $now->addYears(2);
                 $twoYearsLaterformattedDate = $twoYearsLater->format('Y-m-d');
 
                 $session = Session::create([
                     'program_id' => $program->id,
                     'program_level_id' => $program_level->id,
                     'duration_time' => $session['duration_time'],
-                    'start_date' => $formattedTomorrow,
+                    'start_date' => $formattedNow,
                     'end_date' => $twoYearsLaterformattedDate,
                     'monday' => $session['monday'] ?? null,
                     'tuesday' => $session['tuesday'] ?? null,
@@ -197,17 +197,17 @@ class ProgramController extends BaseController
             $program_level->save();
 
             foreach($request->sessions as $session){
-                $tomorrow = Carbon::tomorrow();
-                $formattedTomorrow = $tomorrow->format('Y-m-d');
+                $now = Carbon::now();
+                $formattedNow = $now->format('Y-m-d');
 
-                $twoYearsLater = $tomorrow->addYears(2);
+                $twoYearsLater = $now->addYears(2);
                 $twoYearsLaterformattedDate = $twoYearsLater->format('Y-m-d');
 
                 $session = Session::create([
                     'program_id' => $programId,
                     'program_level_id' => $program_level->id,
                     'duration_time' => $session['duration_time'],
-                    'start_date' => $formattedTomorrow,
+                    'start_date' => $formattedNow,
                     'end_date' => $twoYearsLaterformattedDate,
                     'monday' => $session['monday'] ?? null,
                     'tuesday' => $session['tuesday'] ?? null,
