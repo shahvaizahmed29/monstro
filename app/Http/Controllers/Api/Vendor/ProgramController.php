@@ -100,10 +100,10 @@ class ProgramController extends BaseController
             $location = request()->location;
             $program = Program::with(['programLevels' => function ($query) {
                 $query->withTrashed();
-            }])->where('id',$programId)->first();
+                $query->where('deleted_at', '!=', NULL);
+            }])->where('id', $programId)->first();
 
-
-            return $this->sendResponse($program, 'Getting archived levels related to program');
+            return $this->sendResponse(new ProgramResource($program), 'Getting archived levels related to program');
         }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }
