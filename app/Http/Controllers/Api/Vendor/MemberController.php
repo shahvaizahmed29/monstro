@@ -140,6 +140,23 @@ class MemberController extends BaseController
                     'referral_code' => $randomNumberMT.$user->id,
                     'user_id' => $user->id
                 ]);
+
+                if(isset($request->programLevelId)){
+                    $session = Session::where('program_level_id', $request->programLevelId)->where('status', Session::ACTIVE)->latest()->first();
+
+                    if($session){
+                        Reservation::updateOrCreate([
+                            'session_id' => $session->id,
+                            'member_id' =>  $member->id
+                        ],[
+                            'session_id' => $session->id,
+                            'member_id' =>  $member->id,
+                            'status' => Reservation::ACTIVE,
+                            'start_date' => Carbon::today()->format('Y-m-d'),
+                            'end_date' => $session->end_date
+                        ]);
+                    }
+                }
     
                 $member->locations()->sync([$location->id => [
                     'go_high_level_location_id' => $location->go_high_level_location_id
