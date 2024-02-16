@@ -69,7 +69,6 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::get('sync-members-by-location/{programId}', [App\Http\Controllers\Api\Vendor\MemberController::class, 'syncMembersByLocation'])->name('sync.member.by.location');
     Route::get('get-contacts', [App\Http\Controllers\Api\Vendor\MemberController::class, 'getContacts'])->name('get.contacts');
     Route::post('add-member/{programLevelId}', [App\Http\Controllers\Api\Vendor\MemberController::class, 'addMemberManually'])->name('add.member.manually');
-    Route::put('/program-level-archive/{programLevelId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'programLevelArchive'])->name('program.level.archive');
     Route::put('member/status/{member_id}', [App\Http\Controllers\Api\Vendor\MemberController::class, 'memberStatusUpdate'])->name('member.status.update');
     Route::get('attendances/member/{memberId}/program/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'lastTenAttendance'])->name('member.program.attendances');
 

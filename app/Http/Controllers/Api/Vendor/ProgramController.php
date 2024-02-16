@@ -37,7 +37,7 @@ class ProgramController extends BaseController
         $programs = Program::where('location_id', $location->id);
         if(isset(request()->type)) {
             if(request()->type == 0) {
-                $programs = $programs->whereNotNull('deleted_at');
+                $programs = $programs->whereNotNull('deleted_at')->withTrashed();
             }
         }
         $programs = $programs->paginate(25);
@@ -100,10 +100,10 @@ class ProgramController extends BaseController
             $location = request()->location;
             $program = Program::with(['programLevels' => function ($query) {
                 $query->withTrashed();
-            }])->where('id',$programId)->first();
+                $query->where('deleted_at', '!=', NULL);
+            }])->where('id', $programId)->first();
 
-
-            return $this->sendResponse($program, 'Getting archived levels related to program');
+            return $this->sendResponse(new ProgramResource($program), 'Getting archived levels related to program');
         }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }
@@ -227,26 +227,6 @@ class ProgramController extends BaseController
             Log::info('===== ProgramController - addProgramLevel() - error =====');
             Log::info($e->getMessage());
             return $this->sendError($e->getMessage(), [], 500);
-        }
-    }
-
-    public function programLevelArchive($programLevelId){
-        try{ 
-            $programLevel = ProgramLevel::where('id',$programLevelId)->first();
-
-            if(!$programLevel){
-                return $this->sendError('Program level does not exist.', [], 400);
-            }
-
-            Session::where('program_level_id', $programLevel->id)->update([
-                'status' => ProgramLevel::ARCHIVE
-            ]);
-
-            $programLevel->delete();
-            
-            return $this->sendResponse(['id' => $programLevelId], 'Program level archived successfully.');
-        }catch(Exception $error){
-            return $this->sendError($error->getMessage(), [], 500);
         }
     }
 

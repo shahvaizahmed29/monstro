@@ -428,12 +428,17 @@ class MemberController extends BaseController
             foreach ($reservations as $reservation) {
                 $session = $reservation->session;
                 $programLevel = $session->programLevel;
-    
-                $program = $programLevel->program;
-    
-                if (!isset($programs[$program->id])) {
-                    $programs[$program->id] = $program;
+                
+                if($programLevel){
+                    $program = $programLevel->program;
+                    
+                    if($program){
+                        if (!isset($programs[$program->id])) {
+                            $programs[$program->id] = $program;
+                        }
+                    }
                 }
+
             }
 
             return $this->sendResponse(ProgramResource::collection($programs), 'Get programs related to specific member');
