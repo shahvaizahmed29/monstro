@@ -116,7 +116,7 @@ class VendorController extends BaseController
             }
 
             $new_password = $request->input('new_password');
-            $user->password = $new_password;
+            $user->password = bcrypt($new_password);
             $user->save();
 
             return $this->sendResponse('Success', 'Password set successfully');
@@ -173,7 +173,7 @@ class VendorController extends BaseController
                 return $this->sendError("No user found for this location", [], 400);
             }
 
-            $user->password = $request->password;
+            $user->password = bcrypt($request->password);
             $user->save();
 
             $location->is_new = false;

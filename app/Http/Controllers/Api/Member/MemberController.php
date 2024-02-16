@@ -38,7 +38,7 @@ class MemberController extends BaseController
             }
 
             $new_password = $request->input('new_password');
-            $user->password = $new_password;
+            $user->password = bcrypt($new_password);
             $user->save();
 
             return $this->sendResponse('Success', 'Password set successfully');
