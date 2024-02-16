@@ -28,7 +28,7 @@ class ReservationController extends BaseController
             return $query->whereNull('deleted_at');
         })->whereHas('session.program', function ($query) {
             return $query->whereNull('deleted_at');
-        })
+        })->where('status', Reservation::ACTIVE)
         ->where('member_id', $member_id)->paginate(25);
         // if(count($reservations) > 0) {
             // $location = $reservations[0]->session->programLevel->program->location;
