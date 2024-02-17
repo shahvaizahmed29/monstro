@@ -159,7 +159,8 @@ class MemberController extends BaseController
                 }
     
                 $member->locations()->sync([$location->id => [
-                    'go_high_level_location_id' => $location->go_high_level_location_id
+                    'go_high_level_location_id' => $location->go_high_level_location_id,
+                    'go_high_level_contact_id' => null
                 ]], false);
     
                 $data =  [];
@@ -221,9 +222,13 @@ class MemberController extends BaseController
             } else {
                 $member = $user->member;
             }
-            
+
+            $programLevel = ProgramLevel::with(['program'])->where('id', $programLevelId)->first();
+
             $alreadyEnrolledInProgramLevel = $member->reservations()->whereHas('session.programLevel', function ($query) use ($programLevelId) {
                 $query->where('id', '!=', $programLevelId);
+            })->whereHas('session', function ($query) use ($programLevel) {
+                $query->where('program_id', '=', $programLevel->program->id);
             })->count();
 
             if($alreadyEnrolledInProgramLevel > 0){
@@ -283,10 +288,42 @@ class MemberController extends BaseController
             $location = request()->location;
             $name = request()->name;
             $locationId = $location->go_high_level_location_id;
-            return $this->ghlService->getContactsByName($locationId,$name);
+            
+            $ghl_contacts = $this->ghlService->getContactsByName($locationId, $name);
+
+            $members = $this->getMembers($location->id);
+            $members = json_decode($members, true);
+
+            foreach ($members as &$member) {
+                $member['contactName'] = $member['name'];
+                unset($member['name']);
+            }
+
+            $contacts = array_merge_recursive($ghl_contacts, ['contacts' => $members]);
+
+            $uniqueContacts = [];
+            foreach ($contacts['contacts'] as $contact) {
+                $email = $contact['email'];
+                if (!isset($uniqueContacts[$email])) {
+                    $uniqueContacts[$email] = $contact;
+                }
+            }
+
+            $uniqueContacts = array_values($uniqueContacts);
+            $contacts['contacts'] = $uniqueContacts;
+
+            return $contacts;
         }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }
+    }
+
+    public function getMembers($location_id){
+        $members = Member::whereHas('locations', function ($query) use ($location_id) {
+            $query->where('id', $location_id);
+        })->get();
+
+        return $members;
     }
 
     public function getMembersByProgram($id) {
