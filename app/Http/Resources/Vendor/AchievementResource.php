@@ -26,6 +26,9 @@ class AchievementResource extends JsonResource
             'action' => $this->whenLoaded('actions', function () {
                 return ActionResource::collection($this->actions);
             }),
+            'members' => $this->whenLoaded('members', function () {
+                return MemberResource::collection($this->members);
+            }),
         ];
 
         return $achievement;

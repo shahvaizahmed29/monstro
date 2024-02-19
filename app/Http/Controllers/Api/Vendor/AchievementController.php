@@ -3,21 +3,22 @@
 namespace App\Http\Controllers\Api\Vendor;
 
 use App\Http\Controllers\BaseController;
-use App\Http\Controllers\Controller;
 use App\Http\Resources\Vendor\AchievementResource;
 use App\Models\Achievement;
 use App\Models\AchievementActions;
-use App\Models\AchievementRequirements;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class AchievementController extends BaseController
 {
     public function index(){
         try{
-            $achievements = Achievement::with(['actions'])->paginate(25);
+            $achievements = Achievement::with(['actions', 'members'])->paginate(25);
+
+            if ($achievements->isEmpty()) {
+                return $this->sendError('No achievements found', [], 400);
+            }
 
             $data = [
                 'achievements' => AchievementResource::collection($achievements),
@@ -56,7 +57,7 @@ class AchievementController extends BaseController
 
     public function getAchievement($id){
         try{
-            $achievement = Achievement::with(['actions'])->find($id);
+            $achievement = Achievement::with(['actions', 'members'])->find($id);
 
             if(!$achievement){
                 return $this->sendError('Achievement not found', [], 400);
@@ -64,6 +65,24 @@ class AchievementController extends BaseController
 
             return $this->sendResponse(new AchievementResource($achievement), 'Achievement fetched successfully');
         }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function update(Request $request, Achievement $achievement){
+        try{
+            DB::beginTransaction();
+            $achievement->update([
+                'name' => $request->name,
+                'badge' => $request->badge,
+                'reward_points' => $request->rewardPoints,
+                'action_count' => $request->actionCount
+            ]);
+
+            DB::commit();
+            return $this->sendResponse(new AchievementResource($achievement), 'Achievement updated successfully');
+        }catch(Exception $error){
+            DB::rollBack();
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
@@ -83,6 +102,5 @@ class AchievementController extends BaseController
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
-
 
 }

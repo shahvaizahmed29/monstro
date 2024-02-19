@@ -17,6 +17,9 @@ class ActionResource extends JsonResource
         $action = [
             'id' => $this->id,
             'name' => $this->name,
+            'achievements' => $this->whenLoaded('achievements', function () {
+                return AchievementResource::collection($this->achievements);
+            }),
         ];
 
         return $action;
