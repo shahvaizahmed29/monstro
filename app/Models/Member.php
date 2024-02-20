@@ -31,8 +31,8 @@ class Member extends Model
         return $this->belongsToMany(Achievement::class, 'member_achievements', 'member_id', 'achievement_id');
     }
 
-    public function rewardClaims(){
-        return $this->hasMany(MemberRewardClaim::class);
+    public function rewards(){
+        return $this->hasMany(Reward::class);
     }
 
     public function reservations(){

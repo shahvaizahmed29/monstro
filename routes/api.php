@@ -87,6 +87,11 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::prefix('actions')->group(function () {
         Route::get('', [App\Http\Controllers\Api\Vendor\ActionController::class, 'index'])->name('get.actions');
     });
+
+    Route::prefix('rewards')->group(function () {
+        Route::get('', [App\Http\Controllers\Api\Vendor\RewardController::class, 'index'])->name('get.rewards');
+        Route::get('member/{memberId}', [App\Http\Controllers\Api\Vendor\RewardController::class, 'getMemberRewards'])->name('get.member.rewards');
+    });
     
     Route::put('password-reset', [App\Http\Controllers\Api\Vendor\VendorController::class, 'passwordReset'])->name('password.reset');
     Route::post('assign-program-level/{programLevelId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'assignProgramLevelToMember'])->name('assign.program.level.to.member');
@@ -95,6 +100,7 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::get('program-level/program/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramLevels'])->name('get.program.levels');
     Route::post('member/create', [App\Http\Controllers\Api\Vendor\MemberController::class, 'createMember'])->name('create.member');
     Route::get('program/{programId}/get-archive-program-levels', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getArchiveProgramLevelsWithSession'])->name('get.archive.program.levels');
+    Route::post('program/{program}/image', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'programImageUpdate'])->name('program.image.update');
 });
 
 Route::post('image-update/{user_id}', [App\Http\Controllers\PublicController::class, 'imageUpdate'])->name('image.update');

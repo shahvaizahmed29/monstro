@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 
 class ProgramController extends BaseController
 {
@@ -263,6 +264,24 @@ class ProgramController extends BaseController
 
     public function update(ProgramUpdateRequest $request, Program $program){
         try{
+            $program->update([
+                'name' => $request->name,
+                'description' => $request->description
+            ]);
+
+            $program = Program::with('programLevels')->where('id',$program->id)->first();
+
+            return $this->sendResponse(new ProgramResource($program), 'Program updated successfully.');
+        }catch (Exception $e) {
+            DB::rollBack();
+            Log::info('===== ProgramController - programUpdate() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function programImageUpdate(Request $request, Program $program){
+        try{
             $avatar = $request->file('avatar');
             $imgPath = 'program-images/';
             $imageUrl = null;
@@ -274,17 +293,13 @@ class ProgramController extends BaseController
             }
 
             $program->update([
-                'name' => $request->name,
-                'description' => $request->description,
                 'avatar' => isset($imageUrl) ? $imageUrl : $program->avatar,
             ]);
 
-            $program = Program::with('programLevels')->where('id',$program->id)->first();
-
-            return $this->sendResponse(new ProgramResource($program), 'Program updated successfully.');
+            return $this->sendResponse(new ProgramResource($program), 'Program image updated successfully.');
         }catch (Exception $e) {
             DB::rollBack();
-            Log::info('===== ProgramController - programUpdate() - error =====');
+            Log::info('===== ProgramController - programImageUpdate() - error =====');
             Log::info($e->getMessage());
             return $this->sendError($e->getMessage(), [], 500);
         }
