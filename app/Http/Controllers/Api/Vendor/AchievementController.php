@@ -24,10 +24,6 @@ class AchievementController extends BaseController
 
             $achievements = $achievements->paginate(25);
 
-            if ($achievements->isEmpty()) {
-                return $this->sendError('No achievements found', [], 400);
-            }
-
             $data = [
                 'achievements' => AchievementResource::collection($achievements),
                 'pagination' => [
