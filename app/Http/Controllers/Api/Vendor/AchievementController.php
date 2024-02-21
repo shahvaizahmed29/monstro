@@ -14,7 +14,15 @@ class AchievementController extends BaseController
 {
     public function index(){
         try{
-            $achievements = Achievement::with(['actions', 'members'])->paginate(25);
+            $achievements = Achievement::with(['actions', 'members']);
+
+            if(isset(request()->type)) {
+                if(request()->type == 0) {
+                    $achievements = $achievements->whereNotNull('deleted_at')->withTrashed();
+                }
+            }
+
+            $achievements = $achievements->paginate(25);
 
             if ($achievements->isEmpty()) {
                 return $this->sendError('No achievements found', [], 400);

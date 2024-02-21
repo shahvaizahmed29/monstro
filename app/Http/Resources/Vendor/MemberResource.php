@@ -21,6 +21,7 @@ class MemberResource extends JsonResource
             'phone' => $this->phone,
             'referralCode' => $this->referral_code,
             'avatar' => $this->avatar,
+            'currentPoints' => $this->current_points,
             'activityStatus' => $this->isActive() ? 'Active' : 'Not Active',
             'reservations' => $this->whenLoaded('reservations', function () {
                 return ReservationResource::collection($this->reservations);
@@ -29,6 +30,9 @@ class MemberResource extends JsonResource
             'lastSeen' => $this->when($this->last_seen !== null, $this->last_seen),
             'rewards' => $this->whenLoaded('rewards', function () {
                 return RewardResource::collection($this->rewards);
+            }),
+            'achievements' => $this->whenLoaded('achievements', function () {
+                return AchievementResource::collection($this->achievements);
             }),
         ];
         return $member;

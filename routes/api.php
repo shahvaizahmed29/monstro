@@ -30,6 +30,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('profile-update/{user_id}', [App\Http\Controllers\Api\Member\MemberController::class, 'profileUpdate'])->name('profile.update');
         Route::put('update-password/{user_id}', [App\Http\Controllers\Api\Member\MemberController::class, 'updatePassword'])->name('update.password');
         Route::get('profile', [App\Http\Controllers\Api\Member\MemberController::class, 'getProfile'])->name('get.profile');
+        Route::get('rewards', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberRewards'])->name('get.member.rewards');
+        Route::get('achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberAchievements'])->name('get.member.achievements');
     });
 
     //==================================================================================================================================================================================

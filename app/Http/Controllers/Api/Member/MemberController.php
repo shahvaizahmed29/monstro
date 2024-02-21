@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Member;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\PasswordUpdateRequest;
 use App\Http\Resources\Member\GetMemberProfile;
+use App\Http\Resources\Member\MemberResource;
+use App\Models\Member;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
@@ -24,6 +26,28 @@ class MemberController extends BaseController
             $user->name = isset($request->name) ? $request->name : $user->name;
             $user->save();
             return $this->sendResponse('Success', 'User updated successfully.');
+        }catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getMemberRewards(){
+        try{
+            $member = Member::with(['rewards'])->where('id', auth()->user()->member->id)
+                ->first();
+            
+            return $this->sendResponse(new MemberResource($member), 'Member with rewards fetched successfully');
+        }catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getMemberAchievements(){
+        try{
+            $member = Member::with(['achievements'])->where('id', auth()->user()->member->id)
+                ->first();
+            
+            return $this->sendResponse(new MemberResource($member), 'Member with achievements fetched successfully');
         }catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
