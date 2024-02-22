@@ -20,6 +20,7 @@ class RewardResource extends JsonResource
             'dateClaimed' => $this->date_claimed,
             'createdAt' => $this->created_at,
             'updatedAt' => $this->updated_at,
+            'deletedAt' => $this->deleted_at,
             'member' => $this->whenLoaded('member', function () {
                 return MemberResource::collection($this->member);
             }),

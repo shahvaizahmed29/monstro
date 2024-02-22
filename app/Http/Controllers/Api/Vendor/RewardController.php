@@ -5,14 +5,21 @@ namespace App\Http\Controllers\Api\Vendor;
 use App\Http\Controllers\BaseController;
 use App\Http\Resources\Vendor\MemberResource;
 use App\Models\Member;
+use App\Models\Reward;
 use Exception;
 
 class RewardController extends BaseController
 {
     public function index(){
         try{
-            $members = Member::with(['rewards'])->whereHas('rewards', function ($q) {
-                $q->whereNotNull('member_id');
+            $members = Member::with(['rewards' => function ($query) {
+                if (request()->filled('type') && request()->type == 0) {
+                    $query->withTrashed()->whereNotNull('deleted_at');
+                }
+            }])->whereHas('rewards', function ($query) {
+                if (request()->filled('type') && request()->type == 0) {
+                    $query->withTrashed()->whereNotNull('deleted_at');
+                }
             })->paginate(25);
 
             if ($members->isEmpty()) {
@@ -52,5 +59,23 @@ class RewardController extends BaseController
             return $this->sendError($error->getMessage(), [], 500);
         }
     }    
+
+    public function delete($id){
+        try{
+            Reward::find($id)->delete();
+            return $this->sendResponse('Success', 'Reward deleted successfully');
+        } catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function restore($id){
+        try{
+            Reward::withTrashed()->where('id', $id)->update(['deleted_at' => null]);
+            return $this->sendResponse('Success', 'Reward restore successfully');
+        } catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
 
 }
