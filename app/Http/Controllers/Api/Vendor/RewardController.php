@@ -62,7 +62,13 @@ class RewardController extends BaseController
 
     public function delete($id){
         try{
-            Reward::find($id)->delete();
+            $reward = Reward::find($id);
+
+            if(!$reward){
+                return $this->sendError('Reward does not exist', [], 400);
+            }
+
+            $reward->delete();
             return $this->sendResponse('Success', 'Reward deleted successfully');
         } catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
