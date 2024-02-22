@@ -7,11 +7,12 @@ use App\Http\Requests\PasswordUpdateRequest;
 use App\Http\Resources\Member\GetMemberProfile;
 use App\Http\Resources\Member\MemberResource;
 use App\Models\Member;
+use App\Models\RedeemPointsLog;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 
 class MemberController extends BaseController
 {
@@ -80,6 +81,38 @@ class MemberController extends BaseController
             }
 
             return $this->sendResponse(new GetMemberProfile($user), 200);
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function redeemPoints(Request $request){
+        try {
+            $member = Auth::user()->member;
+            
+            $previousPoints = $member->current_points;
+            $redeemPoints = $request->redeemPoints;
+
+            if($request->redeemPoints == 0){
+                return $this->sendError('Not enough reedem points to claimed at the moment. You have '.$member->current_points.' points in your account currently', [], 400);
+            }elseif($member->current_points >= $request->redeemPoints){
+                $currentPoints = $member->current_points - $request->redeemPoints;
+                $member->current_points = $currentPoints;
+                $member->save();
+
+                RedeemPointsLog::create([
+                    'previous_points' => $previousPoints,
+                    'redeem_points' => $redeemPoints,
+                    'current_points' => $currentPoints,
+                    'date_claimed' => now(),
+                    'member_id' => $member->id
+                ]);
+
+                return $this->sendResponse(new MemberResource($member) , 'Points redeem successfully');
+            }else{
+                return $this->sendError('Not enough reedem points to claimed at the moment. You have '.$member->current_points.' points in your account currently', [], 400);
+            }
+
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }

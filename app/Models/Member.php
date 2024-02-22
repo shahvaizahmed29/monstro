@@ -55,4 +55,12 @@ class Member extends Model
         return $activeReservationsCount > 0 ? true : false;
     }
 
+    public function reedemPoints(){
+        return $this->RedeemPointsLogs()->sum('redeem_points');
+    }
+
+    public function RedeemPointsLogs(){
+        return $this->hasMany(RedeemPointsLog::class);
+    }
+
 }
