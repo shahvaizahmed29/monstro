@@ -7,7 +7,7 @@ use App\Http\Requests\PasswordUpdateRequest;
 use App\Http\Resources\Member\GetMemberProfile;
 use App\Http\Resources\Member\MemberResource;
 use App\Models\Member;
-use App\Models\RedeemPointsLog;
+use App\Models\MemberRewardClaim;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
@@ -89,8 +89,6 @@ class MemberController extends BaseController
     public function redeemPoints(Request $request){
         try {
             $member = Auth::user()->member;
-            
-            $previousPoints = $member->current_points;
             $redeemPoints = $request->redeemPoints;
 
             if($request->redeemPoints == 0){
@@ -100,9 +98,8 @@ class MemberController extends BaseController
                 $member->current_points = $currentPoints;
                 $member->save();
 
-                RedeemPointsLog::create([
-                    'previous_points' => $previousPoints,
-                    'redeem_points' => $redeemPoints,
+                MemberRewardClaim::create([
+                    'points_claimed' => $redeemPoints,
                     'current_points' => $currentPoints,
                     'date_claimed' => now(),
                     'member_id' => $member->id

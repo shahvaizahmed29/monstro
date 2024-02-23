@@ -6,13 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class RedeemPointsLog extends Model
+class MemberRewardClaim extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'previous_points',
-        'redeem_points',
+        'points_claimed',
         'current_points',
         'date_claimed',
         'member_id'
@@ -21,4 +20,5 @@ class RedeemPointsLog extends Model
     public function member(){
         return $this->belongsTo(Member::class);
     }
+
 }

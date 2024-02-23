@@ -56,11 +56,11 @@ class Member extends Model
     }
 
     public function reedemPoints(){
-        return $this->RedeemPointsLogs()->sum('redeem_points');
+        return $this->rewardClaims()->sum('points_claimed');
     }
 
-    public function RedeemPointsLogs(){
-        return $this->hasMany(RedeemPointsLog::class);
+    public function rewardClaims(){
+        return $this->hasMany(MemberRewardClaim::class);
     }
 
 }

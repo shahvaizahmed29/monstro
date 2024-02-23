@@ -74,45 +74,72 @@ class MemberController extends BaseController
     }
 
     public function getMemberDetails($member_id){
-        $location = request()->location;
-        $locationId = $location->id;
-        
-        $reservations = Reservation::with(['checkIns', 'session', 'session.programLevel','session.programLevel.program'])
-        ->whereHas('session.programLevel', function ($query) {
-            return $query->whereNull('deleted_at');
-        })->whereHas('session.program', function ($query) {
-            return $query->whereNull('deleted_at');
-        })
-        ->where('member_id', $member_id)->get();
-        
-        $member_details = Member::where('id', $member_id)->first();
-        
-        $go_high_level_contact_id = DB::table('member_locations')
-            ->where('member_id', $member_id)
-            ->where('go_high_level_location_id', $location->go_high_level_location_id)
-            ->pluck('go_high_level_contact_id')
-            ->first();
+        try{
+            $location = request()->location;
+            $locationId = $location->id;
+            
+            $reservations = Reservation::with(['checkIns', 'session', 'session.programLevel','session.programLevel.program'])
+            ->whereHas('session.programLevel', function ($query) {
+                return $query->whereNull('deleted_at');
+            })->whereHas('session.program', function ($query) {
+                return $query->whereNull('deleted_at');
+            })
+            ->where('member_id', $member_id)->get();
+            
+            $member_details = Member::where('id', $member_id)->first();
+            
+            $go_high_level_contact_id = DB::table('member_locations')
+                ->where('member_id', $member_id)
+                ->where('go_high_level_location_id', $location->go_high_level_location_id)
+                ->pluck('go_high_level_contact_id')
+                ->first();
 
-        $member_details['go_high_level_contact_id'] = $go_high_level_contact_id;
+            $member_details['go_high_level_contact_id'] = $go_high_level_contact_id;
 
-        if(count($reservations)) {
-            $reservationIds = $reservations->pluck('id')->toArray();
-            $latestCheckInTime = CheckIn::whereIn('reservation_id', $reservationIds)->latest()->first();
-            if ($latestCheckInTime) {
-                $carbonInstance = Carbon::parse($latestCheckInTime->check_in_time);
-                $member_details['last_seen'] = $carbonInstance->diffForHumans();
+            if(count($reservations)) {
+                $reservationIds = $reservations->pluck('id')->toArray();
+                $latestCheckInTime = CheckIn::whereIn('reservation_id', $reservationIds)->latest()->first();
+                if ($latestCheckInTime) {
+                    $carbonInstance = Carbon::parse($latestCheckInTime->check_in_time);
+                    $member_details['last_seen'] = $carbonInstance->diffForHumans();
+                } else {
+                    $member_details['last_seen'] = null;
+                }
             } else {
                 $member_details['last_seen'] = null;
             }
-        } else {
-            $member_details['last_seen'] = null;
-        }
 
-        $data = [
-            'memberDetails' => new MemberResource($member_details),
-            'reservations' => ReservationResource::collection($reservations)
-        ];
-        return $this->sendResponse($data, 'Member details with session reservations and program');
+            $member_details['current_level'] = $this->getCurrentLevel($member_id);
+
+            $data = [
+                'memberDetails' => new MemberResource($member_details),
+                'reservations' => ReservationResource::collection($reservations)
+            ];
+            
+            return $this->sendResponse($data, 'Member details with session reservations and program');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getCurrentLevel($member_id){
+        try{
+            $currentLevel = null;
+            $member = Member::findOrFail($member_id);
+            $member->load(['reservations' => function ($query) {
+                $query->where('status', Reservation::ACTIVE);
+            }]);
+            
+            if(count($member->reservations) > 0){
+                $currentLevel = $member->reservations[0]->session->programLevel->name;
+            }else{
+                $currentLevel = "----";
+            }
+            
+            return $currentLevel;
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
     }
 
     public function createMember(CreateMemberResource $request){
