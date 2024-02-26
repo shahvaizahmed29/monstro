@@ -13,11 +13,11 @@ class RewardController extends BaseController
 {
     public function index(){
         try{
-            $members = Member::with(['rewardClaims' => function ($query) {
+            $members = Member::with(['rewards' => function ($query) {
                 if (request()->filled('type') && request()->type == 0) {
                     $query->withTrashed()->whereNotNull('deleted_at');
                 }
-            }])->whereHas('rewardClaims', function ($query) {
+            }])->whereHas('rewards', function ($query) {
                 if (request()->filled('type') && request()->type == 0) {
                     $query->withTrashed()->whereNotNull('deleted_at');
                 }
@@ -49,7 +49,7 @@ class RewardController extends BaseController
 
     public function getMemberRewards($memberId){
         try{
-            $member = Member::with(['rewardClaims'])->where('id', $memberId)->first();
+            $member = Member::with(['rewards'])->where('id', $memberId)->first();
     
             if (!$member) {
                 return $this->sendError('No member with rewards found', [], 400);
