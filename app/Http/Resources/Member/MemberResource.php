@@ -28,8 +28,8 @@ class MemberResource extends JsonResource
                 return AchievementResource::collection($this->achievements);
             }),
             'reedemPoints' => $this->reedemPoints(),
-            'rewards' => $this->whenLoaded('rewardClaims', function () {
-                return ClaimedRewardResource::collection($this->rewardClaims);
+            'rewards' => $this->whenLoaded('rewards', function () {
+                return ClaimedRewardResource::collection($this->rewards);
             }),
         ];
         return $member;
