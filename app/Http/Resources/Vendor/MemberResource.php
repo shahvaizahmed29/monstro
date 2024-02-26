@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Vendor;
 
+use App\Http\Resources\Member\ClaimedRewardResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -35,7 +36,10 @@ class MemberResource extends JsonResource
                 return AchievementResource::collection($this->achievements);
             }),
             'reedemPoints' => $this->reedemPoints(),
-            'currentLevel' => $this->current_level
+            'currentLevel' => $this->current_level,
+            'rewardClaims' => $this->whenLoaded('rewardClaims', function () {
+                return ClaimedRewardResource::collection($this->rewardClaims);
+            }),
         ];
         return $member;
     }
