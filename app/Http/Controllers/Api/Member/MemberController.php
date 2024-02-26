@@ -83,6 +83,21 @@ class MemberController extends BaseController
         }
     }
 
+    public function getCurrentPoints(){
+        try{
+            $member = Member::find(auth()->user()->member->id);
+            $currentPoints = $member->current_points;
+
+            $data = [
+                'currentPoints' => $currentPoints
+            ];
+
+            return $this->sendResponse($data, 'Current points fetched successfully');            
+        }catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
     public function updatePassword(PasswordUpdateRequest $request, $id){
         try {
             $user = User::find($id);
