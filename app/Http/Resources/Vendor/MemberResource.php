@@ -34,8 +34,8 @@ class MemberResource extends JsonResource
             }),
             'reedemPoints' => $this->reedemPoints(),
             'currentLevel' => $this->current_level,
-            'rewards' => $this->whenLoaded('rewardClaims', function () {
-                return ClaimedRewardResource::collection($this->rewardClaims);
+            'rewards' => $this->whenLoaded('rewards', function () {
+                return ClaimedRewardResource::collection($this->rewards);
             }),
         ];
         return $member;
