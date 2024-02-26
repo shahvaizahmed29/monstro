@@ -86,7 +86,7 @@ class MemberController extends BaseController
             })
             ->where('member_id', $member_id)->get();
             
-            $member_details = Member::where('id', $member_id)->first();
+            $member_details = Member::with(['rewards', 'achievements'])->where('id', $member_id)->first();
             
             $go_high_level_contact_id = DB::table('member_locations')
                 ->where('member_id', $member_id)
