@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Vendor;
 use App\Http\Controllers\BaseController;
 use App\Http\Resources\Vendor\MemberResource;
 use App\Models\Member;
+use App\Models\MemberRewardClaim;
 use App\Models\Reward;
 use Exception;
 
@@ -62,7 +63,7 @@ class RewardController extends BaseController
 
     public function delete($id){
         try{
-            $reward = Reward::find($id);
+            $reward = MemberRewardClaim::find($id);
 
             if(!$reward){
                 return $this->sendError('Reward does not exist', [], 400);
@@ -77,7 +78,7 @@ class RewardController extends BaseController
 
     public function restore($id){
         try{
-            Reward::withTrashed()->where('id', $id)->update(['deleted_at' => null]);
+            MemberRewardClaim::withTrashed()->where('id', $id)->update(['deleted_at' => null]);
             return $this->sendResponse('Success', 'Reward restore successfully');
         } catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);

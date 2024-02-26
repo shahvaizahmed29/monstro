@@ -24,15 +24,12 @@ class MemberResource extends JsonResource
             'referralCode' => $this->referral_code,
             'avatar' => $this->avatar,
             'currentPoints' => $this->current_points,
-            'rewards' => $this->whenLoaded('rewards', function () {
-                return RewardResource::collection($this->rewards);
-            }),
             'achievements' => $this->whenLoaded('achievements', function () {
                 return AchievementResource::collection($this->achievements);
             }),
             'reedemPoints' => $this->reedemPoints(),
-            'rewardClaims' => $this->whenLoaded('rewardClaims', function () {
-                return ClaimedRewardResource::collection($this->rewardClaims);
+            'rewards' => $this->whenLoaded('rewards', function () {
+                return ClaimedRewardResource::collection($this->rewards);
             }),
         ];
         return $member;

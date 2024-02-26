@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Api\Member;
 
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\PasswordUpdateRequest;
+use App\Http\Resources\Member\ClaimedRewardResource;
 use App\Http\Resources\Member\GetMemberProfile;
 use App\Http\Resources\Member\MemberResource;
+use App\Http\Resources\Vendor\AchievementResource;
+use App\Models\Achievement;
 use App\Models\Member;
 use App\Models\MemberRewardClaim;
 use App\Models\User;
@@ -34,10 +37,22 @@ class MemberController extends BaseController
 
     public function getMemberRewards(){
         try{
-            $member = Member::with(['rewards'])->where('id', auth()->user()->member->id)
-                ->first();
+            $rewards = MemberRewardClaim::where('member_id', auth()->user()->member->id)->paginate(25);
             
-            return $this->sendResponse(new MemberResource($member), 'Member with rewards fetched successfully');
+            $data = [
+                'rewards' => ClaimedRewardResource::collection($rewards),
+                'pagination' => [
+                    'current_page' => $rewards->currentPage(),
+                    'per_page' => $rewards->perPage(),
+                    'total' => $rewards->total(),
+                    'prev_page_url' => $rewards->previousPageUrl(),
+                    'next_page_url' => $rewards->nextPageUrl(),
+                    'first_page_url' => $rewards->url(1),
+                    'last_page_url' => $rewards->url($rewards->lastPage()),
+                ],
+            ];
+
+            return $this->sendResponse($data, 'Rewards fetched successfully');
         }catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
@@ -45,10 +60,39 @@ class MemberController extends BaseController
 
     public function getMemberAchievements(){
         try{
-            $member = Member::with(['achievements'])->where('id', auth()->user()->member->id)
-                ->first();
-            
-            return $this->sendResponse(new MemberResource($member), 'Member with achievements fetched successfully');
+            $achievements = Achievement::whereHas('members', function ($query) {
+                $query->where('member_id', auth()->user()->member->id);
+            })->paginate(25);
+
+            $data = [
+                'rewards' => AchievementResource::collection($achievements),
+                'pagination' => [
+                    'current_page' => $achievements->currentPage(),
+                    'per_page' => $achievements->perPage(),
+                    'total' => $achievements->total(),
+                    'prev_page_url' => $achievements->previousPageUrl(),
+                    'next_page_url' => $achievements->nextPageUrl(),
+                    'first_page_url' => $achievements->url(1),
+                    'last_page_url' => $achievements->url($achievements->lastPage()),
+                ],
+            ];
+
+            return $this->sendResponse($data, 'Achievements fetched successfully');
+        }catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getCurrentPoints(){
+        try{
+            $member = Member::find(auth()->user()->member->id);
+            $currentPoints = $member->current_points;
+
+            $data = [
+                'currentPoints' => $currentPoints
+            ];
+
+            return $this->sendResponse($data, 'Current points fetched successfully');            
         }catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
@@ -100,7 +144,7 @@ class MemberController extends BaseController
 
                 MemberRewardClaim::create([
                     'points_claimed' => $redeemPoints,
-                    'current_points' => $currentPoints,
+                    'previous_points' => $currentPoints,
                     'date_claimed' => now(),
                     'member_id' => $member->id
                 ]);

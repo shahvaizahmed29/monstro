@@ -12,7 +12,7 @@ class MemberRewardClaim extends Model
 
     protected $fillable = [
         'points_claimed',
-        'current_points',
+        'previous_points',
         'date_claimed',
         'member_id'
     ];
