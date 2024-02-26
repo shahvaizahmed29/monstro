@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('member_id');
             $table->double('points_claimed');
-            $table->double('current_points');
-            $table->date('date_claimed');
+            $table->double('previous_points');
+            $table->dateTime('date_claimed');
             $table->timestamps();
             $table->softDeletes();
         });

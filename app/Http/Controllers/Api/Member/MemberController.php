@@ -98,13 +98,6 @@ class MemberController extends BaseController
                 $member->current_points = $currentPoints;
                 $member->save();
 
-                MemberRewardClaim::create([
-                    'points_claimed' => $redeemPoints,
-                    'current_points' => $currentPoints,
-                    'date_claimed' => now(),
-                    'member_id' => $member->id
-                ]);
-
                 return $this->sendResponse(new MemberResource($member) , 'Points redeem successfully');
             }else{
                 return $this->sendError('Not enough reedem points to claimed at the moment. You have '.$member->current_points.' points in your account currently', [], 400);

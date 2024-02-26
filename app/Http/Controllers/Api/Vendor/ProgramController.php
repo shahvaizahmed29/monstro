@@ -19,6 +19,7 @@ use App\Models\Action;
 use App\Models\CheckIn;
 use App\Models\Member;
 use App\Models\MemberAchievement;
+use App\Models\MemberRewardClaim;
 use App\Models\Reservation;
 use App\Models\Reward;
 use Carbon\Carbon;
@@ -553,10 +554,11 @@ class ProgramController extends BaseController
                     $currentPoints = $member->current_points;
 
                     // Creating reward for a member if member has a new achievement only otherwise no reward
-                    $reward = Reward::create([
-                        'member_id' => $member->id,
+                    $reward = MemberRewardClaim::create([
                         'points_claimed' => $achievement_action->achievement->reward_points,
+                        'previous_points' =>  $currentPoints,
                         'date_claimed' => now(),
+                        'member_id' => $member->id,
                     ]);
 
                     if($reward){

@@ -31,10 +31,6 @@ class Member extends Model
         return $this->belongsToMany(Achievement::class, 'member_achievements', 'member_id', 'achievement_id');
     }
 
-    public function rewards(){
-        return $this->hasMany(Reward::class);
-    }
-
     public function reservations(){
         return $this->hasMany(Reservation::class);
     }
@@ -56,10 +52,10 @@ class Member extends Model
     }
 
     public function reedemPoints(){
-        return $this->rewardClaims()->sum('points_claimed');
+        return $this->rewards()->sum('points_claimed');
     }
 
-    public function rewardClaims(){
+    public function rewards(){
         return $this->hasMany(MemberRewardClaim::class);
     }
 
