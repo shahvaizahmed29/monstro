@@ -106,7 +106,7 @@ class MemberController extends BaseController
                 return $this->sendError('Incorrect old password.', [], 400);
             }
 
-            $new_password = $request->input('new_password');
+            $new_password = $request->input('newPassword');
             $user->password = bcrypt($new_password);
             $user->save();
 

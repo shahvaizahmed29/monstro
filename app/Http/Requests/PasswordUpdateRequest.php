@@ -23,7 +23,7 @@ class PasswordUpdateRequest extends FormRequest
     {
         return [
             'password' => ['required'],
-            'new_password' => 'required'
+            'newPassword' => 'required'
         ];
     }
 }
