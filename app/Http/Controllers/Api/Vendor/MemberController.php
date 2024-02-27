@@ -11,16 +11,21 @@ use App\Models\Setting;
 use App\Models\Program;
 use App\Models\CheckIn;
 use App\Http\Controllers\BaseController;
+use App\Http\Requests\Vendor\CreateMemberResource;
+use App\Http\Resources\Member\ProgramResource;
 use App\Http\Resources\Vendor\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
 use App\Http\Resources\Vendor\SessionResource;
 use App\Models\ProgramLevel;
+use App\Notifications\NewMemberNotification;
 use App\Services\GHLService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 
 class MemberController extends BaseController
 {
@@ -69,45 +74,135 @@ class MemberController extends BaseController
     }
 
     public function getMemberDetails($member_id){
-        $location = request()->location;
-        $locationId = $location->id;
-        
-        $reservations = Reservation::with(['checkIns', 'session', 'session.programLevel','session.programLevel.program'])
-        ->whereHas('session.programLevel', function ($query) {
-            return $query->whereNull('deleted_at');
-        })->whereHas('session.program', function ($query) {
-            return $query->whereNull('deleted_at');
-        })
-        ->where('member_id', $member_id)->get();
-        
-        $member_details = Member::where('id', $member_id)->first();
-        
-        $go_high_level_contact_id = DB::table('member_locations')
-            ->where('member_id', $member_id)
-            ->where('go_high_level_location_id', $location->go_high_level_location_id)
-            ->pluck('go_high_level_contact_id')
-            ->first();
+        try{
+            $location = request()->location;
+            $locationId = $location->id;
+            
+            $reservations = Reservation::with(['checkIns', 'session', 'session.programLevel','session.programLevel.program'])
+            ->whereHas('session.programLevel', function ($query) {
+                return $query->whereNull('deleted_at');
+            })->whereHas('session.program', function ($query) {
+                return $query->whereNull('deleted_at');
+            })
+            ->where('member_id', $member_id)->get();
+            
+            $member_details = Member::with(['rewards', 'achievements'])->where('id', $member_id)->first();
+            
+            $go_high_level_contact_id = DB::table('member_locations')
+                ->where('member_id', $member_id)
+                ->where('go_high_level_location_id', $location->go_high_level_location_id)
+                ->pluck('go_high_level_contact_id')
+                ->first();
 
-        $member_details['go_high_level_contact_id'] = $go_high_level_contact_id;
+            $member_details['go_high_level_contact_id'] = $go_high_level_contact_id;
 
-        if(count($reservations)) {
-            $reservationIds = $reservations->pluck('id')->toArray();
-            $latestCheckInTime = CheckIn::whereIn('reservation_id', $reservationIds)->latest()->first();
-            if ($latestCheckInTime) {
-                $carbonInstance = Carbon::parse($latestCheckInTime->check_in_time);
-                $member_details['last_seen'] = $carbonInstance->diffForHumans();
+            if(count($reservations)) {
+                $reservationIds = $reservations->pluck('id')->toArray();
+                $latestCheckInTime = CheckIn::whereIn('reservation_id', $reservationIds)->latest()->first();
+                if ($latestCheckInTime) {
+                    $carbonInstance = Carbon::parse($latestCheckInTime->check_in_time);
+                    $member_details['last_seen'] = $carbonInstance->diffForHumans();
+                } else {
+                    $member_details['last_seen'] = null;
+                }
             } else {
                 $member_details['last_seen'] = null;
             }
-        } else {
-            $member_details['last_seen'] = null;
-        }
 
-        $data = [
-            'memberDetails' => new MemberResource($member_details),
-            'reservations' => ReservationResource::collection($reservations)
-        ];
-        return $this->sendResponse($data, 'Member details with session reservations and program');
+            $member_details['current_level'] = $this->getCurrentLevel($member_id);
+
+            $data = [
+                'memberDetails' => new MemberResource($member_details),
+                'reservations' => ReservationResource::collection($reservations)
+            ];
+            
+            return $this->sendResponse($data, 'Member details with session reservations and program');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getCurrentLevel($member_id){
+        try{
+            $currentLevel = null;
+            $member = Member::findOrFail($member_id);
+            $member->load(['reservations' => function ($query) {
+                $query->where('status', Reservation::ACTIVE);
+            }]);
+            
+            if(count($member->reservations) > 0){
+                $currentLevel = $member->reservations[0]->session->programLevel->name;
+            }else{
+                $currentLevel = "----";
+            }
+            
+            return $currentLevel;
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function createMember(CreateMemberResource $request){
+        try{
+            $location = request()->location;
+            $password = Str::random(8);
+
+            $user = User::where('email', $request->email)->first();
+
+            if(!$user){
+                $user = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'password' => bcrypt($password),
+                    'email_verified_at' => now()
+                ]);
+    
+                $user->assignRole(User::MEMBER);
+                $randomNumberMT = mt_rand(100, 999);
+    
+                $member = Member::create([
+                    'name' => $request->name,
+                    'email' =>  $request->email,
+                    'phone' => $request->phone,
+                    'referral_code' => $randomNumberMT.$user->id,
+                    'user_id' => $user->id
+                ]);
+
+                if(isset($request->programLevelId)){
+                    $session = Session::where('program_level_id', $request->programLevelId)->where('status', Session::ACTIVE)->latest()->first();
+
+                    if($session){
+                        Reservation::updateOrCreate([
+                            'session_id' => $session->id,
+                            'member_id' =>  $member->id
+                        ],[
+                            'session_id' => $session->id,
+                            'member_id' =>  $member->id,
+                            'status' => Reservation::ACTIVE,
+                            'start_date' => Carbon::today()->format('Y-m-d'),
+                            'end_date' => $session->end_date
+                        ]);
+                    }
+                }
+    
+                $member->locations()->sync([$location->id => [
+                    'go_high_level_location_id' => $location->go_high_level_location_id,
+                    'go_high_level_contact_id' => null
+                ]], false);
+    
+                $data =  [];
+                $data['name'] = $request->name;
+                $data['email'] = $request->email;
+                $data['password'] = $password;
+                // Notification::route('mail', $user->email)->notify(new NewMemberNotification($data));
+    
+                return $this->sendResponse(new MemberResource($member), 'Member created successfully.');
+            }else{
+                return $this->sendError('Member already registered with this email', [], 400);
+            }
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
     }
 
     public function memberStatusUpdate($member_id){
@@ -131,12 +226,15 @@ class MemberController extends BaseController
         try {
             DB::beginTransaction();
             $session = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->latest()->first();
+
+            $password = 'Monstro2024Welcome';
             $user = User::where('email', $contact['email'])->first();
             if(!$user) {
                 $user = User::create([
                     'name' => isset($contact['contactName']) ? $contact['contactName'] : '',
                     'email' => $contact['email'],
-                    'password' => bcrypt($contact['email'].'@'.Carbon::now()->year.'!!'),
+                    // 'password' => bcrypt($contact['email'].'@'.Carbon::now()->year.'!!'),
+                    'password' => bcrypt($password),
                     'email_verified_at' => now()
                 ]);
                 $user->assignRole(User::MEMBER);
@@ -152,24 +250,37 @@ class MemberController extends BaseController
                 $member = $user->member;
             }
 
-            $reservation = Reservation::updateOrCreate([
-                'session_id' => $session->id,
-                'member_id' =>  $member->id
-            ],[
-                'session_id' => $session->id,
-                'member_id' =>  $member->id,
-                'status' => Reservation::ACTIVE,
-                'start_date' => Carbon::today()->format('Y-m-d'),
-                'end_date' => $session->end_date
-            ]);
-            
-            $member->locations()->sync([$location->id => [
-                'go_high_level_location_id' => $location->go_high_level_location_id,
-                'go_high_level_contact_id' => $contact['id']
-            ]], false);
+            $programLevel = ProgramLevel::with(['program'])->where('id', $programLevelId)->first();
 
-            DB::commit();
-            return true;
+            $alreadyEnrolledInProgramLevel = $member->reservations()->whereHas('session.programLevel', function ($query) use ($programLevelId) {
+                $query->where('id', '!=', $programLevelId);
+            })->whereHas('session', function ($query) use ($programLevel) {
+                $query->where('program_id', '=', $programLevel->program->id);
+            })->count();
+
+            if($alreadyEnrolledInProgramLevel > 0){
+                return false;
+            }else{
+                $reservation = Reservation::updateOrCreate([
+                    'session_id' => $session->id,
+                    'member_id' =>  $member->id
+                ],[
+                    'session_id' => $session->id,
+                    'member_id' =>  $member->id,
+                    'status' => Reservation::ACTIVE,
+                    'start_date' => Carbon::today()->format('Y-m-d'),
+                    'end_date' => $session->end_date
+                ]);
+
+                $member->locations()->sync([$location->id => [
+                    'go_high_level_location_id' => $location->go_high_level_location_id,
+                    'go_high_level_contact_id' => $contact['id']
+                ]], false);
+
+                DB::commit();
+                return true;
+            }
+           
         } catch(\Exception $error) {
             DB::rollback();
             Log::info('===== Create New Member =====');
@@ -204,10 +315,42 @@ class MemberController extends BaseController
             $location = request()->location;
             $name = request()->name;
             $locationId = $location->go_high_level_location_id;
-            return $this->ghlService->getContactsByName($locationId,$name);
+            
+            $ghl_contacts = $this->ghlService->getContactsByName($locationId, $name);
+
+            $members = $this->getMembers($location->id);
+            $members = json_decode($members, true);
+
+            foreach ($members as &$member) {
+                $member['contactName'] = $member['name'];
+                unset($member['name']);
+            }
+
+            $contacts = array_merge_recursive($ghl_contacts, ['contacts' => $members]);
+
+            $uniqueContacts = [];
+            foreach ($contacts['contacts'] as $contact) {
+                $email = $contact['email'];
+                if (!isset($uniqueContacts[$email])) {
+                    $uniqueContacts[$email] = $contact;
+                }
+            }
+
+            $uniqueContacts = array_values($uniqueContacts);
+            $contacts['contacts'] = $uniqueContacts;
+
+            return $contacts;
         }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }
+    }
+
+    public function getMembers($location_id){
+        $members = Member::whereHas('locations', function ($query) use ($location_id) {
+            $query->where('id', $location_id);
+        })->get();
+
+        return $members;
     }
 
     public function getMembersByProgram($id) {
@@ -215,7 +358,13 @@ class MemberController extends BaseController
         $locationId = $location->id;
         $program = Program::where('id', $id)->where('location_id', $locationId)->first();
         if ($program) {
-            $activeSessions = $program->activeSessions();
+            
+            $activeSessions = Session::with(['reservations' => function($q) {
+                $q->where('status', Reservation::ACTIVE);
+            }, 'reservations.member','programLevel','program'])->whereHas('reservations', function($q) {
+                $q->where('status', Reservation::ACTIVE);
+            })->where('program_id', $program->id)->get();
+
             return $this->sendResponse(SessionResource::collection($activeSessions), 'program active members.');
         } else {
             return $this->sendError('Program not found.', 404);
@@ -224,7 +373,7 @@ class MemberController extends BaseController
     }
 
     public function syncMembersByLocation($programId) {
-        $delayTimeForEachLocation = 60;
+        $delayTimeForEachLocation = 15;
         $reqCustomField = null;
         $location = request()->location;
         $program = Program::with('programLevels')->where('id',$programId)->first();
@@ -287,26 +436,26 @@ class MemberController extends BaseController
                         }
                         foreach($contacts as $contact) {
                             $programLevelId = null;
-                            foreach($contact['customFields'] as $customField) {
-                              
-                                if($customField['id'] == $reqCustomField['id']) {
-                                    if (strpos($customField['value'], '_') === false) {
-                                        continue;
-                                    }
-                                    $parts = explode('_', $customField['value']);
-                                    if(count($parts) != 2) {
-                                        continue;
-                                    }
-    
-                                    $programLevelName = $parts[1];
-                                    $programName = $parts[0];
-    
-                                    if($programName == $program->name) {
-                                        foreach($program->programLevels as $programLevel) {
-                                            if($programLevelName == $programLevel->name) {
-                                                $programLevelId = $programLevel->id;
-                                                MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
-                                            }
+
+                            $custom_field_index = array_search($reqCustomField['id'], array_column($contact['customFields'], 'id'));
+
+                            if($custom_field_index !== false) {
+                                if (strpos($contact['customFields'][$custom_field_index]['value'], '_') === false) {
+                                    continue;
+                                }
+                                $parts = explode('_', $contact['customFields'][$custom_field_index]['value']);
+                                if(count($parts) != 2) {
+                                    continue;
+                                }
+
+                                $programLevelName = $parts[1];
+                                $programName = $parts[0];
+
+                                if($programName == $program->name) {
+                                    foreach($program->programLevels as $programLevel) {
+                                        if($programLevelName == $programLevel->name) {
+                                            $programLevelId = $programLevel->id;
+                                            MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
                                         }
                                     }
                                 }
@@ -330,19 +479,52 @@ class MemberController extends BaseController
         try {
             $reqCustomField = null;
             $location = request()->location;
-            $tokenObj = $this->generateLocationLevelKey($location->id);
+            $tokenObj = $this->generateLocationLevelKey($location->go_high_level_location_id);
             $programLevel = ProgramLevel::with('program')->where('id',$programLevelId)->first();
             $contact = $request->all();
             if(!isset($contact['email'])) {
-                return $this->sendError('No email found against the contact!', json_encode($tokenObj->json()));
+                return $this->sendError('No email found against the contact!', json_encode($tokenObj));
             } else {
-                MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
+                $addMember = MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
+                
+                if($addMember == true){
+                    return $this->sendResponse('Success', 'Member synced successfully');
+                }else{
+                    return $this->sendError('Member is already enrolled in another program level', [], 400);
+                }
             }
-
-            return $this->sendResponse('Success', 'Member synced successfully');
         } catch(Exception $error) {
             return $this->sendError('Something went wrong!', $error->getMessage());
         }
+    }
 
+    public function getMemberPrograms($member_id){
+        try{
+            $reservations = Reservation::where('member_id', $member_id)
+                ->with('session.programLevel.program')
+                ->get();
+
+            $programs = [];
+
+            foreach ($reservations as $reservation) {
+                $session = $reservation->session;
+                $programLevel = $session->programLevel;
+                
+                if($programLevel){
+                    $program = $programLevel->program;
+                    
+                    if($program){
+                        if (!isset($programs[$program->id])) {
+                            $programs[$program->id] = $program;
+                        }
+                    }
+                }
+
+            }
+
+            return $this->sendResponse(ProgramResource::collection($programs), 'Get programs related to specific member');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
     }
 }

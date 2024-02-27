@@ -4,9 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class AchievementRequirements extends Model
+class AchievementActions extends Model
 {
     use HasFactory;
 
@@ -23,5 +22,5 @@ class AchievementRequirements extends Model
     public function action(){
         return $this->belongsTo(Action::class);
     }
-
+    
 }

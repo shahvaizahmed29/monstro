@@ -17,6 +17,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('sync:ghl-contacts')->everySixHours();
         $schedule->command('check-reservation:status')->everySixHours();
         $schedule->command('sync:refresh-ghl-integration')->twiceDaily(1,13);
+        $schedule->command('ghl-source-token:refresh')->daily();
     }
 
     /**

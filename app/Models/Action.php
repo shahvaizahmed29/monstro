@@ -8,14 +8,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Action extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+
+    public const NO_OF_CLASSES = "No of classes";
+    public const LEVEL_ACHIEVED = "Level achieved";
+    public const No_OF_REFERRALS = "No of Referrals";
 
     protected $fillable = [
         'name'
     ];
 
-    public function achievementRequirements(){
-        return $this->belongsToMany(AchievementRequirements::class, 'achievement_requirements', 'action_id', 'achievement_id');
-    }
+    public function achievements(){
+        return $this->belongsToMany(Achievement::class, 'achievement_actions', 'action_id', 'achievement_id');
+    }    
 
 }

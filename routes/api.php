@@ -30,6 +30,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('profile-update/{user_id}', [App\Http\Controllers\Api\Member\MemberController::class, 'profileUpdate'])->name('profile.update');
         Route::put('update-password/{user_id}', [App\Http\Controllers\Api\Member\MemberController::class, 'updatePassword'])->name('update.password');
         Route::get('profile', [App\Http\Controllers\Api\Member\MemberController::class, 'getProfile'])->name('get.profile');
+        Route::get('rewards', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberRewards'])->name('get.member.rewards');
+        Route::get('achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberAchievements'])->name('get.member.achievements');
+        Route::post('redeem-points', [App\Http\Controllers\Api\Member\MemberController::class, 'redeemPoints'])->name('redeem.points');
+        Route::get('current-points', [App\Http\Controllers\Api\Member\MemberController::class, 'getCurrentPoints'])->name('get.current.points');
     });
 
     //==================================================================================================================================================================================
@@ -69,9 +73,40 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::get('sync-members-by-location/{programId}', [App\Http\Controllers\Api\Vendor\MemberController::class, 'syncMembersByLocation'])->name('sync.member.by.location');
     Route::get('get-contacts', [App\Http\Controllers\Api\Vendor\MemberController::class, 'getContacts'])->name('get.contacts');
     Route::post('add-member/{programLevelId}', [App\Http\Controllers\Api\Vendor\MemberController::class, 'addMemberManually'])->name('add.member.manually');
-    Route::put('/program-level-archive/{programLevelId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'programLevelArchive'])->name('program.level.archive');
     Route::put('member/status/{member_id}', [App\Http\Controllers\Api\Vendor\MemberController::class, 'memberStatusUpdate'])->name('member.status.update');
     Route::get('attendances/member/{memberId}/program/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'lastTenAttendance'])->name('member.program.attendances');
+
+    Route::prefix('achievement')->group(function () {
+        Route::get('', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'index'])->name('achievement.all');
+        Route::post('create', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'create'])->name('create.achievement');
+        Route::get('{achievementId}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'getAchievement'])->name('get.achievement');
+        Route::put('{achievement}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'update'])->name('update.achievement');
+        Route::delete('{achievementId}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'delete'])->name('delete.achievement');
+    });
+
+    Route::prefix('location')->group(function () {
+        Route::get('', [App\Http\Controllers\Api\Vendor\LocationsController::class, 'checkLocationStatus'])->name('check.location.status');
+    });
+
+    Route::prefix('actions')->group(function () {
+        Route::get('', [App\Http\Controllers\Api\Vendor\ActionController::class, 'index'])->name('get.actions');
+    });
+
+    Route::prefix('rewards')->group(function () {
+        Route::get('', [App\Http\Controllers\Api\Vendor\RewardController::class, 'index'])->name('get.rewards');
+        Route::get('member/{memberId}', [App\Http\Controllers\Api\Vendor\RewardController::class, 'getMemberRewards'])->name('get.member.rewards');
+        Route::put('{id}', [App\Http\Controllers\Api\Vendor\RewardController::class, 'restore'])->name('restore.reward');
+        Route::delete('{id}', [App\Http\Controllers\Api\Vendor\RewardController::class, 'delete'])->name('delete.reward');
+    });
+    
+    Route::put('password-reset', [App\Http\Controllers\Api\Vendor\VendorController::class, 'passwordReset'])->name('password.reset');
+    Route::post('assign-program-level/{programLevelId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'assignProgramLevelToMember'])->name('assign.program.level.to.member');
+    
+    Route::get('member/{memberId}/get-programs', [App\Http\Controllers\Api\Vendor\MemberController::class, 'getMemberPrograms'])->name('get.member.programs');
+    Route::get('program-level/program/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramLevels'])->name('get.program.levels');
+    Route::post('member/create', [App\Http\Controllers\Api\Vendor\MemberController::class, 'createMember'])->name('create.member');
+    Route::get('program/{programId}/get-archive-program-levels', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getArchiveProgramLevelsWithSession'])->name('get.archive.program.levels');
+    Route::post('program/{program}/image', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'programImageUpdate'])->name('program.image.update');
 });
 
 Route::post('image-update/{user_id}', [App\Http\Controllers\PublicController::class, 'imageUpdate'])->name('image.update');

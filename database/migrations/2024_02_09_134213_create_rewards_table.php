@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('member_locations', function (Blueprint $table) {
-            $table->foreignId('location_id')->constrained()->onDelete('cascade');
+        Schema::create('rewards', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('member_id')->constrained()->onDelete('cascade');
-            $table->string('go_high_level_location_id')->nullable();
-            $table->string('go_high_level_contact_id')->nullable();
+            $table->double('points_claimed');
+            $table->date('date_claimed');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -25,8 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('member_locations', function (Blueprint $table) {
-            Schema::dropIfExists('member_locations');
-        });
+        Schema::dropIfExists('rewards');
     }
 };

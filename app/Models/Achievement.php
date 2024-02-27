@@ -22,12 +22,12 @@ class Achievement extends Model
         return $this->belongsTo(Program::class);
     }
 
-    public function achievementRequirements(){
-        return $this->belongsToMany(AchievementRequirements::class, 'achievement_requirements', 'achievement_id', 'action_id');
-    }
+    public function actions(){
+        return $this->belongsToMany(Action::class, 'achievement_actions', 'achievement_id', 'action_id')->withPivot('count');
+    }    
 
-    public function memberAchievements(){
-        return $this->belongsToMany(MemberAchievement::class, 'member_achievements', 'achievement_id', 'member_id');
+    public function members(){
+        return $this->belongsToMany(Member::class, 'member_achievements', 'achievement_id', 'member_id');
     }
 
 }

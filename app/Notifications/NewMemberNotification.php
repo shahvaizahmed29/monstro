@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class NewVendorNotification extends Notification
+class NewMemberNotification extends Notification
 {
     use Queueable;
 
@@ -38,7 +38,7 @@ class NewVendorNotification extends Notification
             ->subject('Welcome to '.env('APP_NAME'))
             ->from(env('NO_REPLY_EMAIL'), env('APP_NAME'))
             ->greeting('Dear '.$this->details['name'].',')
-            ->line('You have successfully registrered on '.env('APP_NAME'))
+            ->line('Congratulations you have been successfully registrered on '.env('APP_NAME'))
             ->line('Below are the credentials to log into '.env('APP_NAME'))
             ->line('Email: '.$this->details['email'])
             ->line('Password: '.$this->details['password'])

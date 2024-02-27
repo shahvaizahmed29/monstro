@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->foreignId('vendor_id')->nullable()->constrained();
             $table->longText('meta_data')->nullable();
+            $table->boolean('is_new')->default(1);
             $table->timestamps();
             $table->softDeletes();
         });

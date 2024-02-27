@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Location;
+use App\Models\Program;
+use App\Models\ProgramLevel;
 use App\Models\Setting;
 use App\Http\Controllers\Api\Vendor\MemberController;
 
@@ -40,6 +42,7 @@ class SyncGhlContactsCron extends Command
         $locations = Location::all();
         // $locations = Location::where('go_high_level_location_id', 'kxsCgZcTUell5zwFkTUc')->get();
         foreach($locations as $location) {
+            $reqCustomField = null;
             try {
                 $tokenObj = Http::withHeaders([
                     'Authorization' => 'Bearer '.$token,
@@ -53,31 +56,72 @@ class SyncGhlContactsCron extends Command
                     Log::info('=== SyncGhlContactsCron === (Location Token) =>'.json_encode($tokenObj->json()));
                 }
                 
-                $url = 'https://services.leadconnectorhq.com/contacts/?locationId='.$location->go_high_level_location_id.'&limit=100';
-    
                 $tokenObj = $tokenObj->json();
               
                 do {
-                    $response = Http::withHeaders([
+                    $responseCustomField = Http::withHeaders([
                         'Accept' => 'application/json',
                         'Authorization' => 'Bearer '.$tokenObj['access_token'],
                         'Version' => '2021-07-28'
-                    ])->get($url);
+                    ])->get('https://services.leadconnectorhq.com/locations/'.$location->go_high_level_location_id.'/customFields');
         
-                    if ($response->failed()) {
-                        $response->throw();    
+                    if ($responseCustomField->failed()) {
+                        $responseCustomField->throw();    
                     }
-                    $response = $response->json();
-                    $contacts = $response['contacts'];
-                    $url = null;
-                    if(isset($response['meta'])) {
-                        if(isset($response['meta']['nextPageUrl'])) {
-                            $url = $response['meta']['nextPageUrl'];
-                            $url = str_replace('http://', 'https://', $url);
+                    $responseCustomField = $responseCustomField->json();
+        
+                    foreach($responseCustomField['customFields'] as $customField) {
+                        if($customField['name'] == 'Program Level') {
+                            $reqCustomField = $customField;
                         }
                     }
-                    foreach($contacts as $contact) {
-                        MemberController::createMemberFromGHL($contact, $location);
+
+                    if($reqCustomField) {
+                        $url = 'https://services.leadconnectorhq.com/contacts/?locationId='.$location->go_high_level_location_id.'&limit=100';
+                        $response = Http::withHeaders([
+                            'Accept' => 'application/json',
+                            'Authorization' => 'Bearer '.$tokenObj['access_token'],
+                            'Version' => '2021-07-28'
+                        ])->get($url);
+            
+                        if ($response->failed()) {
+                            $response->throw();    
+                        }
+                        $response = $response->json();
+                        $contacts = $response['contacts'];
+                        $url = null;
+                        if(isset($response['meta'])) {
+                            if(isset($response['meta']['nextPageUrl'])) {
+                                $url = $response['meta']['nextPageUrl'];
+                                $url = str_replace('http://', 'https://', $url);
+                            }
+                        }
+                        foreach($contacts as $contact) {
+                            $programLevelId = null;
+
+                            $custom_field_index = array_search($reqCustomField['id'], array_column($contact['customFields'], 'id'));
+
+                            if($custom_field_index !== false) {
+                                if (strpos($contact['customFields'][$custom_field_index]['value'], '_') === false) {
+                                    continue;
+                                }
+                                $parts = explode('_', $contact['customFields'][$custom_field_index]['value']);
+                                if(count($parts) != 2) {
+                                    continue;
+                                }
+
+                                $programName = $parts[0];
+                                $programLevelName = $parts[1];
+
+                                $program = Program::where('name', $programName)->where('location_id', $location->id)->first();
+                                if($program) {
+                                    $programLevel = ProgramLevel::where('name', $programLevelName)->where('program_id', $program->id)->first();
+                                    if($programLevel) {
+                                        MemberController::createMemberFromGHL($contact, $location ,$programLevel->id);
+                                    }
+                                }                              
+                            }
+                        }
                     }
                     sleep(5);
                 } while($url);

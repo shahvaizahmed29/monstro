@@ -116,7 +116,7 @@ class VendorController extends BaseController
             }
 
             $new_password = $request->input('new_password');
-            $user->password = $new_password;
+            $user->password = bcrypt($new_password);
             $user->save();
 
             return $this->sendResponse('Success', 'Password set successfully');
@@ -158,6 +158,30 @@ class VendorController extends BaseController
             $user->vendor->save();
             return $this->sendResponse(new GetVendorProfile($user), 200);
         } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function passwordReset(Request $request){
+        try{
+            $location = request()->location;
+            $location = Location::find($location->id);
+
+            $user = User::find($location->vendor->user->id);
+
+            if(!$user){
+                return $this->sendError("No user found for this location", [], 400);
+            }
+
+            $user->password = bcrypt($request->password);
+            $user->save();
+
+            $location->is_new = false;
+            $location->save();
+
+            return $this->sendResponse('Success', 'Password updated successfully');
+
+        }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }
     }

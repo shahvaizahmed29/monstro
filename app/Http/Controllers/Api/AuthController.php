@@ -24,18 +24,17 @@ class AuthController extends BaseController
             $user = [
                 'id' => $user->id,
                 'email' => $user->email,
-                'secondary_email' => $user->vendor->email,
-                'name' => $user->vendor->name,
-                'phone' => $user->vendor->phone,
-                'referral_code' => $user->vendor->referral_code,
-                'avatar' => $user->vendor->avatar,
+                // 'secondary_email' => $user->vendor->company_email,
+                'name' => $user->name,
+                'phone' => $user->vendor->phone_number,
+                'avatar' => $user->vendor->logo,
                 'locations' => $user->vendor->locations
             ];
         } else {
             $user = [
                 'id' => $user->id,
                 'email' => $user->email,
-                'secondary_email' => $user->member->email,
+                // 'secondary_email' => $user->member->email,
                 'name' => $user->member->name,
                 'phone' => $user->member->phone,
                 'referral_code' => $user->member->referral_code,

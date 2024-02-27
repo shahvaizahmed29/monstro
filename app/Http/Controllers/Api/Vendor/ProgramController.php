@@ -14,11 +14,19 @@ use App\Http\Requests\ProgramUpdateRequest;
 use App\Http\Resources\Member\CheckInResource;
 use App\Http\Resources\Vendor\ProgramLevelResource;
 use App\Http\Resources\Vendor\ProgramResource;
+use App\Models\AchievementActions;
+use App\Models\Action;
 use App\Models\CheckIn;
+use App\Models\Member;
+use App\Models\MemberAchievement;
+use App\Models\MemberRewardClaim;
+use App\Models\Reservation;
+use App\Models\Reward;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 
 class ProgramController extends BaseController
 {
@@ -28,7 +36,13 @@ class ProgramController extends BaseController
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
         // }
-        $programs = Program::where('location_id', $location->id)->paginate(25);
+        $programs = Program::where('location_id', $location->id);
+        if(isset(request()->type)) {
+            if(request()->type == 0) {
+                $programs = $programs->whereNotNull('deleted_at')->withTrashed();
+            }
+        }
+        $programs = $programs->paginate(25);
         $data = [
             'programs' => ProgramResource::collection($programs),
             'pagination' => [
@@ -67,7 +81,7 @@ class ProgramController extends BaseController
     public function getProgramById($id){
         try{
             $location = request()->location;
-            $program = Program::with('programLevels')->where('id',$id)->where('location_id', $location->id)->first();
+            $program = Program::with(['programLevels'])->where('id',$id)->where('location_id', $location->id)->first();
 
             if(!$program){
                 return $this->sendError("Program doesnot exist", [], 400);
@@ -78,6 +92,20 @@ class ProgramController extends BaseController
             //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
             // }
             return $this->sendResponse(new ProgramResource($program), 'Get programs related to specific location');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getArchiveProgramLevelsWithSession($programId){
+        try{
+            $location = request()->location;
+            $program = Program::with(['programLevels' => function ($query) {
+                $query->withTrashed();
+                $query->where('deleted_at', '!=', NULL);
+            }])->where('id', $programId)->first();
+
+            return $this->sendResponse(new ProgramResource($program), 'Getting archived levels related to program');
         }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }
@@ -114,17 +142,17 @@ class ProgramController extends BaseController
                 
                 $parent_id = $program_level->id;
 
-                $tomorrow = Carbon::tomorrow();
-                $formattedTomorrow = $tomorrow->format('Y-m-d');
+                $now = Carbon::now();
+                $formattedNow = $now->format('Y-m-d');
 
-                $twoYearsLater = $tomorrow->addYears(2);
+                $twoYearsLater = $now->addYears(2);
                 $twoYearsLaterformattedDate = $twoYearsLater->format('Y-m-d');
 
                 $session = Session::create([
                     'program_id' => $program->id,
                     'program_level_id' => $program_level->id,
                     'duration_time' => $session['duration_time'],
-                    'start_date' => $formattedTomorrow,
+                    'start_date' => $formattedNow,
                     'end_date' => $twoYearsLaterformattedDate,
                     'monday' => $session['monday'] ?? null,
                     'tuesday' => $session['tuesday'] ?? null,
@@ -171,17 +199,17 @@ class ProgramController extends BaseController
             $program_level->save();
 
             foreach($request->sessions as $session){
-                $tomorrow = Carbon::tomorrow();
-                $formattedTomorrow = $tomorrow->format('Y-m-d');
+                $now = Carbon::now();
+                $formattedNow = $now->format('Y-m-d');
 
-                $twoYearsLater = $tomorrow->addYears(2);
+                $twoYearsLater = $now->addYears(2);
                 $twoYearsLaterformattedDate = $twoYearsLater->format('Y-m-d');
 
                 $session = Session::create([
                     'program_id' => $programId,
                     'program_level_id' => $program_level->id,
                     'duration_time' => $session['duration_time'],
-                    'start_date' => $formattedTomorrow,
+                    'start_date' => $formattedNow,
                     'end_date' => $twoYearsLaterformattedDate,
                     'monday' => $session['monday'] ?? null,
                     'tuesday' => $session['tuesday'] ?? null,
@@ -201,26 +229,6 @@ class ProgramController extends BaseController
             Log::info('===== ProgramController - addProgramLevel() - error =====');
             Log::info($e->getMessage());
             return $this->sendError($e->getMessage(), [], 500);
-        }
-    }
-
-    public function programLevelArchive($programLevelId){
-        try{ 
-            $programLevel = ProgramLevel::where('id',$programLevelId)->first();
-
-            if(!$programLevel){
-                return $this->sendError('Program level does not exist.', [], 400);
-            }
-
-            Session::where('program_level_id', $programLevel->id)->update([
-                'status' => Session::INACTIVE
-            ]);
-
-            $programLevel->delete();
-            
-            return $this->sendResponse(['id' => $programLevelId], 'Program level archived successfully.');
-        }catch(Exception $error){
-            return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
@@ -257,6 +265,24 @@ class ProgramController extends BaseController
 
     public function update(ProgramUpdateRequest $request, Program $program){
         try{
+            $program->update([
+                'name' => $request->name,
+                'description' => $request->description
+            ]);
+
+            $program = Program::with('programLevels')->where('id',$program->id)->first();
+
+            return $this->sendResponse(new ProgramResource($program), 'Program updated successfully.');
+        }catch (Exception $e) {
+            DB::rollBack();
+            Log::info('===== ProgramController - programUpdate() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function programImageUpdate(Request $request, Program $program){
+        try{
             $avatar = $request->file('avatar');
             $imgPath = 'program-images/';
             $imageUrl = null;
@@ -268,17 +294,13 @@ class ProgramController extends BaseController
             }
 
             $program->update([
-                'name' => $request->name,
-                'description' => $request->description,
                 'avatar' => isset($imageUrl) ? $imageUrl : $program->avatar,
             ]);
 
-            $program = Program::with('programLevels')->where('id',$program->id)->first();
-
-            return $this->sendResponse(new ProgramResource($program), 'Program updated successfully.');
+            return $this->sendResponse(new ProgramResource($program), 'Program image updated successfully.');
         }catch (Exception $e) {
             DB::rollBack();
-            Log::info('===== ProgramController - programUpdate() - error =====');
+            Log::info('===== ProgramController - programImageUpdate() - error =====');
             Log::info($e->getMessage());
             return $this->sendError($e->getMessage(), [], 500);
         }
@@ -381,6 +403,176 @@ class ProgramController extends BaseController
         }
     }
 
+    public function assignProgramLevelToMember($programLevelId, $memberId){
+        try{
+            // Finding Program Level
+            $programLevelCheck = ProgramLevel::find($programLevelId);
+
+            if(!$programLevelCheck){
+                return $this->sendError('Program level does not exist. Cannot assign a level to member', [], 400);
+            }
+
+            // Getting current reservations for the members
+            $reservations = Reservation::with('session')->whereHas('session', function ($query) {
+                $query->where('status', Session::ACTIVE);
+            })->where('member_id', $memberId)->where('status', Reservation::ACTIVE)->get();
+
+            //Checking for reservations
+            if(count($reservations) > 0){
+                // Getting program level id
+                $currentProgramLevelId = $reservations[0]->session->programLevel->id;
+                
+                // Checking if member is currently enrolled in this program level or not
+                if($currentProgramLevelId == $programLevelId){
+                    // If member is already enrolled return back with a message
+                    return $this->sendError('Member already assigned to this level.', [], 400);
+                }elseif($currentProgramLevelId < $programLevelId){ // Checking if program level is bigger than the current enrolled program or not
+                    DB::beginTransaction();
+                    //Getting next level sessions
+                    $nextLevelSession = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->first();
+                    if($nextLevelSession) {
+                        // Create reservation if not present or update if already present
+                        Reservation::updateOrCreate([
+                            'session_id' => $nextLevelSession->id,
+                            'member_id' =>  $memberId
+                        ],[
+                            'session_id' => $nextLevelSession->id,
+                            'member_id' =>  $memberId,
+                            'status' => Reservation::ACTIVE,
+                            'start_date' => Carbon::today()->format('Y-m-d'),
+                            'end_date' => $nextLevelSession->end_date
+                        ]);
+                        
+                    }
+                    
+                    $currentSession = Session::where('program_level_id', $currentProgramLevelId)->where('status', Session::ACTIVE)->first();
+                    if($currentSession) {
+                        // Updating current reservations sessions status to completed
+                        Reservation::where('session_id', $currentSession->id)->where('member_id', $memberId)->update(['status' => Reservation::COMPLETED]);
+                    }
+                    DB::commit();
+                    $this->levelCompletionReward($memberId);
+                    return $this->sendResponse("Success", "Member assigned to next level successfully");
+                }else{
+                    DB::beginTransaction();
+                    // Getting old level sessions
+                    $oldSession = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->first();
+                    if($oldSession) {
+                        // Updating old reservations status to active
+                        Reservation::updateOrCreate([
+                            'session_id' => $oldSession->id,
+                            'member_id' =>  $memberId
+                        ],[
+                            'session_id' => $oldSession->id,
+                            'member_id' =>  $memberId,
+                            'status' => Reservation::ACTIVE,
+                            'start_date' => Carbon::today()->format('Y-m-d'),
+                            'end_date' => $oldSession->end_date
+                        ]);
+                    }
+                    
+                    // Getting current sessions 
+                    $currentSession = Session::where('program_level_id', $currentProgramLevelId)->where('status', Session::ACTIVE)->first();
+                    if($currentSession) {
+                        // Updating current reservations sessions status to inactive
+                        $reservation = Reservation::where('session_id', $currentSession->id)->where('member_id', $memberId)->first();
+                        $reservation->status = Reservation::INACTIVE;
+                        $reservation->save();
+                    }
+                    DB::commit();
+                    $this->levelCompletionReward($memberId);
+                    return $this->sendResponse("Success", "Member assigned to previous level successfully");
+                }
+            }else{
+                $programLevel = ProgramLevel::find($programLevelId);
+
+                if(!$programLevel){
+                    return $this->sendError('Program level does not exist. Cannot assign a level to member', [], 400);
+                }
+
+                $session = $programLevel->sessions[0];
+
+                Reservation::updateOrCreate([
+                    'session_id' => $session->id,
+                    'member_id' =>  $memberId
+                ],[
+                    'session_id' => $session->id,
+                    'member_id' =>  $memberId,
+                    'status' => Reservation::ACTIVE,
+                    'start_date' => Carbon::today()->format('Y-m-d'),
+                    'end_date' => $session->end_date
+                ]);
+                
+                $this->levelCompletionReward($memberId);
+                return $this->sendResponse("Success", "Member assigned to program level and reservation created successfully");
+            }
+        }catch (Exception $e) {
+            DB::rollBack();
+            Log::info('===== ProgramController - assignProgramLevelToMember() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function levelCompletionReward($member_id){
+        // Finding a achivement action related to defined no of level cleared
+        $action = Action::where('name', Action::LEVEL_ACHIEVED)->first();
+        $member = Member::find($member_id);
+
+        // Getting achievement action
+        $achievement_action = AchievementActions::with(['achievement'])->whereHas('achievement' , function ($q) use ($member){
+            $q->where('program_id', $member->reservations[0]->session->program->id);
+        })->where('action_id', $action->id)->first();
+
+        // If achievement action present
+        if($achievement_action){
+            // Checking criteria count
+            $eligibilityCriteria = $achievement_action->count;
+            $completedProgramLevels = Reservation::where('member_id', $member_id)->where('status', Reservation::COMPLETED)
+            ->with('session.programLevel')->get()->pluck('session.programLevel') // Extract programLevel from reservations
+            ->unique('id') // Ensure unique programLevel instances
+            ->count();
+
+            // Checking for eligibility
+            if($completedProgramLevels >= $eligibilityCriteria){
+                $existingMemberAchievement = MemberAchievement::where('achievement_id', $achievement_action->achievement->id)
+                    ->where('member_id', $member_id)->first();
+
+                // Check for if member achievment is already exist
+                if(!$existingMemberAchievement){
+                    //Creating a new achievment for member
+                    MemberAchievement::create([
+                        'achievement_id' => $achievement_action->achievement->id, 
+                        'member_id' => $member_id, 
+                        'status' => 1, 
+                        'note' => 'Achievement accomplished on number of levels completion', 
+                        'date_achieved' => now()
+                    ]);
+
+                    // Fidning member in order to get the current member achieved points
+                    $member = Member::find($member_id);
+                    $currentPoints = $member->current_points;
+
+                    // Creating reward for a member if member has a new achievement only otherwise no reward
+                    $reward = MemberRewardClaim::create([
+                        'points_claimed' => $achievement_action->achievement->reward_points,
+                        'previous_points' =>  $currentPoints,
+                        'date_claimed' => now(),
+                        'member_id' => $member->id,
+                    ]);
+
+                    if($reward){
+                        // Updating mmeber overall points
+                        $currentPoints = $currentPoints + $achievement_action->achievement->reward_points;
+                    }
+
+                    $member->current_points = $currentPoints;
+                    $member->save();
+                }
+            }
+        }
+    }
+
     public function delete($programId){
         try{
             $program = Program::with('programLevels.sessions')->find($programId);
@@ -424,6 +616,20 @@ class ProgramController extends BaseController
 
             $programLevel->delete();
             return $this->sendResponse("Success", "Program Level deleted successfully");
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getProgramLevels($programId){
+        try{
+            $programLevels = ProgramLevel::where('program_id', $programId)->get();
+
+            if(count($programLevels) > 0){
+                return $this->sendResponse(ProgramLevelResource::collection($programLevels), 'Program levels related to specific program');
+            }else{
+                return $this->sendError('No program levels found for this program', [], 400);
+            }
         }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }

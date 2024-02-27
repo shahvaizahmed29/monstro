@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use DB;
 
 class Program extends Model
 {
@@ -40,10 +41,7 @@ class Program extends Model
 
     public function activeSessions()
     {
-        return $this->sessions()->with(['reservations', 'reservations.member','programLevel'])
-        ->whereHas('programLevel', function ($query) {
-            return $query->whereNull('deleted_at');
-        })->where('status', Session::ACTIVE)->latest()->get();
+        return $this->sessions()->whereHas('programLevel')->with(['reservations', 'reservations.member', 'programLevel'])->where('status', Session::ACTIVE)->latest()->get();
     }
 
     public function monthlyRetentionRate()
@@ -78,11 +76,15 @@ class Program extends Model
     public function totalActiveStudents()
     {
         $activeReservationsCount = $this->sessions()
-        ->where('status', Session::ACTIVE)
-        ->whereHas('reservations', function ($query) {
-            $query->where('status', Reservation::ACTIVE);
+        ->whereHas('programLevel', function ($query) {
+            $query->whereNull('deleted_at');
         })
-        ->withCount('reservations')->get()
+        ->where('status', Session::ACTIVE)
+        ->withCount(['reservations' => function ($query) {
+            $query->where('status', Reservation::ACTIVE)
+                ->select(DB::raw('COUNT(DISTINCT member_id)'));
+        }])
+        ->get()
         ->sum('reservations_count');
         return $activeReservationsCount;
     }
@@ -91,12 +93,12 @@ class Program extends Model
     {
         // Need to fix this afterwards
         $activeReservationsCount = $this->sessions()
-        // ->where('status', Session::ACTIVE)
-        // ->whereHas('reservations', function ($query) {
-        //     $query->where('status', Reservation::ACTIVE);
-        // })
-        ->withCount('reservations')->get()
-        ->sum('reservations_count');
-        return $activeReservationsCount;
+        ->with('reservations')
+        ->get()
+        ->pluck('reservations.*.member_id') // Extracting all member_ids
+        ->flatten() // Flattening the nested arrays
+        ->unique(); // Getting unique member_ids
+    
+        return $activeReservationsCount->count();
     }
 }

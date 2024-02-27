@@ -19,7 +19,8 @@ class Member extends Model
         'email',
         'phone',
         'referral_code',
-        'avatar'
+        'avatar',
+        'current_points'
     ];
 
     public function locations(){
@@ -27,11 +28,7 @@ class Member extends Model
     }    
 
     public function achievements(){
-        return $this->belongsToMany(MemberAchievement::class, 'member_achievements', 'member_id', 'achievement_id');
-    }
-
-    public function rewardClaims(){
-        return $this->hasMany(MemberRewardClaim::class);
+        return $this->belongsToMany(Achievement::class, 'member_achievements', 'member_id', 'achievement_id');
     }
 
     public function reservations(){
@@ -52,6 +49,14 @@ class Member extends Model
             ->count();
 
         return $activeReservationsCount > 0 ? true : false;
+    }
+
+    public function reedemPoints(){
+        return $this->rewards()->sum('points_claimed');
+    }
+
+    public function rewards(){
+        return $this->hasMany(MemberRewardClaim::class);
     }
 
 }
