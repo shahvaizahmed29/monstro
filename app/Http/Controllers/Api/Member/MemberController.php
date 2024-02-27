@@ -23,12 +23,21 @@ class MemberController extends BaseController
         try{
             $user = User::find($userId);
 
-            if(!$user){
+            if (!$user) {
                 return $this->sendError('User not exist.', [], 400);
             }
 
-            $user->name = isset($request->name) ? $request->name : $user->name;
-            $user->save();
+            $member = $user->member;
+
+            if (!$member) {
+                return $this->sendError('Member not exist.', [], 400);
+            }
+
+            if ($request->has('name')) {
+                $member->name = $request->name;
+            }
+
+            $member->save();
             return $this->sendResponse('Success', 'User updated successfully.');
         }catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
