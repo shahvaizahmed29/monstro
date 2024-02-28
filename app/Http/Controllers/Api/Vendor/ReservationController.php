@@ -102,7 +102,7 @@ class ReservationController extends BaseController
                     // Check for if member achievment is already exist
                     if(!$existingMemberAchievement){
                         //Creating a new achievment for member
-                        MemberAchievement::create([
+                        $member_achievement = MemberAchievement::create([
                             'achievement_id' => $achievement_action->achievement->id, 
                             'member_id' => $reservation->member_id, 
                             'status' => 1, 
@@ -114,15 +114,7 @@ class ReservationController extends BaseController
                         $member = Member::find($reservation->member_id);
                         $currentPoints = $member->current_points;
 
-                        // Creating reward for a member if member has a new achievement only otherwise no reward
-                        $reward = MemberRewardClaim::create([
-                            'points_claimed' => $achievement_action->achievement->reward_points,
-                            'previous_points' =>  $currentPoints,
-                            'date_claimed' => now(),
-                            'member_id' => $member->id,
-                        ]);
-
-                        if($reward){
+                        if($member_achievement){
                             // Updating mmeber overall points
                             $currentPoints = $currentPoints + $achievement_action->achievement->reward_points;
                         }
