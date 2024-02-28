@@ -48,29 +48,22 @@ class MemberController extends BaseController
             $query->where('locations.id', $locationId);
         })->whereHas("user.roles", function ($q){
             $q->where('name', \App\Models\User::MEMBER);
-        })->with(['reservations','reservations.checkIns'])->get();
+        })->paginate(10);
 
-        $members = $membersByLocation->map(function ($membersByLocation) {
-            $reservations = $membersByLocation->reservations;
-            $reservationIds = $reservations->pluck('id')->toArray();
-            $latestCheckInTime = CheckIn::whereIn('reservation_id', $reservationIds)->latest()->first();
-
-            if ($latestCheckInTime) {
-                $carbonInstance = Carbon::parse($latestCheckInTime->check_in_time);
-                $membersByLocation->last_seen = $carbonInstance->diffForHumans();
-            } else {
-                $membersByLocation->last_seen = null;
-            }
+        $data = [
+            'members' => MemberResource::collection($membersByLocation),
+            'pagination' => [
+                'current_page' => $membersByLocation->currentPage(),
+                'per_page' => $membersByLocation->perPage(),
+                'total' => $membersByLocation->total(),
+                'prev_page_url' => $membersByLocation->previousPageUrl(),
+                'next_page_url' => $membersByLocation->nextPageUrl(),
+                'first_page_url' => $membersByLocation->url(1),
+                'last_page_url' => $membersByLocation->url($membersByLocation->lastPage()),
+            ],
+        ];
         
-            return $membersByLocation;
-        });
-
-        $members->each(function ($member) {
-            $member->unsetRelation('reservations');
-            $member->unsetRelation('checkIns');
-        });
-        
-        return $this->sendResponse(MemberResource::collection($members), 'Members with details for the location.');
+        return $this->sendResponse($data, 'Members with details for the location.');
     }
 
     public function getMemberDetails($member_id){
