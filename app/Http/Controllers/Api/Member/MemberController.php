@@ -16,9 +16,11 @@ use App\Models\MemberRewardClaim;
 use App\Models\Program;
 use App\Models\Reservation;
 use App\Models\User;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class MemberController extends BaseController
@@ -203,6 +205,39 @@ class MemberController extends BaseController
             return $this->sendResponse($data, 'Get programs related to location where member is not enrolled.');
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function enrollInProgram($programId){
+        try{
+            $program = Program::find($programId);
+
+            if(!$program){
+                return $this->sendError('Program does not exist. Cannot enroll in this program.', [], 400);
+            }
+
+            $member = Auth::user()->member;
+            $session = $program->ProgramLevels[0]->sessions[0];
+            
+            DB::beginTransaction();
+
+            Reservation::updateOrCreate([
+                'session_id' => $session->id,
+                'member_id' =>  $member->id
+            ],[
+                'session_id' => $session->id,
+                'member_id' =>  $member->id,
+                'status' => Reservation::ACTIVE,
+                'start_date' => Carbon::today()->format('Y-m-d'),
+                'end_date' => $session->end_date
+            ]);
+
+            DB::commit();
+            return $this->sendResponse("Success", "Congratulations you have successfully enrolled in ". $program->name ." program.");
+
+        }catch (Exception $e) {
+            DB::rollBack();
+            return $this->sendError($e->getMessage(), [], 500);
         }
     }
 
