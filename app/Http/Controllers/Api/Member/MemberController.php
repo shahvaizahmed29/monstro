@@ -7,10 +7,14 @@ use App\Http\Requests\PasswordUpdateRequest;
 use App\Http\Resources\Member\ClaimedRewardResource;
 use App\Http\Resources\Member\GetMemberProfile;
 use App\Http\Resources\Member\MemberResource;
+use App\Http\Resources\Member\ProgramResource;
 use App\Http\Resources\Vendor\AchievementResource;
 use App\Models\Achievement;
+use App\Models\Location;
 use App\Models\Member;
 use App\Models\MemberRewardClaim;
+use App\Models\Program;
+use App\Models\Reservation;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
@@ -163,6 +167,40 @@ class MemberController extends BaseController
                 return $this->sendError('Not enough reedem points to claimed at the moment. You have '.$member->current_points.' points in your account currently', [], 400);
             }
 
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getProgramByLocation($locationId){
+        try {
+            $location = Location::where('go_high_level_location_id', $locationId)->first();
+
+            if(!$location){
+                return $this->sendError('Location not found.', [], 400);
+            }
+
+            $member = Auth::user()->member;
+
+            $reservations = Reservation::with('session')->where('member_id', $member->id)->where('status', Reservation::ACTIVE)->get();
+            $programIds = $reservations->pluck('session.program_id')->unique()->toArray();
+            
+            $programs = Program::whereNotIn('id', $programIds)->where('location_id', $location->id)->paginate(25);
+
+            $data = [
+                'programs' => ProgramResource::collection($programs),
+                'pagination' => [
+                    'current_page' => $programs->currentPage(),
+                    'per_page' => $programs->perPage(),
+                    'total' => $programs->total(),
+                    'prev_page_url' => $programs->previousPageUrl(),
+                    'next_page_url' => $programs->nextPageUrl(),
+                    'first_page_url' => $programs->url(1),
+                    'last_page_url' => $programs->url($programs->lastPage()),
+                ],
+            ];
+
+            return $this->sendResponse($data, 'Get programs related to location where member is not enrolled.');
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }

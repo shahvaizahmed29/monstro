@@ -34,6 +34,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberAchievements'])->name('get.member.achievements');
         Route::post('redeem-points', [App\Http\Controllers\Api\Member\MemberController::class, 'redeemPoints'])->name('redeem.points');
         Route::get('current-points', [App\Http\Controllers\Api\Member\MemberController::class, 'getCurrentPoints'])->name('get.current.points');
+        Route::get('get-programs-by-location/{locationId}', [App\Http\Controllers\Api\Member\MemberController::class, 'getProgramByLocation'])->name('get.programs.by.location');
     });
 
     //==================================================================================================================================================================================
