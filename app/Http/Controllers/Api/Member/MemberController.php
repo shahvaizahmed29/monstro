@@ -174,20 +174,15 @@ class MemberController extends BaseController
         }
     }
 
-    public function getProgramByLocation($locationId){
+    public function getProgramByLocations(){
         try {
-            $location = Location::where('go_high_level_location_id', $locationId)->first();
-
-            if(!$location){
-                return $this->sendError('Location not found.', [], 400);
-            }
-
             $member = Auth::user()->member;
+            $locationIds = $member->locations->pluck('id')->unique()->toArray();
 
             $reservations = Reservation::with('session')->where('member_id', $member->id)->where('status', Reservation::ACTIVE)->get();
             $programIds = $reservations->pluck('session.program_id')->unique()->toArray();
             
-            $programs = Program::whereNotIn('id', $programIds)->where('location_id', $location->id)->paginate(25);
+            $programs = Program::whereNotIn('id', $programIds)->whereIn('location_id', $locationIds)->paginate(25);
 
             $data = [
                 'programs' => ProgramResource::collection($programs),
