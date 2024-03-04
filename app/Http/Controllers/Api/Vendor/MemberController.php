@@ -520,4 +520,29 @@ class MemberController extends BaseController
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
+
+    public function getProgramsForMemberNotEnrolled($member_id) {
+        try{
+            $reservations = Reservation::where('member_id', $member_id)
+                ->with('session.programLevel.program')
+                ->get();
+            $programs = [];
+            foreach ($reservations as $reservation) {
+                $session = $reservation->session;
+                $programLevel = $session->programLevel;
+                
+                if($programLevel){
+                    $program = $programLevel->program;
+                    
+                    if($program){
+                        $programs[] = $program->id;
+                    }
+                }
+            }
+            $programsObj = Program::with(['programLevels'])->whereNotIn('id', $programs)->where('location_id', $location->id)->get();
+            return $this->sendResponse(ProgramResource::collection($programsObj), 'Get programs related to specific member');
+        } catch(Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
 }

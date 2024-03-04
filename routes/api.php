@@ -77,7 +77,7 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::post('add-member/{programLevelId}', [App\Http\Controllers\Api\Vendor\MemberController::class, 'addMemberManually'])->name('add.member.manually');
     Route::put('member/status/{member_id}', [App\Http\Controllers\Api\Vendor\MemberController::class, 'memberStatusUpdate'])->name('member.status.update');
     Route::get('attendances/member/{memberId}/program/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'lastTenAttendance'])->name('member.program.attendances');
-
+    
     Route::prefix('achievement')->group(function () {
         Route::get('', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'index'])->name('achievement.all');
         Route::post('create', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'create'])->name('create.achievement');
@@ -103,8 +103,10 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     
     Route::put('password-reset', [App\Http\Controllers\Api\Vendor\VendorController::class, 'passwordReset'])->name('password.reset');
     Route::post('assign-program-level/{programLevelId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'assignProgramLevelToMember'])->name('assign.program.level.to.member');
-    
+    Route::post('assign-program/{programId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'assignProgramToMember'])->name('assign.program.to.member');
+
     Route::get('member/{memberId}/get-programs', [App\Http\Controllers\Api\Vendor\MemberController::class, 'getMemberPrograms'])->name('get.member.programs');
+    Route::get('member/{memberId}/get-programs-not-enrolled', [App\Http\Controllers\Api\Vendor\MemberController::class, 'getProgramsForMemberNotEnrolled'])->name('get.member.programs.NotEnrolled');
     Route::get('program-level/program/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramLevels'])->name('get.program.levels');
     Route::post('member/create', [App\Http\Controllers\Api\Vendor\MemberController::class, 'createMember'])->name('create.member');
     Route::get('program/{programId}/get-archive-program-levels', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getArchiveProgramLevelsWithSession'])->name('get.archive.program.levels');

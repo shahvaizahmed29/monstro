@@ -514,6 +514,44 @@ class ProgramController extends BaseController
         }
     }
 
+    public function assignProgramToMember($programId, $memberId){
+        try{
+            // Finding Program Level
+            $program = Program::with('programLevels')->where('id', $programId)->first();
+
+            if(!$program){
+                return $this->sendError('Program level does not exist. Cannot assign a level to member', [], 400);
+            }
+            // Getting current reservations for the members
+            $reservations = Reservation::whereHas('session.programLevel.program', function ($query) {
+                $query->where('id', $program->id);
+            })->where('member_id', $memberId)->get();
+
+            //Checking for reservations
+            if(count($reservations) > 0) {
+                return $this->sendError('Program already assigned', [], 400);
+            }else{
+                $programLevel = $program->programLevels->whereNull('parent_id')->first();
+                $session = Session::where('program_level_id', $programLevel->id)->where('status', Session::ACTIVE)->first();
+                Reservation::updateOrCreate([
+                    'session_id' => $session->id,
+                    'member_id' =>  $memberId
+                ],[
+                    'session_id' => $session->id,
+                    'member_id' =>  $memberId,
+                    'status' => Reservation::ACTIVE,
+                    'start_date' => Carbon::today()->format('Y-m-d'),
+                    'end_date' => $session->end_date
+                ]);
+                return $this->sendResponse("Success", "Member assigned to program and reserved successfully");
+            }
+        }catch (Exception $e) {
+            Log::info('===== ProgramController - assignProgramLevelToMember() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+    
     public function levelCompletionReward($member_id){
         // Finding a achivement action related to defined no of level cleared
         $action = Action::where('name', Action::LEVEL_ACHIEVED)->first();
