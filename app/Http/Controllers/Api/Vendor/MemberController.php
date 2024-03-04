@@ -546,4 +546,23 @@ class MemberController extends BaseController
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
+
+    public function memberPasswordReset($member_id){
+        try{
+            $member = Member::findOrFail($member_id);
+
+            if(!$member){
+                return $this->sendError("Member not found", [], 400);
+            }
+
+            $password = bcrypt("Monstro@".Carbon::now()->year);
+            $member->user->password = $password;
+            $member->user->save();
+
+            return $this->sendResponse("Success", 'Member password updated successfully.');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
 }
