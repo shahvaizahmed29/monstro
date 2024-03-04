@@ -523,6 +523,7 @@ class MemberController extends BaseController
 
     public function getProgramsForMemberNotEnrolled($member_id) {
         try{
+            $location = request()->location;
             $reservations = Reservation::where('member_id', $member_id)
                 ->with('session.programLevel.program')
                 ->get();
