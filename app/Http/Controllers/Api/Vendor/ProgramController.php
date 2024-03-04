@@ -523,7 +523,7 @@ class ProgramController extends BaseController
                 return $this->sendError('Program level does not exist. Cannot assign a level to member', [], 400);
             }
             // Getting current reservations for the members
-            $reservations = Reservation::whereHas('session.programLevel.program', function ($query) {
+            $reservations = Reservation::whereHas('session.programLevel.program', function ($query) use ($program) {
                 $query->where('id', $program->id);
             })->where('member_id', $memberId)->get();
 
