@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('check_ins', function (Blueprint $table) {
             $table->id();
             $table->foreignId('reservation_id')->constrained()->onDelete('cascade');
+            $table->datetime('time_to_check_in');
             $table->datetime('check_in_time');
             $table->datetime('check_out_time')->nullable();
             $table->timestamps();

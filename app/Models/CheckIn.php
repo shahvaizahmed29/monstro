@@ -12,6 +12,7 @@ class CheckIn extends Model
 
     protected $fillable = [
         'reservation_id',
+        'time_to_check_in',
         'check_in_time',
         'check_out_time'
     ];

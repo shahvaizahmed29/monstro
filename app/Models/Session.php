@@ -85,6 +85,8 @@ class Session extends Model
             // $startTime = Carbon::parse($this->{$today}, $timezone)->setTimezone('UTC');
             $endTime = $startTime->copy()->addMinutes($this->duration_time);
 
+            $startTime = $startTime->copy()->subMinutes($this->duration_time);
+
             if($currentTime->between($startTime, $endTime)) {
                 return 'In Progress';
             }

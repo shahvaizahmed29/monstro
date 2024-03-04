@@ -58,7 +58,14 @@ class ReservationController extends BaseController
     {
         try{
             DB::beginTransaction();
-            $reservation = Reservation::find($request->reservationId);
+
+            $reservation = Reservation::with(['session'])->where('id', $request->reservationId)->first();
+
+            $currentTime = Carbon::now();
+
+            $currentDayOfWeek = strtolower($currentTime->format('l'));
+
+            $startTime = Carbon::createFromFormat('Y-m-d H:i:s', $currentTime->format('Y-m-d') .' '.$reservation->session->{$currentDayOfWeek});
 
             //Code commented out below becuase auth guard is not applied anymore.
             // $location = $reservation->session->programLevel->program->location;
@@ -79,7 +86,8 @@ class ReservationController extends BaseController
             // Create a new check-in record
             $checkIn = CheckIn::create([
                 'reservation_id' => $reservation->id,
-                'check_in_time' => now()->format('Y-m-d H:i:s')
+                'check_in_time' => now()->format('Y-m-d H:i:s'),
+                'time_to_check_in' => $startTime
             ]);
 
             // Finding a achivement action related to defined no of classes attendented  
