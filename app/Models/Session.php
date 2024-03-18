@@ -94,8 +94,6 @@ class Session extends Model
             // Calculate time until next session
             $timeUntilNextSession = $currentTime->diff($startTime);
 
-            \Log::info(json_encode($timeUntilNextSession));
-
             if ($timeUntilNextSession->invert) {
                 for ($i = 1; $i <= 7; $i++) {
                     $nextDayIndex = ($nextClassDayIndex + $i) % 7; // ite1 = 2
