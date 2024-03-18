@@ -50,7 +50,7 @@ class LocationsController extends BaseController
 
     public function getLocatonById($locationId) {
         $location = request()->location;
-        $vendor = User::find($location->vendor);
+        $vendor = $location->vendor;
         $location = Location::where('go_high_level_location_id', $locationId)->where('vendor_id', $vendor->id)->latest()->first();
         return $this->sendResponse(new LocationResource($location), 200);
     }
