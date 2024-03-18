@@ -6,6 +6,7 @@ use App\Http\Requests\ImageUploadRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use App\Services\TimezoneService;
 use App\Models\Location;
 use App\Models\User;
 use App\Models\Vendor;
@@ -133,6 +134,7 @@ class PublicController extends BaseController
                         $vendor = Vendor::where('user_id', $user->id)->first();
 
                         if(!$vendor){
+                            $timezone = TimezoneService::findTimezone($ghl_location_data['timezone']);
                             $vendor = Vendor::create([
                                 'first_name' => $ghl_location_data['firstName'],
                                 'last_name' => isset($ghl_location_data['lastName']) ? $ghl_location_data['lastName'] : null,
@@ -161,6 +163,7 @@ class PublicController extends BaseController
                                 'website' => isset($ghl_location_data['website']) ? $ghl_location_data['website'] : null,
                                 'email' => $ghl_location_data['email'],
                                 'phone' => isset($ghl_location_data['phone']) ? $ghl_location_data['phone'] : null,
+                                'timezone' => $timezone,
                                 'vendor_id' => $vendor->id,
                                 'meta_data' => $ghl_location_data
                             ]);

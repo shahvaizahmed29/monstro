@@ -43,14 +43,16 @@ class Session extends Model
         return $this->hasMany(Reservation::class);
     }
 
-    public function getCurrentStatusAttribute($timezone, $startFrom = 0)
+    public function getCurrentStatusAttribute($timezone)
     {
+
+        $location = $this->program->location;
+        $locationTimezone = $location->timezone ? $location->timezone : 'UTC';
         // Convert start_date and end_date to the user's timezone
         $startDate = Carbon::parse($this->start_date);
         $endDate = Carbon::parse($this->end_date);
         // Get the current time in the user's timezone
-        $currentTime = Carbon::now()->setTimezone('America/Chicago');
-
+        $currentTime = Carbon::now()->tz($locationTimezone);
         if ($currentTime->lt($startDate)) {
             return "Session Not Started";
         } elseif ($currentTime->gt($endDate)) {
@@ -61,7 +63,6 @@ class Session extends Model
             $currentDayOfWeek = strtolower($currentTime->format('l'));
             $nextClassDayIndex = array_search($currentDayOfWeek, $daysOfWeek);
             $daysToAdd = 0;
-
             for ($i = 0; $i <= 7; $i++) {
                 $nextDayIndex = ($nextClassDayIndex + $i) % 7; // ite1 = 2
                 $nextDay = $daysOfWeek[$nextDayIndex]; // ite1 = wed
@@ -80,25 +81,21 @@ class Session extends Model
             $nextSessionDay = strtolower($nextSessionDate->format('l'));
 
             // Get the start time and end time for the current day
-            $startTime = Carbon::createFromFormat('Y-m-d H:i:s', $nextSessionDate->format('Y-m-d') .' '.$this->{$nextSessionDay}, 'America/Chicago');
+            $startTime = Carbon::createFromFormat('Y-m-d H:i:s', $nextSessionDate->format('Y-m-d') .' '.$this->{$nextSessionDay}, $locationTimezone);
 
             // $startTime = Carbon::parse($this->{$today}, $timezone)->setTimezone('UTC');
             $endTime = $startTime->copy()->addMinutes($this->duration_time);
 
             $startTime = $startTime->copy()->subMinutes($this->duration_time);
 
-            \Log::info(json_encode($currentTime->toDateTimeString()));
-            \Log::info(json_encode($startTime->toDateTimeString()));
-            \Log::info(json_encode($endTime->toDateTimeString()));
-            \Log::info(json_encode($currentTime->diff($startTime)));
-
             if($currentTime->between($startTime, $endTime)) {
                 return 'In Progress';
             }
-
             // Calculate time until next session
             $timeUntilNextSession = $currentTime->diff($startTime);
-         
+
+            \Log::info(json_encode($timeUntilNextSession));
+
             if ($timeUntilNextSession->invert) {
                 for ($i = 1; $i <= 7; $i++) {
                     $nextDayIndex = ($nextClassDayIndex + $i) % 7; // ite1 = 2
@@ -108,12 +105,12 @@ class Session extends Model
                         break;
                     }
                 }
-                $nextSessionDate = $currentTime->copy()->addDays($daysToAdd); 
+                $nextSessionDate = $currentTime->copy()->addDays($daysToAdd);
                 $nextSessionDay = strtolower($nextSessionDate->format('l'));
-                $nextSessionDateTimeReadableFormat = Carbon::createFromFormat('H:i:s', $this->{$nextSessionDay})->setTime(12, 0, 0)->format('h:i A');
-                // $convertedTime = $nextSessionDateTimeReadableFormat->copy()->setTimezone($timezone)->format('h:i A');
+                $nextSessionDateTimeReadableFormat = Carbon::createFromFormat('H:i:s', $this->{$nextSessionDay}, $locationTimezone);
+                $convertedTime = $nextSessionDateTimeReadableFormat->copy()->setTimezone($timezone)->format('h:i A');
                 // Get the start time and end time for the current day
-                $startTime = Carbon::createFromFormat('Y-m-d H:i:s', $nextSessionDate->format('Y-m-d') .' '.$this->{$nextSessionDay});
+                $startTime = Carbon::createFromFormat('Y-m-d H:i:s', $nextSessionDate->format('Y-m-d') .' '.$this->{$nextSessionDay}, $locationTimezone);
                 
                 // $startTime = Carbon::parse($this->{$today}, $timezone)->setTimezone('UTC');
                 $endTime = $startTime->copy()->addMinutes($this->duration_time);
@@ -123,29 +120,41 @@ class Session extends Model
 
                 $days = $timeUntilNextSession->d;
 
-                if($days <= 1) {
-                    return "Next session starts tommorrow at {$nextSessionDateTimeReadableFormat} (CST)";
-                } else {
-                    return "Next session starts {$nextSessionDay} at {$nextSessionDateTimeReadableFormat} (CST)";
-                }
-
-            } else {
-                $nextSessionDateTimeReadableFormat = Carbon::createFromFormat('H:i:s', $this->{$nextSessionDay})->setTime(12, 0, 0)->format('h:i A');
-                // $convertedTime = $nextSessionDateTimeReadableFormat->copy()->setTimezone($timezone)->format('h:i A');
                 $hours = $timeUntilNextSession->h + ($timeUntilNextSession->d * 24);
-                if ($hours < 24 && $hours >= 0) {
+
+                if (($hours < 24 && $hours >= 0) && $days == 0) {
                     if($hours == 0) {
                         return "Next session starts in {$timeUntilNextSession->i} minutues.";
                     } else {
                         return "Next session starts in {$hours} hours.";
                     }
-                    
-                }elseif ($hours >= 24 && $hours <= 48) {
+                }elseif ($days < 2) {
                     $days = $timeUntilNextSession->days;
-                    return "Next session starts tommorrow at {$nextSessionDateTimeReadableFormat} (CST)";
-                } elseif ($hours >= 24) {
+                    return "Next session starts tommorrow at {$convertedTime}";
+                } elseif ($days >= 2) {
                     $days = $timeUntilNextSession->days;
-                    return "Next session starts {$nextSessionDay} at {$nextSessionDateTimeReadableFormat} (CST)";
+                    return "Next session starts {$nextSessionDay} at {$convertedTime}";
+                } else {
+                    return "The next session has already started.";
+                }
+
+            } else {
+                $nextSessionDateTimeReadableFormat = Carbon::createFromFormat('H:i:s', $this->{$nextSessionDay}, $locationTimezone);
+                $convertedTime = $nextSessionDateTimeReadableFormat->copy()->setTimezone($timezone)->format('h:i A');
+                $days = $timeUntilNextSession->d;
+                $hours = $timeUntilNextSession->h + ($timeUntilNextSession->d * 24);
+                if (($hours < 24 && $hours >= 0) && $days == 0) {
+                    if($hours == 0) {
+                        return "Next session starts in {$timeUntilNextSession->i} minutues.";
+                    } else {
+                        return "Next session starts in {$hours} hours.";
+                    }
+                }elseif ($days < 2) {
+                    $days = $timeUntilNextSession->days;
+                    return "Next session starts tommorrow at {$convertedTime}";
+                } elseif ($days >= 2) {
+                    $days = $timeUntilNextSession->days;
+                    return "Next session starts {$nextSessionDay} at {$convertedTime}";
                 } else {
                     return "The next session has already started.";
                 }

@@ -24,6 +24,7 @@ return new class extends Migration
             $table->longText('website')->nullable();
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
+            $table->string('timezone')->nullable();
             $table->foreignId('vendor_id')->nullable()->constrained();
             $table->longText('meta_data')->nullable();
             $table->boolean('is_new')->default(1);
