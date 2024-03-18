@@ -26,6 +26,7 @@ class LocationResource extends JsonResource
             'country' => $this->country,
             'postalCode' => $this->postal_code,
             'website' => $this->website,
+            'timezone' => $this->timezone
         ];
         return $location;
     }

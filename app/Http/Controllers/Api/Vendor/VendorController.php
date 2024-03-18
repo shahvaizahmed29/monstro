@@ -173,9 +173,11 @@ class VendorController extends BaseController
                 return $this->sendError("No user found for this location", [], 400);
             }
 
+            if (!Hash::check($request->current_password, $user->password)) {
+                return $this->sendError('The current password is incorrect.', [], 400);
+            }
             $user->password = bcrypt($request->password);
             $user->save();
-
             $location->is_new = false;
             $location->save();
 
@@ -185,5 +187,4 @@ class VendorController extends BaseController
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
-
 }

@@ -27,6 +27,7 @@ class LocationResource extends JsonResource
             'website' => $this->website,
             'email' => $this->email,
             'phone' => $this->phone,
+            'timezone' => $this->timezone,
             'metaData' => $this->meta_data,
             'createdAt' => $this->created_at,
             'updatedAt' => $this->updated_at,
