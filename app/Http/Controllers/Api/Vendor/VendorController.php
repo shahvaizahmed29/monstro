@@ -173,7 +173,7 @@ class VendorController extends BaseController
                 return $this->sendError("No user found for this location", [], 400);
             }
 
-            if (!Hash::check($request->current_password, $user->password)) {
+            if (!Hash::check($request->currentPassword, $user->password)) {
                 return $this->sendError('The current password is incorrect.', [], 400);
             }
             $user->password = bcrypt($request->password);
