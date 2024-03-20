@@ -335,8 +335,8 @@ class ProgramController extends BaseController
                     );
                 }
             }
-
             DB::commit();
+            $programLevel = ProgramLevel::with('sessions')->where('id', $programLevel->id)->first();
             return $this->sendResponse(new ProgramLevelResource($programLevel), 'Program level updated successfully.');
         }catch (Exception $e) {
             DB::rollBack();
