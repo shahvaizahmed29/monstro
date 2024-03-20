@@ -81,7 +81,7 @@ class ProgramController extends BaseController
     public function getProgramById($id){
         try{
             $location = request()->location;
-            $program = Program::with(['programLevels','programLevels.session'])->where('id',$id)->where('location_id', $location->id)->first();
+            $program = Program::with(['programLevels','programLevels.sessions'])->where('id',$id)->where('location_id', $location->id)->first();
 
             if(!$program){
                 return $this->sendError("Program doesnot exist", [], 400);
