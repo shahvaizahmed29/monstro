@@ -124,7 +124,7 @@ class Session extends Model
                     if($hours == 0) {
                         return "Next session starts in {$timeUntilNextSession->i} minutues.";
                     } else {
-                        return "Next session starts in {$hours} hours.";
+                        return "Next session starts in {$hours} hours and {$timeUntilNextSession->i} minutes.";
                     }
                 }elseif ($days < 2) {
                     $days = $timeUntilNextSession->days;
@@ -145,7 +145,7 @@ class Session extends Model
                     if($hours == 0) {
                         return "Next session starts in {$timeUntilNextSession->i} minutues.";
                     } else {
-                        return "Next session starts in {$hours} hours.";
+                        return "Next session starts in {$hours} hours and {$timeUntilNextSession->i} minutes.";
                     }
                 }elseif ($days < 2) {
                     $days = $timeUntilNextSession->days;
