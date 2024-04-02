@@ -107,23 +107,44 @@ class VendorController extends BaseController
         }
     }
 
-    public function vendorUpdatePassword(PasswordUpdateRequest $request, $id){
+    public function vendorUpdatePassword(PasswordUpdateRequest $request){
         try {
-            $user = User::find($id);;
-            
-            if (!$user || !Hash::check($request->password, $user->password)) {
-                return $this->sendError('Incorrect old password.', [], 400);
+            $location = request()->location;
+            $location = Location::find($location->id);
+            $user = User::find($location->vendor->user->id);
+            if(!$user){
+                return $this->sendError("No user found for this location", [], 400);
             }
-
-            $new_password = $request->input('new_password');
-            $user->password = bcrypt($new_password);
+            if (!Hash::check($request->currentPassword, $user->password)) {
+                return $this->sendError('The current password is incorrect.', [], 400);
+            }
+            $user->password = bcrypt($request->password);
             $user->save();
-
-            return $this->sendResponse('Success', 'Password set successfully');
+            return $this->sendResponse('Success', 'Password updated successfully');
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
+
+    public function passwordReset(Request $request){
+        try{
+            $location = request()->location;
+            $location = Location::find($location->id);
+            $user = User::find($location->vendor->user->id);
+
+            if(!$location->is_new){
+                return $this->sendError("Password already set", [], 400);
+            }
+            $user->password = bcrypt($request->password);
+            $user->save();
+            $location->is_new = false;
+            $location->save();
+            return $this->sendResponse('Success', 'Password set successfully');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
 
     public function getProfile(){
         try {
@@ -158,32 +179,6 @@ class VendorController extends BaseController
             $user->vendor->save();
             return $this->sendResponse(new GetVendorProfile($user), 200);
         } catch (Exception $error) {
-            return $this->sendError($error->getMessage(), [], 500);
-        }
-    }
-
-    public function passwordReset(Request $request){
-        try{
-            $location = request()->location;
-            $location = Location::find($location->id);
-
-            $user = User::find($location->vendor->user->id);
-
-            if(!$user){
-                return $this->sendError("No user found for this location", [], 400);
-            }
-
-            if (!Hash::check($request->currentPassword, $user->password)) {
-                return $this->sendError('The current password is incorrect.', [], 400);
-            }
-            $user->password = bcrypt($request->password);
-            $user->save();
-            $location->is_new = false;
-            $location->save();
-
-            return $this->sendResponse('Success', 'Password updated successfully');
-
-        }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
