@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Api\Vendor;
 
+use App\Http\Controllers\BaseController;
 use App\Models\Reward;
 use App\Http\Resources\Vendor\RewardResource;
+use Exception;
 use Illuminate\Http\Request;
 
 

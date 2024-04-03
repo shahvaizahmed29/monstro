@@ -121,6 +121,7 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
 });
 
 Route::post('image-update/{user_id}', [App\Http\Controllers\PublicController::class, 'imageUpdate'])->name('image.update');
+Route::post('member-image-update/{memberId}', [App\Http\Controllers\PublicController::class, 'memberImageUpdate'])->name('member.image.update');
 
 Route::get('vendor/{vendor_id}/locations' , [\App\Http\Controllers\Api\Vendor\LocationsController::class , 'vendorLocations'])->name('vendor.locations');
 Route::put('vendor/{vendor_id}/update-passowrd',[App\Http\Controllers\Api\Vendor\VendorController::class, 'updatePassword'])->name('update.passowrd');

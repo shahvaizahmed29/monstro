@@ -3,13 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ImageUploadRequest;
-use App\Http\Resources\Vendor\MemberResource;
-use App\Http\Resources\Vendor\VendorResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use App\Services\TimezoneService;
 use App\Models\Location;
+use App\Models\Member;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Setting;
@@ -84,12 +83,28 @@ class PublicController extends BaseController
             if($user->hasRole(\App\Models\User::VENDOR)) {
                 $user->vendor->logo = $uploadedFileName;
                 $user->vendor->save();
-                return $this->sendResponse(new VendorResource($user->vendor), 'Image updated successfully.');
             }else{
                 $user->member->avatar = $uploadedFileName;
                 $user->member->save();
-                return $this->sendResponse(new MemberResource($user->member), 'Image updated successfully.');
             }
+            
+            return $this->sendResponse('Success', 'Image updated successfully.');
+        }catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function memberImageUpdate(ImageUploadRequest $request, $memberId){
+        try{
+            $img = $request->file('image');
+            $imgPath = 'user-images/';
+            $member = Member::find($memberId);
+
+            $uploadedFileName = app('uploadImage')($memberId, $img, $imgPath);
+            $member->avatar = $uploadedFileName;
+            $member->save();
+            
+            return $this->sendResponse('Success', 'Image updated successfully.');
         }catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
