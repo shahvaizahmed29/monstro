@@ -111,6 +111,7 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::post('assign-program-level/{programLevelId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'assignProgramLevelToMember'])->name('assign.program.level.to.member');
     Route::post('assign-program/{programId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'assignProgramToMember'])->name('assign.program.to.member');
 
+    Route::put('member/{memberId}/profile-update', [App\Http\Controllers\Api\Vendor\MemberController::class, 'profileUpdate'])->name('member.profile.update');
     Route::get('member/{memberId}/get-programs', [App\Http\Controllers\Api\Vendor\MemberController::class, 'getMemberPrograms'])->name('get.member.programs');
     Route::get('member/{memberId}/get-programs-not-enrolled', [App\Http\Controllers\Api\Vendor\MemberController::class, 'getProgramsForMemberNotEnrolled'])->name('get.member.programs.NotEnrolled');
     Route::get('program-level/program/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramLevels'])->name('get.program.levels');

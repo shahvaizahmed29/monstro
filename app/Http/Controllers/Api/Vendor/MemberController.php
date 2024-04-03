@@ -66,6 +66,25 @@ class MemberController extends BaseController
         return $this->sendResponse($data, 'Members with details for the location.');
     }
 
+    public function profileUpdate(Request $request, $member_id){
+        try{
+            $member = Member::find($member_id);
+
+            if(!$member){
+                return $this->sendError('Member does not exist.', [], 400);
+            }
+            
+            $member->name = $request->name;
+            $member->email = $request->email;
+            $member->phone = $request->phone;
+            $member->save();
+            
+            return $this->sendResponse(new MemberResource($member), 'Members updated successfully.');            
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
     public function getMemberDetails($member_id){
         try{
             $location = request()->location;
