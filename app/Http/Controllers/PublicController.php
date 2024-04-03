@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ImageUploadRequest;
+use App\Http\Resources\Vendor\MemberResource;
+use App\Http\Resources\Vendor\VendorResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -82,12 +84,12 @@ class PublicController extends BaseController
             if($user->hasRole(\App\Models\User::VENDOR)) {
                 $user->vendor->logo = $uploadedFileName;
                 $user->vendor->save();
+                return $this->sendResponse(new VendorResource($user->vendor), 'Image updated successfully.');
             }else{
                 $user->member->avatar = $uploadedFileName;
                 $user->member->save();
+                return $this->sendResponse(new MemberResource($user->member), 'Image updated successfully.');
             }
-            
-            return $this->sendResponse('Success', 'Image updated successfully.');
         }catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
