@@ -14,8 +14,7 @@ class Achievement extends Model
         'program_id',
         'name',
         'badge',
-        'reward_points',
-        'parent_id',
+        'reward_points'
     ];
 
     public function program(){
@@ -28,6 +27,10 @@ class Achievement extends Model
 
     public function members(){
         return $this->belongsToMany(Member::class, 'member_achievements', 'achievement_id', 'member_id');
+    }
+
+    public function rewards(){
+        return $this->hasMany(Reward::class);
     }
 
 }

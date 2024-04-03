@@ -30,7 +30,7 @@ class Program extends Model
     public function achievements(){
         return $this->hasMany(Achievement::class);
     }
-    
+
     public function members(){
         return $this->belongsToMany(Location::class, 'member_programs', 'program_id', 'member_id');
     }

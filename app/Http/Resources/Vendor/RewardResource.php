@@ -16,15 +16,17 @@ class RewardResource extends JsonResource
     {
         $reward = [
             'id' => $this->id,
-            'pointsClaimed' => $this->points_claimed,
-            'dateClaimed' => $this->date_claimed,
-            'createdAt' => $this->created_at,
-            'updatedAt' => $this->updated_at,
-            'deletedAt' => $this->deleted_at,
-            'member' => $this->whenLoaded('member', function () {
-                return MemberResource::collection($this->member);
+            'name' => $this->name,
+            'description' => $this->description,
+            'image' => $this->image,
+            'type' => $this->type,
+            'limit_per_member' => $this->limit_per_member,
+            'reward_points' => $this->reward_points,
+            'achievement' => $this->whenLoaded('achievement', function () {
+                return AchievementResource::collection($this->achievement);
             }),
         ];
-        return $reward;
+
+        return $achievement;
     }
 }

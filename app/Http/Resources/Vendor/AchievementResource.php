@@ -21,13 +21,8 @@ class AchievementResource extends JsonResource
             'programName' => $program->name,
             'name' => $this->name,
             'badge' => $this->badge,
-            'rewardPoints' => $this->reward_points,
-            'parentId' => $this->parent_id,
-            'createdAt' => $this->created_at,
-            'updatedAt' => $this->updated_at,
-            'action' => $this->whenLoaded('actions', function () {
-                return ActionResource::collection($this->actions);
-            }),
+            'rewardPoints' => $this->reward_points,            
+            'action' => $this->actions,
             'members' => $this->whenLoaded('members', function () {
                 return MemberResource::collection($this->members);
             }),

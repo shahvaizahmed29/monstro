@@ -86,6 +86,8 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
         Route::delete('{achievementId}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'delete'])->name('delete.achievement');
     });
 
+    Route::resource('rewards', App\Http\Controllers\Api\Vendor\RewardController::class);
+
     Route::prefix('location')->group(function () {
         Route::get('', [App\Http\Controllers\Api\Vendor\LocationsController::class, 'checkLocationStatus'])->name('check.location.status');
         Route::get('{locationId}', [App\Http\Controllers\Api\Vendor\LocationsController::class, 'getLocatonById'])->name('get.location.by.id');

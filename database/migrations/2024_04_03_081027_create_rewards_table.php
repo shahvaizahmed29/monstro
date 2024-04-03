@@ -11,12 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('achievements', function (Blueprint $table) {
+        Schema::create('rewards', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('program_id');
             $table->string('name');
-            $table->string('badge')->nullable();
-            $table->double('reward_points')->nullable();
+            $table->string('description');
+            $table->string('image')->nullable();
+            $table->tinyInteger('type');
+            $table->unsignedInteger('limit_per_member')->default(1);
+            $table->foreignId('achievement_id')->constrained()->onDelete('cascade')->nullable();
+            $table->unsignedBigInteger('reward_points')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -27,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('achievements');
+        Schema::dropIfExists('rewards');
     }
 };

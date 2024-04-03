@@ -2,85 +2,84 @@
 
 namespace App\Http\Controllers\Api\Vendor;
 
-use App\Http\Controllers\BaseController;
-use App\Http\Resources\Vendor\MemberResource;
-use App\Models\Member;
-use App\Models\MemberRewardClaim;
 use App\Models\Reward;
-use Exception;
+use App\Http\Resources\Vendor\RewardResource;
+use Illuminate\Http\Request;
+
 
 class RewardController extends BaseController
 {
     public function index(){
         try{
-            $members = Member::with(['rewards' => function ($query) {
-                if (request()->filled('type') && request()->type == 0) {
-                    $query->withTrashed()->whereNotNull('deleted_at');
+            $rewards = Reward::with(['achievement']);
+            if(isset(request()->type)) {
+                if(request()->type == 0) {
+                    $rewards = $rewards->whereNotNull('deleted_at')->withTrashed();
                 }
-            }])->whereHas('rewards', function ($query) {
-                if (request()->filled('type') && request()->type == 0) {
-                    $query->withTrashed()->whereNotNull('deleted_at');
-                }
-            })->paginate(25);
-
-            if ($members->isEmpty()) {
-                return $this->sendError('No member rewards found', [], 400);
             }
-
+            $rewards = $rewards->paginate(25);
             $data = [
-                'members' => MemberResource::collection($members),
+                'rewards' => RewardResource::collection($rewards),
                 'pagination' => [
-                    'current_page' => $members->currentPage(),
-                    'per_page' => $members->perPage(),
-                    'total' => $members->total(),
-                    'prev_page_url' => $members->previousPageUrl(),
-                    'next_page_url' => $members->nextPageUrl(),
-                    'first_page_url' => $members->url(1),
-                    'last_page_url' => $members->url($members->lastPage()),
+                    'current_page' => $rewards->currentPage(),
+                    'per_page' => $rewards->perPage(),
+                    'total' => $rewards->total(),
+                    'prev_page_url' => $rewards->previousPageUrl(),
+                    'next_page_url' => $rewards->nextPageUrl(),
+                    'first_page_url' => $rewards->url(1),
+                    'last_page_url' => $rewards->url($rewards->lastPage()),
                 ],
             ];
-
-            return $this->sendResponse($data, 'Members with rewards fetched successfully');
-
+            return $this->sendResponse($data, 'Rewards fetched successfully');
         }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
-    public function getMemberRewards($memberId){
+    public function create(Request $request){
         try{
-            $member = Member::with(['rewards'])->where('id', $memberId)->first();
-    
-            if (!$member) {
-                return $this->sendError('No member with rewards found', [], 400);
-            }
-    
-            return $this->sendResponse(new MemberResource($member), 'Member with rewards fetched successfully');
-        } catch(Exception $error){
-            return $this->sendError($error->getMessage(), [], 500);
-        }
-    }    
-
-    public function delete($id){
-        try{
-            $reward = MemberRewardClaim::find($id);
-
-            if(!$reward){
-                return $this->sendError('Reward does not exist', [], 400);
-            }
-
-            $reward->delete();
-            return $this->sendResponse('Success', 'Reward deleted successfully');
-        } catch(Exception $error){
+            $reward = Reward::create($request->all());
+            return $this->sendResponse(new RewardResource($reward), 'Reward created successfully');
+        }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
-    public function restore($id){
+    public function show($id){
         try{
-            MemberRewardClaim::withTrashed()->where('id', $id)->update(['deleted_at' => null]);
-            return $this->sendResponse('Success', 'Reward restore successfully');
-        } catch(Exception $error){
+            $reward = Reward::with(['achievement'])->find($id);
+            if(!$reward){
+                return $this->sendError('Reward not found', [], 400);
+            }
+            return $this->sendResponse(new RewardResource($reward), 'Reward fetched successfully');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function update(Request $request, Reward $reward){
+        try{
+            $reward->update([
+                'name' => $request->name,
+                'description' => $request->description,
+                'image' => $request->image,
+                'limit_per_member' => $request->limit_per_member
+            ]);
+            return $this->sendResponse(new RewardResource($reward), 'Reward updated successfully');
+        }catch(Exception $error){
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function delete($id){
+        try{
+            $reward = Reward::find($id);
+            if(!$reward){
+                return $this->sendError('Reward not found', [], 400);
+            }
+            $reward->delete();
+            return $this->sendResponse('Success', 'Reward deleted successfully');
+        }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
         }
     }

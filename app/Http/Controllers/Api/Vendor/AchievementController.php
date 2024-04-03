@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Vendor;
 use App\Http\Controllers\BaseController;
 use App\Http\Resources\Vendor\AchievementResource;
 use App\Models\Achievement;
+use App\Models\Reward;
 use App\Models\AchievementActions;
 use Exception;
 use Illuminate\Http\Request;
@@ -93,6 +94,7 @@ class AchievementController extends BaseController
 
     public function delete($id){
         try{
+            DB::beginTransaction();
             $achievement = Achievement::find($id);
 
             if(!$achievement){
@@ -101,8 +103,11 @@ class AchievementController extends BaseController
 
             $achievement->delete();
 
+            Reward::where('achievement_id', $achievement->id)->delete();
+            DB::commit();
             return $this->sendResponse('Success', 'Achievement deleted successfully');
         }catch(Exception $error){
+            DB::rollBack();
             return $this->sendError($error->getMessage(), [], 500);
         }
     }

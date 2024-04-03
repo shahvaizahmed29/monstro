@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Reward extends Model
+{
+    use HasFactory;
+    
+    const ACHIEVEMENT = 'achievement';
+    const POINTS = 'point';
+
+    protected $fillable = [
+        'name',
+        'description',
+        'image',
+        'type',
+        'limit_per_member',
+        'achievement_id',
+        'reward_points'
+    ];
+
+    public function achievement(){
+        return $this->belongsTo(Achievement::class);
+    }
+
+    public function members(){
+        return $this->belongsToMany(Member::class, 'member_reward_claim', 'achievement_id', 'member_id');
+    }
+
+}
