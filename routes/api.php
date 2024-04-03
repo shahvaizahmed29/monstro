@@ -87,6 +87,7 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     });
 
     Route::resource('rewards', App\Http\Controllers\Api\Vendor\RewardController::class);
+    Route::post('rewards/{rewardId}/update', [App\Http\Controllers\Api\Vendor\RewardController::class, 'update'])->name('update.reward');
 
     Route::prefix('location')->group(function () {
         Route::get('', [App\Http\Controllers\Api\Vendor\LocationsController::class, 'checkLocationStatus'])->name('check.location.status');

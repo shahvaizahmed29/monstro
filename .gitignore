@@ -4,6 +4,7 @@
 /public/hot
 /public/storage
 /public/user-images
+/public/reward-images
 /public/program-images
 /storage/*.key
 /vendor
