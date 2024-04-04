@@ -569,6 +569,27 @@ class ProgramController extends BaseController
         }
     }
     
+    public function programCompletion($programId, $memberId){
+        try{
+            $sessionIds = Session::where('program_id', $programId)
+                ->where('status', Session::ACTIVE)
+                ->pluck('id')
+                ->toArray();
+
+            Reservation::whereIn('session_id', $sessionIds)
+                ->where('member_id', $memberId)
+                ->where('status', Reservation::ACTIVE)
+                ->update([
+                    'status' => Reservation::COMPLETED
+                ]);
+
+            return $this->sendResponse("Success", "The program for the member has been completed successfully");
+        } catch (Exception $e) {
+            Log::info('===== ProgramController - programCompletion() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
     
     public function levelCompletionReward($member_id){
         // Finding a achivement action related to defined no of level cleared
