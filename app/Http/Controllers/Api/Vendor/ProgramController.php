@@ -551,6 +551,24 @@ class ProgramController extends BaseController
             return $this->sendError($e->getMessage(), [], 500);
         }
     }
+
+    public function unAssignMemberFromProgram($programId, $memberId){
+        try{
+            $sessionIds = Session::where('program_id', $programId)
+                ->pluck('id')->toArray();
+    
+            $reservations = Reservation::whereIn('session_id', $sessionIds)
+                ->where('member_id', $memberId)
+                ->delete();
+    
+            return $this->sendResponse("Success", "The member has been removed from the program successfully");
+        } catch (Exception $e) {
+            Log::info('===== ProgramController - unAssignProgramLevel() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+    
     
     public function levelCompletionReward($member_id){
         // Finding a achivement action related to defined no of level cleared
