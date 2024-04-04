@@ -20,7 +20,7 @@ class NewRewardResource extends JsonResource
             'description' => $this->description,
             'image' => $this->image,
             'type' => $this->type,
-            'limitPer<ember' => $this->limit_per_member,
+            'limitPerMember' => $this->limit_per_member,
             'rewardPoints' => $this->reward_points,
             'achievement' => $this->whenLoaded('achievement', function () {
                 return new AchievementResource($this->achievement);
