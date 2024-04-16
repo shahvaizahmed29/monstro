@@ -91,7 +91,7 @@ class RewardController extends BaseController
         try {
 
             $reward = Reward::find($id);
-            
+
             if (!$reward) {
                 return $this->sendError('Reward not found', [], 400);
             }
@@ -106,7 +106,7 @@ class RewardController extends BaseController
             $reward->update([
                 'name' => $request->name ?? $reward->name,
                 'description' => $request->description ?? $reward->description,
-                'image' => ($uploadedFileName) ? $uploadedFileName : $request->image,
+                'image' => ($uploadedFileName) ? $uploadedFileName : $reward->image,
                 'limit_per_member' => $request->limit_per_member ?? $reward->limit_per_member,
             ]);
 

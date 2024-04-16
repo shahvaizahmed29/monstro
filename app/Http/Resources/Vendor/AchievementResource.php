@@ -23,6 +23,7 @@ class AchievementResource extends JsonResource
             'badge' => $this->badge,
             'rewardPoints' => $this->reward_points,            
             'action' => $this->actions,
+            'image' => $this->image,
             'members' => $this->whenLoaded('members', function () {
                 return MemberResource::collection($this->members);
             }),

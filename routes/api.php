@@ -82,7 +82,7 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
         Route::get('', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'index'])->name('achievement.all');
         Route::post('create', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'create'])->name('create.achievement');
         Route::get('{achievementId}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'getAchievement'])->name('get.achievement');
-        Route::put('{achievement}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'update'])->name('update.achievement');
+        Route::post('{achievement}/update', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'update'])->name('update.achievement');
         Route::delete('{achievementId}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'delete'])->name('delete.achievement');
     });
 

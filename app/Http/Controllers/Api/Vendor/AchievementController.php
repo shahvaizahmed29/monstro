@@ -76,12 +76,20 @@ class AchievementController extends BaseController
 
     public function update(Request $request, Achievement $achievement){
         try{
+            $uploadedFileName = null;
+            if ($request->hasFile('image')) {
+                $img = $request->file('image');
+                $imgPath = 'reward-images/';
+                $uploadedFileName = app('uploadImage')(0, $img, $imgPath);
+            }
+
             DB::beginTransaction();
             $achievement->update([
                 'name' => $request->name,
-                'badge' => $request->badge,
-                'reward_points' => $request->rewardPoints,
-                'action_count' => $request->actionCount
+                'badge' => $request->badge ?? $achievement->badge,
+                'reward_points' => $request->rewardPoints ?? $achievement->reward_points,
+                'image' => ($uploadedFileName) ? $uploadedFileName : $achievement->image,
+                'action_count' => $request->actionCount ?? $achievement->action_count
             ]);
 
             DB::commit();

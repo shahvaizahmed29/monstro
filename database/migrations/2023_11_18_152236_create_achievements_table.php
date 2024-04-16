@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('program_id');
             $table->string('name');
+            $table->string('image')->nullable();
             $table->string('badge')->nullable();
             $table->double('reward_points')->nullable();
             $table->timestamps();

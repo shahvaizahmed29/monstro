@@ -14,7 +14,8 @@ class Achievement extends Model
         'program_id',
         'name',
         'badge',
-        'reward_points'
+        'reward_points',
+        'image'
     ];
 
     public function program(){
