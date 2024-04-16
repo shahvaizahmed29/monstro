@@ -110,6 +110,8 @@ class RewardController extends BaseController
                 'limit_per_member' => $request->limit_per_member ?? $reward->limit_per_member,
             ]);
 
+            $reward = Reward::with('achievement')->where('id', $reward->id)->first();
+
             return $this->sendResponse(new NewRewardResource($reward), 'Reward updated successfully');
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
