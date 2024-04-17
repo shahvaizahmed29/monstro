@@ -8,7 +8,9 @@ use App\Http\Resources\Member\ClaimedRewardResource;
 use App\Http\Resources\Member\GetMemberProfile;
 use App\Http\Resources\Member\MemberResource;
 use App\Http\Resources\Member\ProgramResource;
+use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Vendor\AchievementResource;
+use App\Http\Resources\Vendor\VendorResource;
 use App\Models\Achievement;
 use App\Models\Location;
 use App\Models\Member;
@@ -47,6 +49,65 @@ class MemberController extends BaseController
             return $this->sendResponse('Success', 'User updated successfully.');
         }catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getMemberEnrolledPrograms($vendorId){
+        try{
+            $reservations = Reservation::with(['session.programLevel.program'])->whereHas('session.programLevel.program.location', function ($query) use ($vendorId){
+                $query->where('vendor_id', $vendorId);
+            })
+                ->where('member_id', auth()->user()->id)
+                ->where('status', Reservation::ACTIVE)
+                ->paginate(25);
+            
+            $programs = $reservations->pluck('session.programLevel.program')->unique('id');    
+
+            $data = [
+                'enrolledPrograms' => ProgramResource::collection($programs),
+                'pagination' => [
+                    'current_page' => $reservations->currentPage(),
+                    'per_page' => $reservations->perPage(),
+                    'total' => $reservations->total(),
+                    'prev_page_url' => $reservations->previousPageUrl(),
+                    'next_page_url' => $reservations->nextPageUrl(),
+                    'first_page_url' => $reservations->url(1),
+                    'last_page_url' => $reservations->url($reservations->lastPage()),
+                ],
+            ];
+
+            return $this->sendResponse($data, 'Member enrolled programs fetched successfully');
+        }catch(Exception $error){
+            return $error->getMessage();
+        }
+    }
+
+    public function getMemberActiveVendors(){
+        try{
+            $reservations = Reservation::with(['session.programLevel.program.location.vendor'])
+                ->where('member_id', auth()->user()->id)
+                ->where('status', Reservation::ACTIVE)
+                ->paginate(25);
+
+                $vendors = $reservations->pluck('session.programLevel.program.location.vendor')->unique('id');    
+
+                $data = [
+                    'vendors' => VendorResource::collection($vendors),
+                    'pagination' => [
+                        'current_page' => $reservations->currentPage(),
+                        'per_page' => $reservations->perPage(),
+                        'total' => $reservations->total(),
+                        'prev_page_url' => $reservations->previousPageUrl(),
+                        'next_page_url' => $reservations->nextPageUrl(),
+                        'first_page_url' => $reservations->url(1),
+                        'last_page_url' => $reservations->url($reservations->lastPage()),
+                    ],
+                ];
+    
+                return $this->sendResponse($data, 'Member enrolled programs fetched successfully');
+
+        }catch(Exception $error){
+            return $error->getMessage();
         }
     }
 
