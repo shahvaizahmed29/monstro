@@ -10,8 +10,8 @@ class Reward extends Model
 {
     use HasFactory, SoftDeletes;
     
-    const ACHIEVEMENT = 'achievement';
-    const POINTS = 'point';
+    const ACHIEVEMENT = 1;
+    const POINTS = 2;
 
     protected $fillable = [
         'name',

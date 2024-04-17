@@ -9,6 +9,7 @@ use App\Http\Resources\Member\GetMemberProfile;
 use App\Http\Resources\Member\MemberResource;
 use App\Http\Resources\Member\ProgramResource;
 use App\Http\Resources\Vendor\AchievementResource;
+use App\Http\Resources\Vendor\RewardResource;
 use App\Models\Achievement;
 use App\Models\Location;
 use App\Models\Member;
@@ -16,6 +17,7 @@ use App\Models\MemberRewardClaim;
 use App\Models\Program;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Models\Reward;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -71,6 +73,24 @@ class MemberController extends BaseController
         }catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
+    }
+
+    public function getTradableRewards(){
+        $rewards = Reward::where('type', Reward::POINTS)->with("achievement")->paginate(25);
+
+        $data = [
+            'rewards' => RewardResource::collection($rewards),
+            'pagination' => [
+                'current_page' => $rewards->currentPage(),
+                'per_page' => $rewards->perPage(),
+                'total' => $rewards->total(),
+                'prev_page_url' => $rewards->previousPageUrl(),
+                'next_page_url' => $rewards->nextPageUrl(),
+                'first_page_url' => $rewards->url(1),
+                'last_page_url' => $rewards->url($rewards->lastPage()),
+            ],
+        ];
+        return $this->sendResponse($data, 'Rewards List');
     }
 
     public function getMemberAchievements(){

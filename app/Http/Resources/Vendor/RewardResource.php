@@ -27,6 +27,6 @@ class RewardResource extends JsonResource
             }),
         ];
 
-        return $achievement;
+        return $reward;
     }
 }
