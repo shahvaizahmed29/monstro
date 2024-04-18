@@ -61,10 +61,8 @@ class MemberController extends BaseController
                 ->where('status', Reservation::ACTIVE)
                 ->paginate(25);
             
-            $programs = $reservations->pluck('session.programLevel.program')->unique('id');    
-
             $data = [
-                'enrolledPrograms' => ProgramResource::collection($programs),
+                'reservations' => ReservationResource::collection($reservations),
                 'pagination' => [
                     'current_page' => $reservations->currentPage(),
                     'per_page' => $reservations->perPage(),
