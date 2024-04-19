@@ -54,10 +54,15 @@ class MemberController extends BaseController
 
     public function getMemberEnrolledPrograms($vendorId){
         try{
-            $reservations = Reservation::with(['session.programLevel.program'])->whereHas('session.programLevel.program.location', function ($query) use ($vendorId){
+            $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])
+            ->whereHas('session.programLevel', function ($query) {
+                return $query->whereNull('deleted_at');
+            })->whereHas('session.program', function ($query) {
+                return $query->whereNull('deleted_at');
+            })->whereHas('session.programLevel.program.location', function ($query) use ($vendorId){
                 $query->where('vendor_id', $vendorId);
             })
-                ->where('member_id', auth()->user()->id)
+                ->where('member_id', auth()->user()->member->id)
                 ->where('status', Reservation::ACTIVE)
                 ->paginate(25);
             
@@ -83,7 +88,7 @@ class MemberController extends BaseController
     public function getMemberActiveVendors(){
         try{
             $reservations = Reservation::with(['session.programLevel.program.location.vendor'])
-                ->where('member_id', auth()->user()->id)
+                ->where('member_id', auth()->user()->member->id)
                 ->where('status', Reservation::ACTIVE)
                 ->paginate(25);
 
