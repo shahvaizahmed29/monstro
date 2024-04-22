@@ -40,6 +40,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('current-points', [App\Http\Controllers\Api\Member\MemberController::class, 'getCurrentPoints'])->name('get.current.points');
         Route::get('get-programs-by-locations', [App\Http\Controllers\Api\Member\MemberController::class, 'getProgramByLocations'])->name('get.programs.by.location');
         Route::post('enroll-in-program/{programId}', [App\Http\Controllers\Api\Member\MemberController::class, 'enrollInProgram'])->name('enroll.in.program');
+        Route::get('enrolled-programs/vendor/{vendorId}', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberEnrolledPrograms'])->name('get.member.enrolled.programs');
+        Route::get('active-vendors', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberActiveVendors'])->name('get.member.active.vendors');
+        Route::get('upcoming-classes', [App\Http\Controllers\Api\Member\ReservationController::class, 'memberUpcomingClasses'])->name('get.member.upcoming.classes');
     });
 
     //==================================================================================================================================================================================
