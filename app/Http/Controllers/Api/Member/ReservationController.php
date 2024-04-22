@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Models\Reservation;
 use App\Models\CheckIn;
 use App\Http\Controllers\BaseController;
+use App\Http\Resources\CustomReservationResource;
 use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Member\CheckInResource;
 use App\Http\Resources\Vendor\MeetingResource;
@@ -97,55 +98,34 @@ class ReservationController extends BaseController
         return $this->sendResponse(new ReservationResource($reservation), 'Reservations.');
     }
 
-    // public function memberUpcomingClasses(){
-    //     try {
-    //         $dayName = strtolower(Carbon::now()->format('l'));
-
-    //         $reservations = Reservation::where('member_id', auth()->user()->member->id)
-    //             ->with(['session.programLevel.program'])
-    //             ->whereHas('session', function ($query) use ($dayName){
-    //                 $query->whereDate('start_date', '>=', Carbon::today());
-    //                 $query->orderBy('start_date', 'ASC');
-    //                 $query->orderBy($dayName, 'ASC');
-    //             })
-    //             ->where('status', Reservation::ACTIVE)
-    //             ->get();
-    
-    //         return $this->sendResponse(ReservationResource::collection($reservations), 'Member Upcoming Classes.');
-    //     } catch(Exception $e) {
-    //         return $this->sendError($e->getMessage(), [], 500);
-    //     }
-    // }
-
     public function memberUpcomingClasses(){
         try {
             $dayName = strtolower(Carbon::now()->format('l'));
-            
-            $reservations = Reservation::where('member_id', auth()->user()->member->id)
-                ->with(['session.programLevel.program'])
+
+            $reservations = Reservation::with(['session.programLevel.program.location'])
+                ->where('member_id', auth()->user()->member->id)
                 ->whereHas('session', function ($query) use ($dayName) {
-                    $query->whereDate('start_date', '>=', Carbon::today());
+                    $query->orderBy('start_date', 'ASC');
+                    $columnName = $dayName;
+                    $query->whereNotNull($columnName);
                 })
                 ->where('status', Reservation::ACTIVE)
                 ->get();
 
-            // Sort the reservations based on the day of the week
-            $reservations->sortBy(function ($reservation) use ($dayName) {
-                // Access the start_date of the session and get the day of the week
-                $sessionStartDate = $reservation->session->start_date;
-                $sessionDayName = strtolower(Carbon::parse($sessionStartDate)->format('l'));
-
-                // Compare the current day with the day of the session
-                if ($sessionDayName == $dayName) {
-                    return 0; // Keep the order unchanged
+            // Sort the reservations by the session start time for the specified day
+            $reservations = $reservations->sortBy(function ($reservation) use ($dayName) {
+                $session = $reservation->session; // Assuming each reservation has only one session
+                // Check if session exists before accessing it
+                if ($session) {
+                    return Carbon::parse($session->{$dayName});
                 } else {
-                    return ($sessionDayName < $dayName) ? -1 : 1; // Sort by ascending order of day of the week
+                    // Handle the case where there is no associated session
+                    return PHP_INT_MAX;
                 }
             });
-
-            return $this->sendResponse(ReservationResource::collection($reservations), 'Member Upcoming Classes.');
-
-        } catch(Exception $e) {
+    
+            return $this->sendResponse(CustomReservationResource::collection($reservations, $dayName), 'Member Upcoming Classes.');
+        } catch (Exception $e) {
             return $this->sendError($e->getMessage(), [], 500);
         }
     }
