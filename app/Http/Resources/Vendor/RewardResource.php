@@ -20,8 +20,8 @@ class RewardResource extends JsonResource
             'description' => $this->description,
             'image' => $this->image,
             'type' => $this->type,
-            'limit_per_member' => $this->limit_per_member,
-            'reward_points' => $this->reward_points,
+            'limitPerMember' => $this->limit_per_member,
+            'rewardPoints' => $this->reward_points,
             'achievement' => $this->whenLoaded('achievement', function () {
                 return AchievementResource::collection($this->achievement);
             }),

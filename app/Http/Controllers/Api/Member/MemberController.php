@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api\Member;
 
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\PasswordUpdateRequest;
+use App\Http\Resources\Member\AchievementRewardResource;
 use App\Http\Resources\Member\ClaimedRewardResource;
 use App\Http\Resources\Member\GetMemberProfile;
 use App\Http\Resources\Member\MemberResource;
 use App\Http\Resources\Member\ProgramResource;
 use App\Http\Resources\Vendor\AchievementResource;
 use App\Http\Resources\Vendor\RewardResource;
+use App\Mail\RewardsClaimed;
 use App\Models\Achievement;
 use App\Models\Member;
 use App\Models\MemberAchievement;
@@ -24,6 +26,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class MemberController extends BaseController
 {
@@ -91,12 +94,31 @@ class MemberController extends BaseController
                 'last_page_url' => $rewards->url($rewards->lastPage()),
             ],
         ];
-        return $this->sendResponse($data, 'Rewards List');
+        return $this->sendResponse($data, 'Reward List');
     }
 
     public function getUnclaimedAchievements(){
         $member = Auth::user()->member;
         $achievements = MemberAchievement::where('is_claimed', false)->where('member_id', $member->id)->with("achievement")->paginate(25);
+        
+        $data = [
+            'achievements' => AchievementRewardResource::collection($achievements),
+            'pagination' => [
+                'current_page' => $achievements->currentPage(),
+                'per_page' => $achievements->perPage(),
+                'total' => $achievements->total(),
+                'prev_page_url' => $achievements->previousPageUrl(),
+                'next_page_url' => $achievements->nextPageUrl(),
+                'first_page_url' => $achievements->url(1),
+                'last_page_url' => $achievements->url($achievements->lastPage()),
+            ],
+        ];
+        return $this->sendResponse($data, 'Achievements fetched successfully');
+    }
+
+    public function getClaimedAchievements(){
+        $member = Auth::user()->member;
+        $achievements = MemberAchievement::where('is_claimed', true)->where('member_id', $member->id)->with("achievement")->paginate(25);
 
         $data = [
             'achievements' => $achievements,
@@ -110,7 +132,7 @@ class MemberController extends BaseController
                 'last_page_url' => $achievements->url($achievements->lastPage()),
             ],
         ];
-        return $this->sendResponse($data, 'Achievements fetched successfully');
+        return $this->sendResponse($data, 'Achievements List');
     }
 
     public function getMemberAchievements(){
@@ -198,10 +220,11 @@ class MemberController extends BaseController
                     'date_claimed' => now(),
                     'member_id' => $member->id,
                     'reward_id' => $reward->id,
-                    "status" => "Pending"
+                    "status" => "Active"
                 ]);
                 $member->current_points = $member->current_points - $reward->reward_points;
                 $member->save();
+                Mail::to($member->email)->send(new RewardsClaimed(array("member" => $member, "reward" => $reward, "admin" => false)));
                 return $this->sendResponse(new MemberResource($member) , 'Reward redeemed successfully');
             } else {
                 return $this->sendError('Youi don\'t have enough points to claim this reward. Please earn more points to ', [], 400);
@@ -232,7 +255,7 @@ class MemberController extends BaseController
                 'date_claimed' => now(),
                 'member_id' => $member->id,
                 'reward_id' => $reward->id,
-                "status" => "Pending"
+                "status" => "Active"
             ]);
             return $this->sendResponse(new MemberResource($member) , 'Reward redeemed successfully');
 
