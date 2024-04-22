@@ -30,8 +30,8 @@ class Achievement extends Model
         return $this->belongsToMany(Member::class, 'member_achievements', 'achievement_id', 'member_id');
     }
 
-    public function rewards(){
-        return $this->hasMany(Reward::class);
+    public function reward(){
+        return $this->belongsTo(Reward::class);
     }
 
 }
