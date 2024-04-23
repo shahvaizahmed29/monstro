@@ -290,7 +290,7 @@ class MemberController extends BaseController
                 $member->save();
                 $mailObject = new \stdClass();
                 $mailObject->member = $member;
-                $mailObject->$reward = $reward;
+                $mailObject->reward = $reward;
                 $mailObject->admin = false;
                 Mail::to($member->email)->send(new RewardsClaimed($mailObject));
                 $mailObject->admin = true;
@@ -330,7 +330,7 @@ class MemberController extends BaseController
             ]);
             $mailObject = new \stdClass();
             $mailObject->member = $member;
-            $mailObject->$reward = $reward;
+            $mailObject->reward = $reward;
             $mailObject->admin = false;
             Mail::to($member->email)->send(new RewardsClaimed($mailObject));
             $mailObject->admin = true;
