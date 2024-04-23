@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -12,13 +11,15 @@ use Illuminate\Queue\SerializesModels;
 class RewardsClaimed extends Mailable
 {
     use Queueable, SerializesModels;
+    private $claimed;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(protected $claimed,)
+    public function __construct($claimed)
     {
-        //
+        $this->claimed = $claimed;
+        // 
     }
 
     /**
@@ -37,7 +38,7 @@ class RewardsClaimed extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'mail.rewards.claimed',
+            markdown: 'mail.rewards.claimed',
             with: [
                 'member_id' => $this->claimed->member->id,
                 'member_name' => $this->claimed->member->name,

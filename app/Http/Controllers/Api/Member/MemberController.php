@@ -276,7 +276,7 @@ class MemberController extends BaseController
             $member = Auth::user()->member;
 
             $reward = Reward::where("id", $request->rewardId)->first();
-
+            
             if($reward->reward_points < $member->current_points){
                 MemberRewardClaim::create([
                     'points_claimed' => $reward->reward_points,
@@ -288,7 +288,14 @@ class MemberController extends BaseController
                 ]);
                 $member->current_points = $member->current_points - $reward->reward_points;
                 $member->save();
-                Mail::to($member->email)->send(new RewardsClaimed(array("member" => $member, "reward" => $reward, "admin" => false)));
+                $mailObject = new \stdClass();
+                $mailObject->member = $member;
+                $mailObject->$reward = $reward;
+                $mailObject->admin = false;
+                Mail::to($member->email)->send(new RewardsClaimed($mailObject));
+                $mailObject->admin = true;
+                //replace admin email;
+                Mail::to($member->email)->send(new RewardsClaimed($mailObject));
                 return $this->sendResponse(new MemberResource($member) , 'Reward redeemed successfully');
             } else {
                 return $this->sendError('Youi don\'t have enough points to claim this reward. Please earn more points to ', [], 400);
@@ -321,6 +328,14 @@ class MemberController extends BaseController
                 'reward_id' => $reward->id,
                 "status" => "Active"
             ]);
+            $mailObject = new \stdClass();
+            $mailObject->member = $member;
+            $mailObject->$reward = $reward;
+            $mailObject->admin = false;
+            Mail::to($member->email)->send(new RewardsClaimed($mailObject));
+            $mailObject->admin = true;
+            //replace admin email;
+            Mail::to($member->email)->send(new RewardsClaimed($mailObject));
             return $this->sendResponse(new MemberResource($member) , 'Reward redeemed successfully');
 
         } catch (Exception $error) {
