@@ -16,7 +16,8 @@ class MemberRewardClaim extends Model
         'date_claimed',
         'member_id',
         'reward_id',
-        'status'
+        'status',
+        'is_claimed'
     ];
 
     public function member(){
