@@ -146,7 +146,7 @@ class MemberController extends BaseController
 
     public function getMemberRewards(){
         try{
-            $rewards = MemberRewardClaim::where('member_id', auth()->user()->member->id)->paginate(25);
+            $rewards = MemberRewardClaim::with(['member','reward'])->where('member_id', auth()->user()->member->id)->paginate(25);
             
             $data = [
                 'rewards' => ClaimedRewardResource::collection($rewards),
