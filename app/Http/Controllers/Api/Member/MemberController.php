@@ -168,7 +168,10 @@ class MemberController extends BaseController
     }
 
     public function getTradableRewards(){
-        $rewards = Reward::where('type', Reward::POINTS)->where('location_id', request()->locationId)->with("achievement")->paginate(25);
+        $member = Auth::user()->member;
+        $rewards = Reward::where('type', Reward::POINTS)->where('location_id', request()->locationId)->with(["achievement", "member_reward_claim" => function ($query) use($member) {
+            return $query->where('member_id',$member->id);
+        }])->paginate(25);
         $data = [
             'rewards' => RewardResource::collection($rewards),
             'pagination' => [
@@ -342,7 +345,7 @@ class MemberController extends BaseController
     public function claimReward(Request $request){
         try {
             $member = Auth::user()->member;
-            $memberAchievement = MemberAchievement::where("id", $request->memberAchievementId)->first();
+            $memberAchievement = MemberAchievement::with('achievement')->where("id", $request->memberAchievementId)->first();
             $reward = Reward::where("achievement_id", $memberAchievement->achievement->id)->first();
             $claimedCount = MemberRewardClaim::where("reward_id", $reward->id)->where("member_id", $member->id)->count();
             if($claimedCount >= $reward->limit_per_member){

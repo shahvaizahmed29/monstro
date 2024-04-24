@@ -25,6 +25,9 @@ class RewardResource extends JsonResource
             'achievement' => $this->whenLoaded('achievement', function () {
                 return AchievementResource::collection($this->achievement);
             }),
+            'remainingTrades' => $this->whenLoaded('member_reward_claim', function () {
+                return $this->limit_per_member - $this->member_reward_claim->count();
+            }),
         ];
 
         return $reward;
