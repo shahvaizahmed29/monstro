@@ -52,7 +52,14 @@ class Member extends Model
     }
 
     public function reedemPoints(){
-        return $this->rewards()->sum('points_claimed');
+        $redeemPoints = 0;
+        $rewards = $this->rewards()->get();
+        foreach($rewards as $reward) {
+            if($reward->reward->type == Reward::POINT){
+                $redeemPoints = $redeemPoints + $reward->reward->reward_points;
+            }
+        }
+        return $redeemPoints;
     }
 
     public function rewards(){
