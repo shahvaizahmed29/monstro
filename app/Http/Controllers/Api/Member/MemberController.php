@@ -210,7 +210,7 @@ class MemberController extends BaseController
     public function getClaimedAchievements(){
         $member = Auth::user()->member;
         $programIds = Program::where('location_id', request()->locationId)->pluck('id');
-        $achievements = MemberAchievement::whereHas('achievement', function ($query) {
+        $achievements = MemberAchievement::whereHas('achievement', function ($query) use ($programIds){
             return $query->whereNull('deleted_at')->whereIn('program_id', $programIds);
         })->where('member_id', $member->id)->with("achievement")->paginate(25);
 
