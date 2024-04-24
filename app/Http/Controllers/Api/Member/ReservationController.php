@@ -98,36 +98,4 @@ class ReservationController extends BaseController
         return $this->sendResponse(new ReservationResource($reservation), 'Reservations.');
     }
 
-    public function memberUpcomingClasses(){
-        try {
-            $dayName = strtolower(Carbon::now()->format('l'));
-
-            $reservations = Reservation::with(['session.programLevel.program.location'])
-                ->where('member_id', auth()->user()->member->id)
-                ->whereHas('session', function ($query) use ($dayName) {
-                    $query->orderBy('start_date', 'ASC');
-                    $columnName = $dayName;
-                    $query->whereNotNull($columnName);
-                })
-                ->where('status', Reservation::ACTIVE)
-                ->get();
-
-            // Sort the reservations by the session start time for the specified day
-            $reservations = $reservations->sortBy(function ($reservation) use ($dayName) {
-                $session = $reservation->session; // Assuming each reservation has only one session
-                // Check if session exists before accessing it
-                if ($session) {
-                    return Carbon::parse($session->{$dayName});
-                } else {
-                    // Handle the case where there is no associated session
-                    return PHP_INT_MAX;
-                }
-            });
-    
-            return $this->sendResponse(CustomReservationResource::collection($reservations, $dayName), 'Member Upcoming Classes.');
-        } catch (Exception $e) {
-            return $this->sendError($e->getMessage(), [], 500);
-        }
-    }
-
 }
