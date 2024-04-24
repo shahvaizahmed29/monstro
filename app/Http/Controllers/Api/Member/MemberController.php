@@ -6,12 +6,12 @@ use App\Http\Controllers\BaseController;
 use App\Http\Requests\PasswordUpdateRequest;
 use App\Http\Resources\Member\AchievementRewardResource;
 use App\Http\Resources\Member\ClaimedRewardResource;
+use App\Http\Resources\Member\AchievementResource;
 use App\Http\Resources\Member\GetMemberProfile;
 use App\Http\Resources\Member\MemberResource;
 use App\Http\Resources\Member\ProgramResource;
 use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Member\LocationResource;
-use App\Http\Resources\Vendor\AchievementResource;
 use App\Http\Resources\Vendor\RewardResource;
 use App\Mail\RewardsClaimed;
 use App\Http\Resources\Vendor\VendorResource;
@@ -193,7 +193,7 @@ class MemberController extends BaseController
         $programIds = Program::where('location_id', request()->locationId)->pluck('id');
         $achievements = Achievement::whereIn('program_id', $programIds)->get();
         $data = [
-            'achievements' => AchievementRewardResource::collection($achievements),
+            'achievements' => AchievementResource::collection($achievements),
             'pagination' => [
                 'current_page' => $achievements->currentPage(),
                 'per_page' => $achievements->perPage(),

@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\Member;
 
-use App\Http\Resources\Vendor\AchievementResource;
+use App\Http\Resources\Member\AchievementResource;
 use App\Models\MemberRewardClaim;
 use App\Models\Reward;
 use Illuminate\Http\Request;
