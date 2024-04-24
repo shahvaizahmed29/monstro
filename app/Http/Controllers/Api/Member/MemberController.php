@@ -10,6 +10,7 @@ use App\Http\Resources\Member\GetMemberProfile;
 use App\Http\Resources\Member\MemberResource;
 use App\Http\Resources\Member\ProgramResource;
 use App\Http\Resources\Member\ReservationResource;
+use App\Http\Resources\Member\LocationResource;
 use App\Http\Resources\Vendor\AchievementResource;
 use App\Http\Resources\Vendor\RewardResource;
 use App\Mail\RewardsClaimed;
@@ -124,7 +125,7 @@ class MemberController extends BaseController
         try{
             $locations = auth()->user()->member->locations;
                 $data = [
-                    'locations' => VendorResource::collection($locations),
+                    'locations' => LocationResource::collection($locations),
                     // 'pagination' => [
                     //     'current_page' => $reservations->currentPage(),
                     //     'per_page' => $reservations->perPage(),
@@ -135,6 +136,7 @@ class MemberController extends BaseController
                     //     'last_page_url' => $reservations->url($reservations->lastPage()),
                     // ],
                 ];
+
                 return $this->sendResponse($locations, 'Member locations fetched successfully');
         }catch(Exception $error){
             return $error->getMessage();
