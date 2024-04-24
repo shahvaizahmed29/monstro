@@ -362,7 +362,7 @@ class MemberController extends BaseController
                 Mail::to($member->email)->send(new RewardsClaimed($mailObject));
                 return $this->sendResponse(new MemberResource($member) , 'Reward redeemed successfully');
             } else {
-                return $this->sendError('Youi don\'t have enough points to claim this reward. Please earn more points to ', [], 400);
+                return $this->sendError('You don\'t have enough points to claim this reward.', [], 400);
             }
 
         } catch (Exception $error) {
