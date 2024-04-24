@@ -21,7 +21,7 @@ class MemberAchievementResource extends JsonResource
             'note' => $this->note,
             'date_achieved' => $this->date_achieved,
             'achievement' => $this->whenLoaded('achievement', function () {
-                return AchievementResource::collection($this->achievement);
+                return new AchievementResource($this->achievement);
             }),
         ];
 

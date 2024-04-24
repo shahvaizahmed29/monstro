@@ -190,7 +190,12 @@ class MemberController extends BaseController
             return $query->whereNull('deleted_at');
         })->where('member_id', $member->id)->pluck('achievement_id');
         $programIds = Program::where('location_id', request()->locationId)->pluck('id');
-        $achievements = Achievement::whereIn('program_id', $programIds)->whereNotIn('id', $alreadyAchieved)->paginate(25);
+        if(count($alreadyAchieved)){
+            $achievements = Achievement::whereIn('program_id', $programIds)->whereNotIn('id', $alreadyAchieved)->paginate(25);
+        } else {
+            $achievements = Achievement::whereIn('program_id', $programIds)->paginate(25);
+        }
+        
         $data = [
             'achievements' => AchievementResource::collection($achievements),
             'pagination' => [
