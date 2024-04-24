@@ -23,6 +23,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //===================================================================================== Members Routes =============================================================================
     //==================================================================================================================================================================================
     Route::group(['prefix' => 'member', 'middleware' => ['is_member']], function () {
+        Route::get('get-login-member', [App\Http\Controllers\Api\Member\MemberController::class, 'getLoginMember'])->name('get.login.member');
         Route::get('get-reservations-by-member', [App\Http\Controllers\Api\Member\ReservationController::class, 'getReservationsByMember'])->name('get.reservations.by.member');
         Route::get('get-reservations-by-id/{reservation_id}', [App\Http\Controllers\Api\Member\ReservationController::class, 'getReservationById'])->name('get.reservations.by.id');
         Route::get('get-checkins/{reservation_id}', [App\Http\Controllers\Api\Member\ReservationController::class, 'getCheckInsByReservation'])->name('get.checkins.by.reservation');

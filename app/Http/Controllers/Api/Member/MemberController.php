@@ -59,6 +59,15 @@ class MemberController extends BaseController
         }
     }
 
+    public function getLoginMember(){
+        try{
+            $member = auth()->user()->member;
+            return $this->sendResponse(new MemberResource($member) , 'Get member successfully');
+        }catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
     public function getMemberEnrolledPrograms($vendorId){
         try{
             $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])
