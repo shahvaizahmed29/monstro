@@ -4,6 +4,8 @@ namespace App\Http\Resources\Member;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\Member\MemberResource;
+use App\Http\Resources\Member\RewardResource;
 
 class ClaimedRewardResource extends JsonResource
 {
