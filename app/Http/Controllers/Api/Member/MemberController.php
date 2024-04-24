@@ -345,7 +345,7 @@ class MemberController extends BaseController
     public function claimRewardTradeable(Request $request){
         try {
             $member = Auth::user()->member;
-            $reward = Reward::where("id", $rewardId)->where('type', Reward::POINTS)->first();
+            $reward = Reward::where("id", $request->rewardId)->where('type', Reward::POINTS)->first();
             $claimedCount = MemberRewardClaim::where("reward_id", $reward->id)->where("member_id", $member->id)->count();
             if($claimedCount >= $reward->limit_per_member){
                 return $this->sendError('You have already exceeded the limit for this achievement, You cannot claim it at the moment.', [], 400);
