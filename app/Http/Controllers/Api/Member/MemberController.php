@@ -13,7 +13,7 @@ use App\Http\Resources\Member\ProgramResource;
 use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Member\LocationResource;
 use App\Http\Resources\Member\MemberAchievementResource;
-use App\Http\Resources\Vendor\RewardResource;
+use App\Http\Resources\Member\RewardResource;
 use App\Mail\RewardsClaimed;
 use App\Http\Resources\Vendor\VendorResource;
 use App\Models\Achievement;
