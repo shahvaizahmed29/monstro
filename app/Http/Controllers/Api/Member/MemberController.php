@@ -148,7 +148,7 @@ class MemberController extends BaseController
         try{
 
             $locationId = request()->locationId;
-            $rewards = MemberRewardClaim::with(['member','reward'])->whereHas('reward', function ($query) use ($locationId){
+            $rewards = MemberRewardClaim::with('reward')->whereHas('reward', function ($query) use ($locationId){
                 return $query->where('location_id', $locationId);
             })->where('member_id', auth()->user()->member->id)->paginate(25);
             
