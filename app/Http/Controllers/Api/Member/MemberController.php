@@ -189,9 +189,31 @@ class MemberController extends BaseController
         return $this->sendResponse($data, 'Reward List');
     }
 
+    public function getAchievementRewards(){
+        $member = Auth::user()->member;
+        $locationId = request()->locationId;
+        $alreadyAchieved = MemberAchievement::whereHas('achievement', function ($query) {
+            return $query->whereNull('deleted_at');
+        })->where('member_id', $member->id)->pluck('achievement_id');
+        $rewards = Reward::where('type', Reward::ACHIEVEMENT)->where('location_id', request()->locationId)->whereIn('achievement_id', $alreadyAchieved)->with(["achievement"])->paginate(25);
+        $data = [
+            'rewards' => RewardResource::collection($rewards),
+            'pagination' => [
+                'current_page' => $rewards->currentPage(),
+                'per_page' => $rewards->perPage(),
+                'total' => $rewards->total(),
+                'prev_page_url' => $rewards->previousPageUrl(),
+                'next_page_url' => $rewards->nextPageUrl(),
+                'first_page_url' => $rewards->url(1),
+                'last_page_url' => $rewards->url($rewards->lastPage()),
+            ],
+        ];
+        return $this->sendResponse($data, 'Reward List');
+    }
+
     public function getUnclaimedAchievements(){
         $member = Auth::user()->member;
-        $alreadyAchieved = MemberAchievement::where('is_claimed', false)->whereHas('achievement', function ($query) {
+        $alreadyAchieved = MemberAchievement::whereHas('achievement', function ($query) {
             return $query->whereNull('deleted_at');
         })->where('member_id', $member->id)->pluck('achievement_id');
         $programIds = Program::where('location_id', request()->locationId)->pluck('id');

@@ -32,6 +32,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('profile', [App\Http\Controllers\Api\Member\MemberController::class, 'getProfile'])->name('get.profile');
         Route::get('rewards', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberRewards'])->name('get.member.rewards');
         Route::get('tradable-rewards', [App\Http\Controllers\Api\Member\MemberController::class, 'getTradableRewards'])->name('get.member.tradable.rewards');
+        Route::get('achievement-rewards', [App\Http\Controllers\Api\Member\MemberController::class, 'getAchievementRewards'])->name('get.member.achievement.rewards');
         Route::get('unclaimed-achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getUnclaimedAchievements'])->name('get.member.unclaimed.achievements');
         Route::get('claimed-achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getClaimedAchievements'])->name('get.member.claimed.achievements');
         Route::post('claim-reward-tradeable', [App\Http\Controllers\Api\Member\MemberController::class, 'claimRewardTradeable'])->name('member.claim.reward.tradeable');
