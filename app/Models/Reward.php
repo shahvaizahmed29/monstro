@@ -28,7 +28,7 @@ class Reward extends Model
         return $this->belongsTo(Achievement::class);
     }
 
-    public function member_reward_claim(){
+    public function member(){
         return $this->belongsToMany(Member::class, 'member_reward_claim', 'achievement_id', 'member_id');
     }
 
