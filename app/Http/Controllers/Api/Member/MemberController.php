@@ -349,7 +349,7 @@ class MemberController extends BaseController
             $member = Auth::user()->member;
             $reward = Reward::where("id", $request->rewardId)->where('type', Reward::POINTS)->first();
             $claimedCount = MemberRewardClaim::where("reward_id", $reward->id)->where("member_id", $member->id)->count();
-            if($reward->limit_per_member >= $claimedCount){
+            if($reward->limit_per_member < $claimedCount){
                 return $this->sendError('You have already exceeded the limit for this achievement, You cannot claim it at the moment.', [], 400);
             }
             $previousPoints = $member->current_points;
