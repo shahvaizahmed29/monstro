@@ -21,7 +21,7 @@ class Reward extends Model
         'limit_per_member',
         'achievement_id',
         'reward_points',
-        'locaiton_id'
+        'location_id'
     ];
 
     public function achievement(){

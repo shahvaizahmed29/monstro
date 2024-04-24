@@ -44,6 +44,8 @@ class RewardController extends BaseController
     public function store(Request $request)
     {
         try {
+            $location = request()->location;
+
             $uploadedFileName = null;
             if ($request->hasFile('image')) {
                 $img = $request->file('image');
@@ -57,11 +59,13 @@ class RewardController extends BaseController
                 'image' => $uploadedFileName,
                 'type' => $request->type,
                 'limit_per_member' => $request->limit_per_member,
-                'reward_points' => $request->reward_points,
+                'location_id' => $location->id
             ];
 
-            if ($request->has('achievement_id')) {
+            if ($request->type == Reward::ACHIEVEMENT){
                 $rewardData['achievement_id'] = $request->achievement_id;
+            }else{
+                $rewardData['reward_points'] = $request->reward_points;
             }
 
             $reward = Reward::create($rewardData);
