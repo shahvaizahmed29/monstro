@@ -137,7 +137,7 @@ class MemberController extends BaseController
                     // ],
                 ];
 
-                return $this->sendResponse($locations, 'Member locations fetched successfully');
+                return $this->sendResponse($data, 'Member locations fetched successfully');
         }catch(Exception $error){
             return $error->getMessage();
         }
