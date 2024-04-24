@@ -15,8 +15,11 @@ class ClaimedRewardResource extends JsonResource
     public function toArray(Request $request): array
     {
         $rewardClaim = [
-            'members' => $this->whenLoaded('members', function () {
-                return MemberResource::collection($this->members);
+            'member' => $this->whenLoaded('member', function () {
+                return MemberResource::collection($this->member);
+            }),
+            'reward' => $this->whenLoaded('reward', function () {
+                return RewardResource::collection($this->reward);
             }),
             'currentPoints' => $this->current_points,
             'dateClaimed' => $this->date_claimed,
