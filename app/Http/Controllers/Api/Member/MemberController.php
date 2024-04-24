@@ -168,9 +168,7 @@ class MemberController extends BaseController
     }
 
     public function getTradableRewards(){
-        $locationIds = Auth::user()->member->locations->pluck('id');
-        $rewards = Reward::where('type', Reward::POINTS)->whereIn('location_id', $locationIds)->with("achievement")->paginate(25);
-
+        $rewards = Reward::where('type', Reward::POINTS)->where('location_id', $locationIds)->with("achievement")->paginate(25);
         $data = [
             'rewards' => RewardResource::collection($rewards),
             'pagination' => [
