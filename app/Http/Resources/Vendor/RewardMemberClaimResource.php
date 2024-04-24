@@ -16,7 +16,6 @@ class RewardResource extends JsonResource
     {
         $reward = [
             'id' => $this->id,
-            'pointsClaimed' => $this->points_claimed,
             'dateClaimed' => $this->date_claimed,
             'createdAt' => $this->created_at,
             'updatedAt' => $this->updated_at,
