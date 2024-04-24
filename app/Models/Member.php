@@ -55,7 +55,7 @@ class Member extends Model
         $redeemPoints = 0;
         $rewards = $this->rewards()->get();
         foreach($rewards as $reward) {
-            if($reward->reward->type == Reward::POINT){
+            if($reward->reward->type == Reward::POINTS){
                 $redeemPoints = $redeemPoints + $reward->reward->reward_points;
             }
         }
