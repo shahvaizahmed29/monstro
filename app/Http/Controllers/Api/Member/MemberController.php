@@ -146,7 +146,11 @@ class MemberController extends BaseController
 
     public function getMemberRewards(){
         try{
-            $rewards = MemberRewardClaim::with(['member','reward'])->where('member_id', auth()->user()->member->id)->paginate(25);
+
+            $locationId = request()->locationId;
+            $rewards = MemberRewardClaim::with(['member','reward'])->whereHas('reward', function ($query) use ($locationId){
+                return $query->where('location_id', $locationId);
+            })->where('member_id', auth()->user()->member->id)->paginate(25);
             
             $data = [
                 'rewards' => ClaimedRewardResource::collection($rewards),
