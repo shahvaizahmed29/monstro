@@ -187,11 +187,11 @@ class MemberController extends BaseController
 
     public function getUnclaimedAchievements(){
         $member = Auth::user()->member;
-        // $achievements = MemberAchievement::where('is_claimed', false)->whereHas('achievement', function ($query) {
-        //     return $query->whereNull('deleted_at');
-        // })->where('member_id', $member->id)->with("achievement")->paginate(25);
+        $alreadyAchieved = MemberAchievement::where('is_claimed', false)->whereHas('achievement', function ($query) {
+            return $query->whereNull('deleted_at');
+        })->where('member_id', $member->id)->pluck('achievement_id');
         $programIds = Program::where('location_id', request()->locationId)->pluck('id');
-        $achievements = Achievement::whereIn('program_id', $programIds)->paginate(25);
+        $achievements = Achievement::whereIn('program_id', $programIds)->whereNotIn('id', $alreadyAchieved)->paginate(25);
         $data = [
             'achievements' => AchievementResource::collection($achievements),
             'pagination' => [
