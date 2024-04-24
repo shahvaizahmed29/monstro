@@ -13,7 +13,7 @@ use App\Http\Resources\Member\ProgramResource;
 use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Member\LocationResource;
 use App\Http\Resources\Member\MemberAchievementResource;
-use App\Http\Resources\Vendor\RewardResource;
+use App\Http\Resources\Member\RewardResource;
 use App\Mail\RewardsClaimed;
 use App\Http\Resources\Vendor\VendorResource;
 use App\Models\Achievement;
@@ -54,6 +54,15 @@ class MemberController extends BaseController
 
             $member->save();
             return $this->sendResponse('Success', 'User updated successfully.');
+        }catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getLoginMember(){
+        try{
+            $member = auth()->user()->member;
+            return $this->sendResponse(new MemberResource($member) , 'Get member successfully');
         }catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
@@ -195,7 +204,11 @@ class MemberController extends BaseController
         $alreadyAchieved = MemberAchievement::whereHas('achievement', function ($query) {
             return $query->whereNull('deleted_at');
         })->where('member_id', $member->id)->pluck('achievement_id');
-        $rewards = Reward::where('type', Reward::ACHIEVEMENT)->where('location_id', request()->locationId)->whereIn('achievement_id', $alreadyAchieved)->with(["achievement"])->paginate(25);
+        if(count($alreadyAchieved)) {
+            $rewards = Reward::where('type', Reward::ACHIEVEMENT)->where('location_id', $locationId)->whereIn('achievement_id', $alreadyAchieved)->with(["achievement"])->paginate(25);
+        } else {
+            $rewards = Reward::where('type', Reward::ACHIEVEMENT)->where('location_id', $locationId)->with(["achievement"])->paginate(25);
+        }
         $data = [
             'rewards' => RewardResource::collection($rewards),
             'pagination' => [
@@ -358,7 +371,7 @@ class MemberController extends BaseController
                 Mail::to($member->email)->send(new RewardsClaimed($mailObject));
                 return $this->sendResponse(new MemberResource($member) , 'Reward redeemed successfully');
             } else {
-                return $this->sendError('Youi don\'t have enough points to claim this reward. Please earn more points to ', [], 400);
+                return $this->sendError('You don\'t have enough points to claim this reward.', [], 400);
             }
 
         } catch (Exception $error) {
@@ -371,7 +384,7 @@ class MemberController extends BaseController
             $member = Auth::user()->member;
             $reward = Reward::where("id", $request->rewardId)->where('type', Reward::POINTS)->first();
             $claimedCount = MemberRewardClaim::where("reward_id", $reward->id)->where("member_id", $member->id)->count();
-            if($reward->limit_per_member < $claimedCount){
+            if($reward->limit_per_member <= $claimedCount){
                 return $this->sendError('You have already exceeded the limit for this achievement, You cannot claim it at the moment.', [], 400);
             }
             $previousPoints = $member->current_points;
@@ -393,34 +406,38 @@ class MemberController extends BaseController
             //replace admin email;
             Mail::to($member->email)->send(new RewardsClaimed($mailObject));
             return $this->sendResponse(new MemberResource($member) , 'Reward redeemed successfully');
-                // $member = Auth::user()->member;
-                // $memberAchievement = MemberAchievement::with('achievement')->where("id", $request->memberAchievementId)->first();
-                // $reward = Reward::where("achievement_id", $memberAchievement->achievement->id)->first();
-                // $claimedCount = MemberRewardClaim::where("reward_id", $reward->id)->where("member_id", $member->id)->count();
-                // if($claimedCount >= $reward->limit_per_member){
-                //     return $this->sendError('You have already exceeded the limit for this achievement, You cannot claim it at the moment.', [], 400);
-                // }
-                // $previousPoints = $member->current_points;
-                // if($reward->type == Reward::POINTS){
-                //     $member->current_points = $member->current_points - $reward->reward_points;
-                //     $member->save();
-                // }
-                // MemberRewardClaim::create([
-                //     'previous_points' => $previousPoints,
-                //     'date_claimed' => now(),
-                //     'member_id' => $member->id,
-                //     'reward_id' => $reward->id,
-                //     "status" =>  1
-                // ]);
-                // $mailObject = new \stdClass();
-                // $mailObject->member = $member;
-                // $mailObject->reward = $reward;
-                // $mailObject->admin = false;
-                // Mail::to($member->email)->send(new RewardsClaimed($mailObject));
-                // $mailObject->admin = true;
-                // //replace admin email;
-                // Mail::to($member->email)->send(new RewardsClaimed($mailObject));
-                // return $this->sendResponse(new MemberResource($member) , 'Reward redeemed successfully');
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function claimRewardAchieveable(Request $request){
+        try {
+            $member = Auth::user()->member;
+            $reward = Reward::where("id", $request->rewardId)->where('type', Reward::ACHIEVEMENT)->first();
+            $memberAchievement = MemberAchievement::with('achievement')->where("id", $reward->achievement_id)->first();
+            if($memberAchievement){
+                return $this->sendError('You haven\'t achieved this goal to claim this reward.', [], 400);
+            }
+            $claimedCount = MemberRewardClaim::where("reward_id", $reward->id)->where("member_id", $member->id)->count();
+            if($claimedCount >= $reward->limit_per_member){
+                return $this->sendError('You have already exceeded the limit for this achievement, You cannot claim it at the moment.', [], 400);
+            }
+            MemberRewardClaim::create([
+                'date_claimed' => now(),
+                'member_id' => $member->id,
+                'reward_id' => $reward->id,
+                "status" =>  1
+            ]);
+            $mailObject = new \stdClass();
+            $mailObject->member = $member;
+            $mailObject->reward = $reward;
+            $mailObject->admin = false;
+            Mail::to($member->email)->send(new RewardsClaimed($mailObject));
+            $mailObject->admin = true;
+            //replace admin email;
+            Mail::to($member->email)->send(new RewardsClaimed($mailObject));
+            return $this->sendResponse(new MemberResource($member) , 'Reward redeemed successfully');
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }

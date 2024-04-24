@@ -23,6 +23,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     //===================================================================================== Members Routes =============================================================================
     //==================================================================================================================================================================================
     Route::group(['prefix' => 'member', 'middleware' => ['is_member']], function () {
+        Route::get('get-login-member', [App\Http\Controllers\Api\Member\MemberController::class, 'getLoginMember'])->name('get.login.member');
         Route::get('get-reservations-by-member', [App\Http\Controllers\Api\Member\ReservationController::class, 'getReservationsByMember'])->name('get.reservations.by.member');
         Route::get('get-reservations-by-id/{reservation_id}', [App\Http\Controllers\Api\Member\ReservationController::class, 'getReservationById'])->name('get.reservations.by.id');
         Route::get('get-checkins/{reservation_id}', [App\Http\Controllers\Api\Member\ReservationController::class, 'getCheckInsByReservation'])->name('get.checkins.by.reservation');
@@ -36,6 +37,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('unclaimed-achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getUnclaimedAchievements'])->name('get.member.unclaimed.achievements');
         Route::get('claimed-achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getClaimedAchievements'])->name('get.member.claimed.achievements');
         Route::post('claim-reward-tradeable', [App\Http\Controllers\Api\Member\MemberController::class, 'claimRewardTradeable'])->name('member.claim.reward.tradeable');
+        Route::post('claim-reward-achieveable', [App\Http\Controllers\Api\Member\MemberController::class, 'claimRewardAchieveable'])->name('member.claim.reward.achieveable');
         Route::get('achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberAchievements'])->name('get.member.achievements');
         Route::post('redeem-points', [App\Http\Controllers\Api\Member\MemberController::class, 'redeemPoints'])->name('redeem.points');
         Route::get('current-points', [App\Http\Controllers\Api\Member\MemberController::class, 'getCurrentPoints'])->name('get.current.points');
