@@ -12,6 +12,7 @@ use App\Http\Resources\Member\MemberResource;
 use App\Http\Resources\Member\ProgramResource;
 use App\Http\Resources\Member\ReservationResource;
 use App\Http\Resources\Member\LocationResource;
+use App\Http\Resources\Member\MemberAchievementResource;
 use App\Http\Resources\Vendor\RewardResource;
 use App\Mail\RewardsClaimed;
 use App\Http\Resources\Vendor\VendorResource;
@@ -215,7 +216,7 @@ class MemberController extends BaseController
         })->where('member_id', $member->id)->with("achievement")->paginate(25);
 
         $data = [
-            'achievements' => $achievements,
+            'achievements' => MemberAchievementResource::collection($achievements),
             'pagination' => [
                 'current_page' => $achievements->currentPage(),
                 'per_page' => $achievements->perPage(),
