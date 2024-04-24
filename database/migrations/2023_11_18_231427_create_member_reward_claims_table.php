@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('member_reward_claims', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('member_id');
-            $table->double('points_claimed');
             $table->double('previous_points');
             $table->dateTime('date_claimed');
+            $table->unsignedBigInteger('reward_id'); 
+            $table->tinyInteger('status'); 
             $table->timestamps();
             $table->softDeletes();
         });

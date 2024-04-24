@@ -34,7 +34,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('tradable-rewards', [App\Http\Controllers\Api\Member\MemberController::class, 'getTradableRewards'])->name('get.member.tradable.rewards');
         Route::get('unclaimed-achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getUnclaimedAchievements'])->name('get.member.unclaimed.achievements');
         Route::get('claimed-achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getClaimedAchievements'])->name('get.member.claimed.achievements');
-        Route::post('claim-achievement', [App\Http\Controllers\Api\Member\MemberController::class, 'claimAchievement'])->name('member.claim.achievement');
+        Route::post('claim-reward', [App\Http\Controllers\Api\Member\MemberController::class, 'claimReward'])->name('member.claim.reward');
         Route::get('achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberAchievements'])->name('get.member.achievements');
         Route::post('redeem-points', [App\Http\Controllers\Api\Member\MemberController::class, 'redeemPoints'])->name('redeem.points');
         Route::get('current-points', [App\Http\Controllers\Api\Member\MemberController::class, 'getCurrentPoints'])->name('get.current.points');

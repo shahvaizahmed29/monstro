@@ -11,7 +11,6 @@ class MemberRewardClaim extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'points_claimed',
         'previous_points',
         'date_claimed',
         'member_id',
@@ -21,6 +20,10 @@ class MemberRewardClaim extends Model
 
     public function member(){
         return $this->belongsTo(Member::class);
+    }
+
+    public function reward(){
+        return $this->belongsTo(Reward::class);
     }
 
 }

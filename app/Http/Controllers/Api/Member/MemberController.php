@@ -168,9 +168,7 @@ class MemberController extends BaseController
     }
 
     public function getTradableRewards(){
-        $locationIds = Auth::user()->member->locations->pluck('id');
-        $rewards = Reward::where('type', Reward::POINTS)->whereIn('location_id', $locationIds)->with("achievement")->paginate(25);
-
+        $rewards = Reward::where('type', Reward::POINTS)->where('location_id', $locationIds)->with("achievement")->paginate(25);
         $data = [
             'rewards' => RewardResource::collection($rewards),
             'pagination' => [
@@ -315,7 +313,6 @@ class MemberController extends BaseController
             
             if($reward->reward_points < $member->current_points){
                 MemberRewardClaim::create([
-                    'points_claimed' => $reward->reward_points,
                     'previous_points' => $member->current_points,
                     'date_claimed' => now(),
                     'member_id' => $member->id,
@@ -342,27 +339,26 @@ class MemberController extends BaseController
         }
     }
 
-    public function claimAchievement(Request $request){
+    public function claimReward(Request $request){
         try {
             $member = Auth::user()->member;
-
             $memberAchievement = MemberAchievement::where("id", $request->memberAchievementId)->first();
             $reward = Reward::where("achievement_id", $memberAchievement->achievement->id)->first();
             $claimedCount = MemberRewardClaim::where("reward_id", $reward->id)->where("member_id", $member->id)->count();
             if($claimedCount >= $reward->limit_per_member){
                 return $this->sendError('You have already exceeded the limit for this achievement, You cannot claim it at the moment.', [], 400);
             }
-            if($reward->reward_points != null){
-                $member->current_points = $member->current_points + $reward->reward_points;
+            $previousPoints = $member->current_points;
+            if($reward->type == Reward::POINTS){
+                $member->current_points = $member->current_points - $reward->reward_points;
                 $member->save();
             }
             MemberRewardClaim::create([
-                'points_claimed' => 0,
-                'previous_points' => $member->current_points,
+                'previous_points' => $previousPoints,
                 'date_claimed' => now(),
                 'member_id' => $member->id,
                 'reward_id' => $reward->id,
-                "status" => "Active"
+                "status" =>  1
             ]);
             $mailObject = new \stdClass();
             $mailObject->member = $member;

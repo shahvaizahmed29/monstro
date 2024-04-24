@@ -18,7 +18,6 @@ class ClaimedRewardResource extends JsonResource
             'members' => $this->whenLoaded('members', function () {
                 return MemberResource::collection($this->members);
             }),
-            'pointsClaimed' => $this->points_claimed,
             'currentPoints' => $this->current_points,
             'dateClaimed' => $this->date_claimed,
             'createdAt' => $this->created_at,
