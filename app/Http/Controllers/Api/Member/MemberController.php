@@ -191,7 +191,7 @@ class MemberController extends BaseController
         //     return $query->whereNull('deleted_at');
         // })->where('member_id', $member->id)->with("achievement")->paginate(25);
         $programIds = Program::where('location_id', request()->locationId)->pluck('id');
-        $achievements = Achievement::whereIn('program_id', $programIds)->get();
+        $achievements = Achievement::whereIn('program_id', $programIds)->paginate(25);
         $data = [
             'achievements' => AchievementResource::collection($achievements),
             'pagination' => [
