@@ -119,6 +119,28 @@ class MemberController extends BaseController
         }
     }
 
+
+    public function getMemberActiveLocations(){
+        try{
+            $locations = auth()->user()->member->locations;
+                $data = [
+                    'locations' => VendorResource::collection($locations),
+                    // 'pagination' => [
+                    //     'current_page' => $reservations->currentPage(),
+                    //     'per_page' => $reservations->perPage(),
+                    //     'total' => $reservations->total(),
+                    //     'prev_page_url' => $reservations->previousPageUrl(),
+                    //     'next_page_url' => $reservations->nextPageUrl(),
+                    //     'first_page_url' => $reservations->url(1),
+                    //     'last_page_url' => $reservations->url($reservations->lastPage()),
+                    // ],
+                ];
+                return $this->sendResponse($locations, 'Member locations fetched successfully');
+        }catch(Exception $error){
+            return $error->getMessage();
+        }
+    }
+
     public function getMemberRewards(){
         try{
             $rewards = MemberRewardClaim::where('member_id', auth()->user()->member->id)->paginate(25);
@@ -163,8 +185,11 @@ class MemberController extends BaseController
 
     public function getUnclaimedAchievements(){
         $member = Auth::user()->member;
-        $achievements = MemberAchievement::where('is_claimed', false)->where('member_id', $member->id)->with("achievement")->paginate(25);
-        
+        // $achievements = MemberAchievement::where('is_claimed', false)->whereHas('achievement', function ($query) {
+        //     return $query->whereNull('deleted_at');
+        // })->where('member_id', $member->id)->with("achievement")->paginate(25);
+        $programIds = Program::where('location_id', request()->locationId)->pluck('id');
+        $achievements = Achievement::whereIn('program_id', $programIds)->get();
         $data = [
             'achievements' => AchievementRewardResource::collection($achievements),
             'pagination' => [
@@ -182,7 +207,10 @@ class MemberController extends BaseController
 
     public function getClaimedAchievements(){
         $member = Auth::user()->member;
-        $achievements = MemberAchievement::where('is_claimed', true)->where('member_id', $member->id)->with("achievement")->paginate(25);
+        $programIds = Program::where('location_id', request()->locationId)->pluck('id');
+        $achievements = MemberAchievement::whereHas('achievement', function ($query) {
+            return $query->whereNull('deleted_at')->whereIn('program_id', $programIds);
+        })->where('member_id', $member->id)->with("achievement")->paginate(25);
 
         $data = [
             'achievements' => $achievements,

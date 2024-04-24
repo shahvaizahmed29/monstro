@@ -24,7 +24,6 @@ class AchievementRewardResource extends JsonResource
         
         $rewardClaim = [
             'id' => $this->id,
-            'isClaimed' => $this->is_claimed,
             'note' => $this->note,
             'dateAchieved' => $this->date_achieved,
             'dateExpired' => $this->date_expire,

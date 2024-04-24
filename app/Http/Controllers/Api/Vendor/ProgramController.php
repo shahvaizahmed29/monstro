@@ -623,7 +623,7 @@ class ProgramController extends BaseController
                         'member_id' => $member_id, 
                         'status' => 1, 
                         'note' => 'Achievement accomplished on number of levels completion', 
-                        'date_achieved' => now()
+                        'date_achieved' => now(),
                     ]);
 
                     // Fidning member in order to get the current member achieved points

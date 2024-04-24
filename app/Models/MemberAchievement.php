@@ -18,7 +18,6 @@ class MemberAchievement extends Model
         'note',
         'date_achieved',
         'date_expire',
-        'is_claimed',
         'is_expired'
     ];
 

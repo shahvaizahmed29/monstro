@@ -42,6 +42,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('enroll-in-program/{programId}', [App\Http\Controllers\Api\Member\MemberController::class, 'enrollInProgram'])->name('enroll.in.program');
         Route::get('enrolled-programs/vendor/{vendorId}', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberEnrolledPrograms'])->name('get.member.enrolled.programs');
         Route::get('active-vendors', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberActiveVendors'])->name('get.member.active.vendors');
+        Route::get('active-locations', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberActiveLocations'])->name('get.member.active.locations');
         Route::get('upcoming-classes', [App\Http\Controllers\Api\Member\ReservationController::class, 'memberUpcomingClasses'])->name('get.member.upcoming.classes');
     });
 
