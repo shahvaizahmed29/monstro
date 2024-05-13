@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('members', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->integer('parent_id');
+            $table->integer('parent_id')->nullable();
             $table->string('name');
             $table->string('email');
             $table->string('phone');

@@ -505,4 +505,47 @@ class MemberController extends BaseController
         }
     }
 
+    public function addChildren(Request $request){
+        $member = Auth::user()->member;
+        if($member->parent_id){
+            return $this->sendError('You need to be a parent to add a children under your account.', [], 500);
+        } else {
+            try {
+                DB::beginTransaction();
+                Member::whereIn('id', $request->memberIds)->update([
+                    "parent_id" => $member->id
+                ]);
+                DB::commit();
+                return $this->sendResponse("Success", "Family Members Added.");
+            } catch(Exception $e){
+                DB::rollBack();
+                return $this->sendError($e->getMessage(), [], 500);
+            }
+        }
+    }
+
+    public function getChildren(){
+        $children = Auth::user()->member->children;
+        return $this->sendResponse($children, "Family Members.");
+    }
+
+    public function removeChildren(Request $request){
+        $member = Auth::user()->member;
+        if($member->parent_id){
+            return $this->sendError('You need to be a parent to remove a children under your account.', [], 500);
+        } else {
+            try {
+                DB::beginTransaction();
+                Member::whereIn('parent_id', $request->memberIds)->update([
+                    "parent_id" => null
+                ]);
+                DB::commit();
+                return $this->sendResponse("Success", "Family Members Removed.");
+            } catch(Exception $e){
+                DB::rollBack();
+                return $this->sendError($e->getMessage(), [], 500);
+            }
+        }
+    }
+
 }
