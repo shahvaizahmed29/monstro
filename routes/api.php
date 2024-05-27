@@ -88,6 +88,7 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::put('member/status/{member_id}', [App\Http\Controllers\Api\Vendor\MemberController::class, 'memberStatusUpdate'])->name('member.status.update');
     Route::get('attendances/member/{memberId}/program/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'lastTenAttendance'])->name('member.program.attendances');
     Route::get('member/{memberId}/password-reset', [App\Http\Controllers\Api\Vendor\MemberController::class, 'memberPasswordReset'])->name('member.password.reset');
+    Route::get('member/{memberId}/get-family', [App\Http\Controllers\Api\Vendor\MemberController::class, 'getFamilyMembers'])->name('member.fetch.family');
     
     Route::prefix('achievement')->group(function () {
         Route::get('', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'index'])->name('achievement.all');
@@ -119,6 +120,7 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     
     Route::put('password-reset', [App\Http\Controllers\Api\Vendor\VendorController::class, 'passwordReset'])->name('password.reset');
     Route::put('update-password',[App\Http\Controllers\Api\Vendor\VendorController::class, 'vendorUpdatePassword'])->name('vendor.update.password');
+    Route::post('complete-stripe-connection', [App\Http\Controllers\Api\Vendor\VendorController::class, 'completeStripeConnection'])->name('complete.stripe.connection');
     
     Route::post('assign-program-level/{programLevelId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'assignProgramLevelToMember'])->name('assign.program.level.to.member');
     Route::post('assign-program/{programId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'assignProgramToMember'])->name('assign.program.to.member');

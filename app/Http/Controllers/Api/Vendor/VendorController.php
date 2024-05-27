@@ -14,6 +14,7 @@ use App\Models\Vendor;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Services\StripeService;
 
 class VendorController extends BaseController
 {
@@ -181,5 +182,16 @@ class VendorController extends BaseController
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
+    }
+
+    public function completeStripeConnection(Request $request) {
+        $stripe = new StripeService();
+        $location = request()->location;
+        $location = Location::find($location->id);
+        $token = $stripe->completeConnection($request->input("scope"), $request->input("code"));
+        $location->stripe_account_id = $token->stripe_user_id;
+        $location->stripe_oauth = json_encode($token);
+        $location->save();
+        return $this->sendResponse($token, 'Authorization Completed.');
     }
 }

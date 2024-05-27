@@ -17,6 +17,7 @@ use App\Http\Resources\Vendor\ProgramResource;
 use App\Models\AchievementActions;
 use App\Models\Action;
 use App\Models\CheckIn;
+use App\Models\Location;
 use App\Models\Member;
 use App\Models\MemberAchievement;
 use App\Models\MemberRewardClaim;
@@ -113,6 +114,9 @@ class ProgramController extends BaseController
 
     public function addProgram(ProgramStoreRequest $request){
         $location = request()->location;
+        $pricing_model = request()->pricing_model;
+        $recurring_prices = request()->recurring_prices;
+        $one_time_price = request()->one_time_price;
         try{
             //Code commented out below becuase auth guard is not applied anymore.
             // $location = Location::find($request->location_id);
@@ -164,8 +168,29 @@ class ProgramController extends BaseController
                     'status' => \App\Models\Session::ACTIVE
                 ]);
             }
-            DB::commit();
+            $location = Location::find($location->id);
+            $stripeClientAuth = json_decode($location->stripe_oauth);
+            $stripe = new \Stripe\StripeClient($stripeClientAuth->access_token);
+            $product = $stripe->products->create(['name' => $request->program_name, 'description' => $request->description]);
+            if($pricing_model == "One Time"){
+                $stripe->prices->create([
+                    'currency' => 'usd',
+                    'unit_amount' => $one_time_price,
+                    'type' => "one_time",
+                    'product' => $product->id,
+                ]);
+            } else {
+                foreach ($recurring_prices as $price) {
+                    $stripe->prices->create([
+                        'currency' => 'usd',
+                        'unit_amount' => (float)$price["unit_amount"] * 100,
+                        'recurring' => ['interval' => $price["recurring"]],
+                        'product' => $product->id,
+                    ]);
+                }
+            }
             
+            DB::commit();
             $program = Program::with('programLevels.sessions')->where('id', $program->id)->first();
             return $this->sendResponse(new ProgramResource($program), 'Program created successfully.');
         }catch(Exception $e){

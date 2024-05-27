@@ -36,8 +36,12 @@ class Member extends Model
         return $this->hasMany(Reservation::class);
     }
 
+    public function parent(){
+        return $this->belongsTo(Member::class, 'parent_id');
+    }
+
     public function children(){
-        return $this->belongsTo(Member::class);
+        return $this->hasMany(Member::class, 'parent_id');
     }
 
     public function programs(){
