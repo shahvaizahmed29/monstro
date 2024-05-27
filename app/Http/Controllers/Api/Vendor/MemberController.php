@@ -98,7 +98,7 @@ class MemberController extends BaseController
             })
             ->where('member_id', $member_id)->get();
             
-            $member_details = Member::with(['rewards', 'achievements'])->where('id', $member_id)->first();
+            $member_details = Member::with(['rewards', 'achievements', 'children'])->where('id', $member_id)->first();
             
             $go_high_level_contact_id = DB::table('member_locations')
                 ->where('member_id', $member_id)
@@ -584,4 +584,17 @@ class MemberController extends BaseController
         }
     }
 
+    public function getFamilyMembers($member_id) {
+        try{
+            $member = Member::with('children')->findOrFail($member_id);
+
+            if(!$member){
+                return $this->sendError("Member not found", [], 400);
+            }
+
+            return $this->sendResponse($member, 'Family Members List.');        
+        } catch(Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
 }
