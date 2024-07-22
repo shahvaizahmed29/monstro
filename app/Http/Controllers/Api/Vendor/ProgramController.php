@@ -20,9 +20,9 @@ use App\Models\CheckIn;
 use App\Models\Location;
 use App\Models\Member;
 use App\Models\MemberAchievement;
-use App\Models\MemberRewardClaim;
 use App\Models\Reservation;
-use App\Models\Reward;
+use App\Models\StripePlan;
+use App\Models\StripePlanPricing;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -82,7 +82,7 @@ class ProgramController extends BaseController
     public function getProgramById($id){
         try{
             $location = request()->location;
-            $program = Program::with(['programLevels','programLevels.sessions'])->where('id',$id)->where('location_id', $location->id)->first();
+            $program = Program::with(['programLevels','programLevels.sessions', 'stripePlans.pricing'])->where('id',$id)->where('location_id', $location->id)->first();
 
             if(!$program){
                 return $this->sendError("Program doesnot exist", [], 400);
@@ -114,9 +114,7 @@ class ProgramController extends BaseController
 
     public function addProgram(ProgramStoreRequest $request){
         $location = request()->location;
-        $pricing_model = request()->pricing_model;
-        $recurring_prices = request()->recurring_prices;
-        $one_time_price = request()->one_time_price;
+        $prices = request()->prices;
         try{
             //Code commented out below becuase auth guard is not applied anymore.
             // $location = Location::find($request->location_id);
@@ -168,26 +166,52 @@ class ProgramController extends BaseController
                     'status' => \App\Models\Session::ACTIVE
                 ]);
             }
+
             $location = Location::find($location->id);
             $stripeClientAuth = json_decode($location->stripe_oauth);
             $stripe = new \Stripe\StripeClient($stripeClientAuth->access_token);
             $product = $stripe->products->create(['name' => $request->program_name, 'description' => $request->description]);
-            if($pricing_model == "One Time"){
-                $stripe->prices->create([
-                    'currency' => 'usd',
-                    'unit_amount' => $one_time_price,
-                    'type' => "one_time",
-                    'product' => $product->id,
-                ]);
-            } else {
-                foreach ($recurring_prices as $price) {
-                    $stripe->prices->create([
+            foreach ($prices as $key => $price) {
+                $stripePrice = array();
+                if($price['recurring'] == "One Time"){
+                    $stripePrice = $stripe->prices->create([
+                        'currency' => 'usd',
+                        'unit_amount' => (float)$price["unit_amount"] * 100,
+                        'type' => "one_time",
+                        'product' => $product->id,
+                    ]);
+                } else {
+                    $stripePrice = $stripe->prices->create([
                         'currency' => 'usd',
                         'unit_amount' => (float)$price["unit_amount"] * 100,
                         'recurring' => ['interval' => $price["recurring"]],
                         'product' => $product->id,
                     ]);
                 }
+                $description = '';
+                if($price['family']){
+                    $description = "This is a plan with {$price['family_member_limit']} family members allowed in it.";
+                } else {
+                    $description = "This is a plan with no family members allowed in it.";
+                }
+                $plan = StripePlan::create([
+                    'name' => 'Plan '.$key+1,
+                    'description' => $description,
+                    'vendor_id' => $location->vendor_id,
+                    'status' => 1,
+                    'family' => $price['family'],
+                    'program_id' => $program->id,
+                    'family_member_limit' => $price['family_member_limit'],
+                ]);
+                
+                $plan->save();
+
+                $pricing = new StripePlanPricing([
+                    'amount' => $price['unit_amount'],
+                    'billing_period' => $price['recurring'],
+                    'stripe_price_id' => $stripePrice->id
+                ]);
+                $plan->pricing()->save($pricing);
             }
             
             DB::commit();

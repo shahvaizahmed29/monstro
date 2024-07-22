@@ -28,7 +28,9 @@ class AuthController extends BaseController
                 'name' => $user->name,
                 'phone' => $user->vendor->phone_number,
                 'avatar' => $user->vendor->logo,
-                'locations' => $user->vendor->locations
+                'locations' => $user->vendor->locations,
+                'vendor' => $user->vendor,
+                'member' => false
             ];
         } else {
             $user = [
@@ -39,6 +41,9 @@ class AuthController extends BaseController
                 'phone' => $user->member->phone,
                 'referral_code' => $user->member->referral_code,
                 'avatar' => $user->member->avatar,
+                'locations' => $user->member->locations,
+                'member' => $user->member,
+                'vendor' => false
             ];
         }
         

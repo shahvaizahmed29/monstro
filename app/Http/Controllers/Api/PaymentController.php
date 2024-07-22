@@ -5,17 +5,20 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Api\Vendor\VendorController;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\DepositRequest;
-use App\Http\Resources\Vendor\VendorResource;
-use App\Models\PaymentMethod;
+use App\Models\Location;
+use App\Models\Member;
+use App\Models\StripePlan;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorProgress;
 use App\Services\GHLService;
 use App\Services\StripeService;
+use Stripe\Subscription;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class PaymentController extends BaseController
@@ -138,6 +141,34 @@ class PaymentController extends BaseController
             Log::info($error->getMessage());
             return $this->sendError($error->getMessage(), [], 500);
         }
+    }
+
+    public function completeSubscription(Request $request){
+        $member = Auth::user()->member;
+        $locationId = request()->locationId;
+        $location = Location::find($locationId);
+        $stripeDetails = json_decode($location->stripe_oauth);
+        $stripe = new \Stripe\StripeClient(['api_key' => $stripeDetails->access_token]);
+       
+        $oldCustomer = $stripe->customers->search([
+            'query' => 'email:\'' . $member['email'] . '\''
+        ]);
+        if(count($oldCustomer['data'])) {
+            $customer = $oldCustomer['data'][0];
+        } else {
+            $customer = $stripe->customers->create([
+                'name' => $member['name'],
+                'email' => $member['email'],
+                'phone' => $member['phone']
+            ]);
+        }
+        return $this->sendResponse($customer, 'Subscription successfull.');
+        $planId = request()->planId;
+        $stripePlan = StripePlan::find($planId);
+
+        $subscriptionStatus = Subscription::create();
+
+
     }
 
 }

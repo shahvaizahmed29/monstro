@@ -24,6 +24,9 @@ use App\Models\Program;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Models\Reward;
+use App\Models\Contract;
+use App\Models\Location;
+use App\Models\StripePlan;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -545,6 +548,48 @@ class MemberController extends BaseController
                 DB::rollBack();
                 return $this->sendError($e->getMessage(), [], 500);
             }
+        }
+    }
+
+    public function getProgramsWithPlans(){
+        $locationId = request()->locationId;
+        $member = Auth::user()->member;
+        try{
+            $reservations = Reservation::with('session')->where('member_id', $member->id)->where('status', Reservation::ACTIVE)->get();
+            $programIds = $reservations->pluck('session.program_id')->unique()->toArray();
+            
+            $programs = Program::with(['stripePlans.pricing'])->whereNotIn('id', $programIds)->where('location_id', $locationId)->get();
+            $data = [
+                'programs' => ProgramResource::collection($programs),
+            ];
+            return $this->sendResponse($data, 'Programs with Plans');
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getPlanContract(){
+        
+        try {
+            $planId = request()->planId;
+            $stripePlan = StripePlan::find($planId);
+            if ($stripePlan) {
+                $contracts = $stripePlan->contract;
+                return $this->sendResponse($contracts, 'Contract');
+            }
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function fetchVendorStripePk(){
+        try {
+            $locationId = request()->locationId;
+            $location = Location::find($locationId);
+            $stripeDetails = json_decode($location->stripe_oauth);
+            return $this->sendResponse($stripeDetails->stripe_publishable_key, 'Location');
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
