@@ -7,6 +7,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Requests\DepositRequest;
 use App\Models\Location;
 use App\Models\Member;
+use App\Models\Program;
 use App\Models\StripePlan;
 use App\Models\User;
 use App\Models\Vendor;
@@ -145,8 +146,8 @@ class PaymentController extends BaseController
 
     public function completeSubscription(Request $request){
         $member = Auth::user()->member;
-        $locationId = request()->locationId;
-        $location = Location::find($locationId);
+        $program = Program::with(['location'])->where('id', $request->programId)->first();
+        $location = $program->location;
         $stripeDetails = json_decode($location->stripe_oauth);
         $stripe = new \Stripe\StripeClient(['api_key' => $stripeDetails->access_token]);
        
@@ -162,11 +163,10 @@ class PaymentController extends BaseController
                 'phone' => $member['phone']
             ]);
         }
-        return $this->sendResponse($customer, 'Subscription successfull.');
         $planId = request()->planId;
         $stripePlan = StripePlan::find($planId);
-
         $subscriptionStatus = Subscription::create();
+        return $this->sendResponse($subscriptionStatus, 'Subscription successfull.');
 
 
     }

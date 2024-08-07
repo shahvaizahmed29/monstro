@@ -16,6 +16,7 @@ use App\Http\Resources\Member\ProgramResource;
 use App\Http\Resources\Vendor\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
 use App\Http\Resources\Vendor\SessionResource;
+use App\Mail\InviteMembers;
 use App\Models\ProgramLevel;
 use App\Notifications\NewMemberNotification;
 use App\Services\GHLService;
@@ -26,6 +27,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
 
 class MemberController extends BaseController
 {
@@ -252,7 +254,74 @@ class MemberController extends BaseController
                 $user->assignRole(User::MEMBER);
                 $randomNumberMT = mt_rand(100, 999);
                 $member = Member::create([
-                    'name' => (isset($contact['firstName']) ? $contact['firstName'] : ' ').' ' .(isset($contact['lastName']) ? $contact['lastName'] : ''),
+                    'name' => (isset($contact['firstName']) ? $contact['firstName'] : ($contact['name'] ? $contact['name'] : ' ')).' ' .(isset($contact['lastName']) ? $contact['lastName'] : ''),
+                    'email' =>  $contact['email'],
+                    'phone' => isset($contact['phone']) ? $contact['phone'] : '',
+                    'referral_code' => $randomNumberMT.$user->id,
+                    'user_id' => $user->id
+                ]);
+            } else {
+                $member = $user->member;
+            }
+
+            $programLevel = ProgramLevel::with(['program'])->where('id', $programLevelId)->first();
+
+            $alreadyEnrolledInProgramLevel = $member->reservations()->whereHas('session.programLevel', function ($query) use ($programLevelId) {
+                $query->where('id', '!=', $programLevelId);
+            })->whereHas('session', function ($query) use ($programLevel) {
+                $query->where('program_id', '=', $programLevel->program->id);
+            })->count();
+
+            if($alreadyEnrolledInProgramLevel > 0){
+                return false;
+            }else{
+                $reservation = Reservation::updateOrCreate([
+                    'session_id' => $session->id,
+                    'member_id' =>  $member->id
+                ],[
+                    'session_id' => $session->id,
+                    'member_id' =>  $member->id,
+                    'status' => Reservation::ACTIVE,
+                    'start_date' => Carbon::today()->format('Y-m-d'),
+                    'end_date' => $session->end_date
+                ]);
+
+                $member->locations()->sync([$location->id => [
+                    'go_high_level_location_id' => $location->go_high_level_location_id,
+                    'go_high_level_contact_id' => $contact['id']
+                ]], false);
+
+                DB::commit();
+                return true;
+            }
+           
+        } catch(\Exception $error) {
+            DB::rollback();
+            Log::info('===== Create New Member =====');
+            Log::info(json_encode($contact));
+            Log::info(json_encode($programLevelId));
+            Log::info($error->getMessage());
+            return false;
+        }
+    }
+
+    public static function createMemberFromRegistration($contact, $location, $programLevelId) {
+        try {
+            DB::beginTransaction();
+            $session = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->latest()->first();
+            $user = User::where('email', $contact['email'])->first();
+            if(!$user) {
+                $user = User::create([
+                    'name' => $contact['name'],
+                    'email' => $contact['email'],
+                    // 'password' => bcrypt($contact['email'].'@'.Carbon::now()->year.'!!'),
+                    'password' => bcrypt($contact['password']),
+                    'email_verified_at' => now()
+                ]);
+                $user->assignRole(User::MEMBER);
+                $randomNumberMT = mt_rand(100, 999);
+                $member = Member::create([
+                    'name' => $contact['name'],
                     'email' =>  $contact['email'],
                     'phone' => isset($contact['phone']) ? $contact['phone'] : '',
                     'referral_code' => $randomNumberMT.$user->id,
@@ -596,5 +665,10 @@ class MemberController extends BaseController
         } catch(Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
+    }
+
+    public function inviteMember(Request $request) {
+        Mail::to($request->email)->send(new InviteMembers("https://localhost:3000/registration/{$request->programId}/4/signup"));
+        return response()->json(['message' => $request->email]);
     }
 }

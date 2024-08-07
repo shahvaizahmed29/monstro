@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Member;
 
+use App\Http\Controllers\Api\Vendor\MemberController as VendorMemberController;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\PasswordUpdateRequest;
 use App\Http\Resources\Member\AchievementRewardResource;
@@ -582,15 +583,22 @@ class MemberController extends BaseController
         }
     }
 
-    public function fetchVendorStripePk(){
+    public function fetchVendorStripePk(Request $request){
         try {
-            $locationId = request()->locationId;
-            $location = Location::find($locationId);
+            $program = Program::with(['location'])->where('id', $request->programId)->first();
+            $location = $program->location;
             $stripeDetails = json_decode($location->stripe_oauth);
             return $this->sendResponse($stripeDetails->stripe_publishable_key, 'Location');
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
+    }
+
+    public function register(Request $request){
+        $program = Program::with(['programLevels', 'location'])->where('id', $request->programId)->first();
+        $addMember = VendorMemberController::createMemberFromRegistration($request, $program->location, $program->programLevels[0]->id);
+
+        return $this->sendResponse($addMember, 'Register');
     }
 
 }

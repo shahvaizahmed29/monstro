@@ -18,6 +18,10 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::group(['prefix' => 'member'], function () {
+    Route::post('register', [App\Http\Controllers\Api\Member\MemberController::class, 'register'])->name('register.member');
+});
+
 Route::middleware(['auth:sanctum'])->group(function () {
     //==================================================================================================================================================================================
     //===================================================================================== Members Routes =============================================================================
@@ -53,8 +57,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('get-plan-contract/{planId}', [App\Http\Controllers\Api\Member\MemberController::class, 'getPlanContract'])->name('get.plan.contract');
         Route::get('contract/{contractId}/variables', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContractVariables'])->name('contract.variables.fetch');
         Route::post('fill-contract', [App\Http\Controllers\Api\Vendor\ContractController::class, 'fillContract'])->name('fill.contract');
-        Route::get('fetch-vendor-stripe-pk/{locationId}', [App\Http\Controllers\Api\Member\MemberController::class, 'fetchVendorStripePk'])->name('fetch.vendor.stripe.pk');
-        Route::post('program/plan/subscribe/{locationId}/{planId}', [App\Http\Controllers\Api\PaymentController::class, 'completeSubscription'])->name('complete.subscription');
+        Route::get('fetch-vendor-stripe-pk/{programId}', [App\Http\Controllers\Api\Member\MemberController::class, 'fetchVendorStripePk'])->name('fetch.vendor.stripe.pk');
+        Route::post('program/plan/subscribe/{programId}/{planId}', [App\Http\Controllers\Api\PaymentController::class, 'completeSubscription'])->name('complete.subscription');
     });
 
     //==================================================================================================================================================================================
@@ -147,6 +151,8 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::post('create-contract', [App\Http\Controllers\Api\Vendor\ContractController::class, 'addContract'])->name('contract.create');
     Route::get('contracts', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContracts'])->name('contracts.fetch');
     Route::get('contract/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContractById'])->name('contract.single.fetch');
+    Route::post('invite-member', [App\Http\Controllers\Api\Vendor\MemberController::class, 'inviteMember'])->name('invite.member');
+    Route::post('add-stripe-plan/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addPlan'])->name('plan.create');
 });
 
 Route::post('image-update/{user_id}', [App\Http\Controllers\PublicController::class, 'imageUpdate'])->name('image.update');
