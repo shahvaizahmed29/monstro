@@ -7,14 +7,15 @@ use App\Services\TimezoneService;
 use App\Models\StripePlan;
 use App\Models\Location;
 use App\Http\Controllers\BaseController;
+use App\Models\Program;
 use Exception;
 
 class StripePlanController extends BaseController
 {
-    public function getPlans(){
+    public function getPlans($programId){
       try{
-        $location = request()->location;
-        $location = Location::find($location->id);
+        $program = Program::with('location')->where('id',$programId)->first();
+        $location = $program->location;
         if(!$location){
             return $this->sendError("Location doesnot exist", [], 400);
         }
@@ -26,4 +27,16 @@ class StripePlanController extends BaseController
         return $this->sendError($error->getMessage(), [], 500);
     }
   }
+
+  public function getPlan($planId){
+    try{
+      $plans = StripePlan::with('pricing')->where('id', $planId)->firstOrFail();
+
+      return $this->sendResponse($plans, 'Plan');
+
+  }catch(Exception $error){
+      return $this->sendError($error->getMessage(), [], 500);
+  }
 }
+}
+

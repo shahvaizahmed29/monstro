@@ -147,9 +147,10 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::get('program/{programId}/get-archive-program-levels', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getArchiveProgramLevelsWithSession'])->name('get.archive.program.levels');
     Route::post('program/{program}/image', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'programImageUpdate'])->name('program.image.update');
 
-    Route::get('stripe-plans', [App\Http\Controllers\Api\Vendor\StripePlanController::class, 'getPlans'])->name('stripe.plans.fetch');
+    Route::get('stripe-plans/{programId}', [App\Http\Controllers\Api\Vendor\StripePlanController::class, 'getPlans'])->name('stripe.plans.fetch');
+    Route::get('stripe-plans/single/{planId}', [App\Http\Controllers\Api\Vendor\StripePlanController::class, 'getPlan'])->name('stripe.plan.fetch');
     Route::post('create-contract', [App\Http\Controllers\Api\Vendor\ContractController::class, 'addContract'])->name('contract.create');
-    Route::get('contracts', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContracts'])->name('contracts.fetch');
+    Route::get('contracts/{programId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContracts'])->name('contracts.fetch');
     Route::get('contract/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContractById'])->name('contract.single.fetch');
     Route::post('invite-member', [App\Http\Controllers\Api\Vendor\MemberController::class, 'inviteMember'])->name('invite.member');
     Route::post('add-stripe-plan/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addPlan'])->name('plan.create');

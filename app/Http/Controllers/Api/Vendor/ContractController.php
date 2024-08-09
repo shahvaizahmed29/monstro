@@ -8,6 +8,7 @@ use App\Models\Contract;
 use App\Models\Location;
 use App\Models\Member;
 use App\Models\MemberContract;
+use App\Models\Program;
 use App\Models\StripePlan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -45,11 +46,12 @@ class ContractController extends BaseController
         }
     }
 
-    public function getContracts()
+    public function getContracts($programId)
     {
         try {
-            $location = request()->location;
-            $location = Location::find($location->id);
+            
+            $program = Program::with(['location'])->where('id', $programId)->firstOrFail();
+            $location = $program->location;
             if (!$location) {
                 return $this->sendError("Location doesnot exist", [], 400);
             }
