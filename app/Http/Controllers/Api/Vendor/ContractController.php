@@ -19,11 +19,10 @@ use Illuminate\Support\Facades\Log;
 
 class ContractController extends BaseController
 {
-    public function addContract(ContractStoreRequest $request)
+    public function addContract(ContractStoreRequest $request, $programId)
     {
-        $location = request()->location;
-        $location = Location::find($location->id);
-
+        $program = Program::with(['location'])->where('id', $programId)->firstOrFail();
+        $location = $program->location;
         try {
             DB::beginTransaction();
             $contract = Contract::create([
@@ -35,7 +34,8 @@ class ContractController extends BaseController
             // Get the Stripe plan you want to attach the contract to
             $stripePlan = StripePlan::find($request->plan_id);
             // Attach the contract to the Stripe plan
-            $stripePlan->contracts()->attach($contract->id);
+            $stripePlan->contract_id = $contract->id;
+            $stripePlan->save();
             DB::commit();
             return $this->sendResponse($contract, 'Contract created successfully.');
         } catch (Exception $e) {
