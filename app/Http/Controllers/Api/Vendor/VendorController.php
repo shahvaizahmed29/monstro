@@ -8,6 +8,7 @@ use App\Http\Controllers\GHLController;
 use App\Http\Requests\PasswordUpdateRequest;
 use App\Http\Requests\Vendor\VendorProfileUpdate;
 use App\Http\Resources\Vendor\GetVendorProfile;
+use App\Mail\VendorRegister;
 use App\Models\Location;
 use App\Models\User;
 use App\Models\Vendor;
@@ -15,6 +16,9 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Services\StripeService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class VendorController extends BaseController
 {
@@ -193,5 +197,52 @@ class VendorController extends BaseController
         $location->stripe_oauth = json_encode($token);
         $location->save();
         return $this->sendResponse($token, 'Authorization Completed.');
+    }
+
+    public function registerVendor(Request $request) {
+        try{
+            $user = User::where('email', $request->email)->first();
+            if ($user) {
+                return $this->sendError('User not found.', [], 404);
+            }
+            $password = Str::random(10);
+            DB::beginTransaction();
+            $user = User::create([
+                'name' => $request->firstName.' '.$request->lastName,
+                'email' => $request->email,
+                'password' => bcrypt($password),
+                'email_verified_at' => now()
+            ]);
+
+            if ($user) {
+                $user->assignRole(\App\Models\User::VENDOR);
+            }
+
+            $vendor = Vendor::create([
+                'first_name' => $request->firstName,
+                'last_name' =>  $request->lastName,
+                'user_id' => $user->id,
+                'phone_number' => $request->phone,
+                'company_email' => $request->email
+            ]);
+
+            $location = Location::create([
+                'name' => $request->locationName,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'stripe_oauth' => '{}',
+                'stripe_account_id' => '0',
+                'vendor_id' => $vendor->id
+            ]);
+            DB::commit();
+
+            if($location && $vendor && $user) {
+                Mail::to($request->email)->send(new VendorRegister($vendor, $location, $user, $password));
+            }
+            return $this->sendResponse(['location' => $location, 'vendor' => $vendor, 'user' => $user], 200);
+        
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
     }
 }

@@ -76,6 +76,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
 //==================================================================================================================================================================================
 //===================================================================================== Vendors Public Routes =============================================================================
 //==================================================================================================================================================================================
+
+Route::group(['prefix' => 'vendor'],function () {
+    Route::post('register/44a1a08a-3109-4199-ad64-fa484ed6b656/gmnq69ju9hds/b0be1897-4db1-4cfb-9c0f-38321a7e6fcb', [App\Http\Controllers\Api\Vendor\VendorController::class, 'registerVendor'])->name('vendor.register.admin');
+    Route::get('register/get-programs-by-vendor/{vendorId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramsByVendor'])->name('get.programs.by.Vendor');
+    Route::get('register/stripe-plans/{programId}', [App\Http\Controllers\Api\Vendor\StripePlanController::class, 'getPlans'])->name('regitser.stripe.plans.fetch');
+});
+
 Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],function () {
     Route::get('get-programs-by-location', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramsByLocation'])->name('get.programs.by.location');
     Route::get('get-programs-by-id/{id}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramById'])->name('get.program.by.id');

@@ -23,6 +23,7 @@ use App\Models\MemberAchievement;
 use App\Models\Reservation;
 use App\Models\StripePlan;
 use App\Models\StripePlanPricing;
+use App\Models\Vendor;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +39,34 @@ class ProgramController extends BaseController
         //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
         // }
         $programs = Program::where('location_id', $location->id);
+        if(isset(request()->type)) {
+            if(request()->type == 0) {
+                $programs = $programs->whereNotNull('deleted_at')->withTrashed();
+            }
+        }
+        $programs = $programs->paginate(25);
+        $data = [
+            'programs' => ProgramResource::collection($programs),
+            'pagination' => [
+                'current_page' => $programs->currentPage(),
+                'per_page' => $programs->perPage(),
+                'total' => $programs->total(),
+                'prev_page_url' => $programs->previousPageUrl(),
+                'next_page_url' => $programs->nextPageUrl(),
+                'first_page_url' => $programs->url(1),
+                'last_page_url' => $programs->url($programs->lastPage()),
+            ],
+        ];
+        return $this->sendResponse($data, 'Get programs related to specific location');
+    }
+
+    public function getProgramsByVendor($vendorId){
+        $vendor = Vendor::with('locations')->find($vendorId);
+        $locations = $vendor->locations;
+        $ids = collect($locations)->pluck('id')->all();
+        $programs = Program::whereIn('location_id', $ids)->whereHas('stripePlans', function ($query) {
+            $query->where('status', 1); // Example condition: only include active stripe plans
+        });
         if(isset(request()->type)) {
             if(request()->type == 0) {
                 $programs = $programs->whereNotNull('deleted_at')->withTrashed();
