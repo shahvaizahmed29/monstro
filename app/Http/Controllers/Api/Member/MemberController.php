@@ -27,6 +27,7 @@ use App\Models\User;
 use App\Models\Reward;
 use App\Models\Contract;
 use App\Models\Location;
+use App\Models\MemberContract;
 use App\Models\StripePlan;
 use Carbon\Carbon;
 use Exception;
@@ -34,6 +35,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class MemberController extends BaseController
@@ -583,10 +585,25 @@ class MemberController extends BaseController
         }
     }
 
+    public function getPlan($planId){
+        try{
+            $member = Auth::user()->member;
+            $memberContract = MemberContract::where(['member_id' => $member->id, 'stripe_plan_id' => $planId, 'signed' => true])->firstOrFail();
+            if($memberContract) {
+                $planId = request()->planId;
+                $stripePlan = StripePlan::with('pricing')->find($planId);
+                return $this->sendResponse($stripePlan, 'Programs with Plans');
+            }
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
     public function fetchVendorStripePk(Request $request){
         try {
             $program = Program::with(['location'])->where('id', $request->programId)->first();
             $location = $program->location;
+            Log::info($location->stripe_oauth);
             $stripeDetails = json_decode($location->stripe_oauth);
             return $this->sendResponse($stripeDetails->stripe_publishable_key, 'Location');
         } catch (Exception $error) {
@@ -597,8 +614,7 @@ class MemberController extends BaseController
     public function register(Request $request){
         $program = Program::with(['programLevels', 'location'])->where('id', $request->programId)->first();
         $addMember = VendorMemberController::createMemberFromRegistration($request, $program->location, $program->programLevels[0]->id);
-
+        Log::info($addMember);
         return $this->sendResponse($addMember, 'Register');
     }
-
 }

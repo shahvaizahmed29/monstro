@@ -9,6 +9,7 @@ use App\Http\Requests\PasswordUpdateRequest;
 use App\Http\Requests\Vendor\VendorProfileUpdate;
 use App\Http\Resources\Vendor\GetVendorProfile;
 use App\Mail\VendorRegister;
+use App\Models\Integration;
 use App\Models\Location;
 use App\Models\User;
 use App\Models\Vendor;
@@ -16,7 +17,9 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Services\StripeService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -186,17 +189,6 @@ class VendorController extends BaseController
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
-    }
-
-    public function completeStripeConnection(Request $request) {
-        $stripe = new StripeService();
-        $location = request()->location;
-        $location = Location::find($location->id);
-        $token = $stripe->completeConnection($request->input("scope"), $request->input("code"));
-        $location->stripe_account_id = $token->stripe_user_id;
-        $location->stripe_oauth = json_encode($token);
-        $location->save();
-        return $this->sendResponse($token, 'Authorization Completed.');
     }
 
     public function registerVendor(Request $request) {

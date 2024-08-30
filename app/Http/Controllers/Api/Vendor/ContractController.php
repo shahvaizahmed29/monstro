@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ContractController extends BaseController
 {
@@ -49,7 +50,7 @@ class ContractController extends BaseController
     public function getContracts($programId)
     {
         try {
-            
+
             $program = Program::with(['location'])->where('id', $programId)->firstOrFail();
             $location = $program->location;
             if (!$location) {
@@ -89,13 +90,13 @@ class ContractController extends BaseController
             $memberDetails = Member::with('programs')->find($member->id);
             $plans = Contract::with('stripePlans')->find($contractId);
             $data = collect([
-              "member_name" => $memberDetails->name,
-              "member_email" => $memberDetails->email,
-              "member_phone" => $memberDetails->phone,
-              "plan_title" => $plans->title,
-              "plan_description" => $plans->description,
-              "member_details" => $memberDetails
-              
+                "member_name" => $memberDetails->name,
+                "member_email" => $memberDetails->email,
+                "member_phone" => $memberDetails->phone,
+                "plan_title" => $plans->title,
+                "plan_description" => $plans->description,
+                "member_details" => $memberDetails,
+
             ]);
 
             return $this->sendResponse($data, 'Contract');
@@ -105,28 +106,45 @@ class ContractController extends BaseController
         }
     }
 
-    public function fillContract(Request $request){
-      try {
-        $member = Auth::user()->member;
-        DB::beginTransaction();
-        $memberContract = MemberContract::create([
-            'member_id' => $member->id,
-            'contract_id' => $request->contractId,
-            'stripe_plan_id' => $request->stripePlanId,
-            'content' => $request->content,
-            'signed' => $request->signed,
-        ]);
-        DB::commit();
-        // $pdf = Pdf::loadHTML($request->content);
+    public function fillContract(Request $request)
+    {
+        try {
+            $member = Auth::user()->member;
+            DB::beginTransaction();
+            $memberContract = MemberContract::create([
+                'member_id' => $member->id,
+                'contract_id' => $request->contractId,
+                'stripe_plan_id' => $request->stripePlanId,
+                'content' => $request->content,
+                'signed' => $request->signed,
+            ]);
+            DB::commit();
+            // Generate the PDF from the HTML content
+            $pdf = Pdf::loadHTML(mb_convert_encoding($request->content, 'UTF-8', 'UTF-8'));
 
-        // // Return the PDF as a stream to the browser
-        // return $pdf->stream('document.pdf');
-        return $this->sendResponse($memberContract, 'Contract created successfully.');
-    } catch (Exception $e) {
-        DB::rollBack();
-        Log::info('===== ContractController - fillContract() - error =====');
-        Log::info($e->getMessage());
-        return $this->sendError($e->getMessage(), [], 500);
-    }
+            // Save the PDF to a public path directly in the 'public' directory
+            $fileName = uniqid() . '.pdf';
+            $pdfPath = public_path('contracts/' . $fileName);
+        
+            // Ensure the 'contracts' directory exists
+            if (!file_exists(public_path('contracts'))) {
+                mkdir(public_path('contracts'), 0755, true);
+            }
+        
+            // Save the PDF to the specified path
+            file_put_contents($pdfPath, $pdf->output());
+        
+            // Generate the URL to the file
+            $pdfUrl = url('contracts/' . $fileName);
+        
+            // Send the response with the PDF URL
+            return $this->sendResponse(["data" => $memberContract, "pdf_url" => $pdfUrl], 'Contract created successfully.');
+        
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::info('===== ContractController - fillContract() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
     }
 }

@@ -66,7 +66,10 @@ class ProgramController extends BaseController
         $ids = collect($locations)->pluck('id')->all();
         $programs = Program::whereIn('location_id', $ids)->whereHas('stripePlans', function ($query) {
             $query->where('status', 1); // Example condition: only include active stripe plans
-        });
+        })
+        ->with(['stripePlans' => function ($query) {
+            $query->where('status', 1)->whereHas('contract')->with('pricing'); // Load pricing data with stripePlans
+        }]);
         if(isset(request()->type)) {
             if(request()->type == 0) {
                 $programs = $programs->whereNotNull('deleted_at')->withTrashed();

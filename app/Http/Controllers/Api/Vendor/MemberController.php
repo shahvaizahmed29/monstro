@@ -312,7 +312,7 @@ class MemberController extends BaseController
             $user = User::where('email', $contact['email'])->first();
             if(!$user) {
                 $user = User::create([
-                    'name' => $contact['name'],
+                    'name' => $contact['firstName'].' '.$contact['lastName'],
                     'email' => $contact['email'],
                     // 'password' => bcrypt($contact['email'].'@'.Carbon::now()->year.'!!'),
                     'password' => bcrypt($contact['password']),
@@ -321,7 +321,7 @@ class MemberController extends BaseController
                 $user->assignRole(User::MEMBER);
                 $randomNumberMT = mt_rand(100, 999);
                 $member = Member::create([
-                    'name' => $contact['name'],
+                    'name' => $contact['firstName'].' '.$contact['lastName'],
                     'email' =>  $contact['email'],
                     'phone' => isset($contact['phone']) ? $contact['phone'] : '',
                     'referral_code' => $randomNumberMT.$user->id,

@@ -166,6 +166,7 @@ class PaymentController extends BaseController
         $planId = request()->planId;
         $stripePlan = StripePlan::find($planId);
         $subscriptionStatus = Subscription::create();
+        Log::info(json_encode($subscriptionStatus));
         return $this->sendResponse($subscriptionStatus, 'Subscription successfull.');
 
 

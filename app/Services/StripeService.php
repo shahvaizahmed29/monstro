@@ -148,12 +148,16 @@ class StripeService
     }
 
     public function completeConnection($scope, $code){
-        $response = \Stripe\OAuth::token([
-            'grant_type' => 'authorization_code',
-            'code' => $code,
-            'scope' => $scope
-        ]);        
-        return $response;
+        try{
+            $response = \Stripe\OAuth::token([
+                'grant_type' => 'authorization_code',
+                'code' => $code,
+                'scope' => $scope
+            ]);        
+            return $response;
+        } catch (Exception $error) {
+            return $error->getMessage();
+        }
     }
 
 
