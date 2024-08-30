@@ -17,6 +17,7 @@ use App\Http\Resources\Vendor\ProgramResource;
 use App\Models\AchievementActions;
 use App\Models\Action;
 use App\Models\CheckIn;
+use App\Models\Integration;
 use App\Models\Location;
 use App\Models\Member;
 use App\Models\MemberAchievement;
@@ -114,7 +115,7 @@ class ProgramController extends BaseController
     public function getProgramById($id){
         try{
             $location = request()->location;
-            $program = Program::with(['programLevels','programLevels.sessions', 'stripePlans.pricing'])->where('id',$id)->where('location_id', $location->id)->first();
+            $program = Program::with(['location', 'programLevels','programLevels.sessions', 'stripePlans.pricing'])->where('id',$id)->where('location_id', $location->id)->first();
 
             if(!$program){
                 return $this->sendError("Program doesnot exist", [], 400);
@@ -786,9 +787,8 @@ class ProgramController extends BaseController
     }
 
     public function addPlan($programId, Request $request) {
-        $location = request()->location;
         $pricing = request()->pricing;
-        $program = Program::find($programId);
+        $program = Program::with('location')->find($programId);
         
         try{
             //Code commented out below becuase auth guard is not applied anymore.
@@ -797,8 +797,7 @@ class ProgramController extends BaseController
             //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
             // }
             DB::beginTransaction();
-            $location = Location::find($location->id);
-            $stripeClientAuth = json_decode($location->stripe_oauth);
+            $stripeClientAuth = Integration::where(['vendor_id' => $program->location->vendor_id, "service" => "Stripe"])->first();
             $stripe = new \Stripe\StripeClient($stripeClientAuth->access_token);
             
             $product = $stripe->products->create(['name' => $request->name, 'description' => $request->description]);
@@ -832,7 +831,7 @@ class ProgramController extends BaseController
             $plan = StripePlan::create([
                 'name' => $request->name,
                 'description' => $request->description .'. '. $description,
-                'vendor_id' => $location->vendor_id,
+                'vendor_id' => $program->location->vendor_id,
                 'status' => 1,
                 'family' => $request->family,
                 'program_id' => $program->id,

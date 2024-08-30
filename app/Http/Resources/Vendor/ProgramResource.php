@@ -21,6 +21,7 @@ class ProgramResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'avatar' => $this->avatar,
+            'vendorId' => $this->location->vendor_id,
             'location' => $this->whenLoaded('location', function () {
                 return new LocationResource($this->location);
             }),

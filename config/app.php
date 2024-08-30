@@ -126,6 +126,9 @@ return [
 
     'cipher' => 'AES-256-CBC',
 
+
+    'frontend_url' => env('APP_FRONTEND_URL', 'http://localhost:3000'),
+
     /*
     |--------------------------------------------------------------------------
     | Maintenance Mode Driver

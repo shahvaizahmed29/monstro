@@ -26,6 +26,7 @@ use App\Models\Reservation;
 use App\Models\User;
 use App\Models\Reward;
 use App\Models\Contract;
+use App\Models\Integration;
 use App\Models\Location;
 use App\Models\MemberContract;
 use App\Models\StripePlan;
@@ -599,13 +600,14 @@ class MemberController extends BaseController
         }
     }
 
-    public function fetchVendorStripePk(Request $request){
+    public function fetchVendorStripePk($programId){
+        $program = Program::with('location')->find($programId);
         try {
-            $program = Program::with(['location'])->where('id', $request->programId)->first();
-            $location = $program->location;
-            Log::info($location->stripe_oauth);
-            $stripeDetails = json_decode($location->stripe_oauth);
-            return $this->sendResponse($stripeDetails->stripe_publishable_key, 'Location');
+            if($program) {
+                $stripeDetails = Integration::where(['vendor_id' => $program->location->vendor_id, "service" => "Stripe"])->first();
+                return $this->sendResponse($stripeDetails->api_key, 'Stripe Publishable Key');
+            }
+
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
