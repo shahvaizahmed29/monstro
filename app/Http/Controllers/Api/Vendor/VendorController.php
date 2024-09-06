@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\GHLController;
 use App\Http\Requests\PasswordUpdateRequest;
 use App\Http\Requests\Vendor\VendorProfileUpdate;
+use App\Http\Resources\Member\LocationResource;
 use App\Http\Resources\Vendor\GetVendorProfile;
 use App\Mail\VendorRegister;
 use App\Models\Integration;
@@ -17,6 +18,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Services\StripeService;
+use App\Services\TimezoneService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -235,6 +237,40 @@ class VendorController extends BaseController
         
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function updateLocation(Request $request)
+    {
+        try {
+            // Find the location by ID
+            $location = Location::find($request->id);
+    
+            if (!$location) {
+                return $this->sendError("Location not found", [], 404);
+            }
+            $timezone = TimezoneService::findTimezone($request->timezone);
+            // Update the location with the provided data
+            $location->update([
+                'timezone' => $timezone, // Assuming timezone logic is commented out for now
+                'logo_url' => $request->logo,
+                'name' => $request->businessName,
+                'address' => $request->address,
+                'city' => $request->city,
+                'country' => $request->country,
+                'postal_code' => $request->postal,
+                'website' => $request->website,
+                'state' => $request->state,
+                'phone' => $request->phone,
+                'email' => $request->email,
+                'industry' => $request->niche
+            ]);
+    
+            $response = $this->sendResponse($location, "Location updated successfully.");
+            Log::info('API Response: ', $response->getData(true)); // Log the response data
+            return $response;
+        } catch (Exception $error) {
+            return $this->sendError("An error occurred: " . $error->getMessage(), [], 500);
         }
     }
 }

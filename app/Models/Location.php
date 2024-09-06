@@ -44,7 +44,8 @@ class Location extends Model
         'meta_data',
         'timezone',
         'stripe_oauth',
-        'stripe_account_id'
+        'stripe_account_id',
+        'industry'
     ];
 
     protected $casts = [
