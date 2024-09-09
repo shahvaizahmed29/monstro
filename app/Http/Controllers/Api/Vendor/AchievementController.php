@@ -10,6 +10,7 @@ use App\Models\AchievementActions;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AchievementController extends BaseController
 {
@@ -47,8 +48,14 @@ class AchievementController extends BaseController
     public function create(Request $request){
         try{
             DB::beginTransaction();
-            $achievement = Achievement::create($request->all());
-            AchievementActions::create(['action_id' => $request->action_id, 'count' => $request->action_count, 'achievement_id' => $achievement->id]);
+            Log::info(json_encode($request->all()));
+            $achievement = Achievement::create([
+                "name" => $request->name,
+                "badge" => $request->badge,
+                "reward_points" => $request->rewardPoints,
+                "program_id" => $request->program
+            ]);
+            AchievementActions::create(['action_id' => $request->action, 'count' => $request->actionCount, 'achievement_id' => $achievement->id]);
             DB::commit();
 
             $achievement = Achievement::with(['actions'])->find($achievement->id);

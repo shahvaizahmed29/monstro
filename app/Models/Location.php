@@ -10,6 +10,24 @@ class Location extends Model
 {
     use HasFactory, SoftDeletes;
 
+        /**
+     * The attributes that are NOT mass assignable.
+     *
+     * @var string[]
+     */
+    protected $guarded = [
+        'stripe_oauth'
+    ];
+
+    /**
+     * Default values for attributes.
+     *
+     * @var array
+     */
+    protected $attributes = [
+        'stripe_oauth' => "{}",
+    ];
+
     protected $fillable = [
         'go_high_level_location_id',
         'name',
@@ -24,7 +42,10 @@ class Location extends Model
         'phone',
         'vendor_id',
         'meta_data',
-        'timezone'
+        'timezone',
+        'stripe_oauth',
+        'stripe_account_id',
+        'industry'
     ];
 
     protected $casts = [

@@ -11,6 +11,7 @@ class StripeService
 
     public function __construct(){
         \Stripe\Stripe::setApiKey(config('services.stripe.secret_key'));
+        \Stripe\Stripe::setAccountId(config('services.stripe.secret_key'));
         // $this->stripe = new \Stripe\StripeClient();
     }
 
@@ -144,6 +145,19 @@ class StripeService
         ];
 
         return $subscriptions[$plan][$cycle] ?? null;
+    }
+
+    public function completeConnection($scope, $code){
+        try{
+            $response = \Stripe\OAuth::token([
+                'grant_type' => 'authorization_code',
+                'code' => $code,
+                'scope' => $scope
+            ]);        
+            return $response;
+        } catch (Exception $error) {
+            return $error->getMessage();
+        }
     }
 
 

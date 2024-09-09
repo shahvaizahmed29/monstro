@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Member;
 
+use App\Http\Controllers\Api\Vendor\MemberController as VendorMemberController;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\PasswordUpdateRequest;
 use App\Http\Resources\Member\AchievementRewardResource;
@@ -24,12 +25,18 @@ use App\Models\Program;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Models\Reward;
+use App\Models\Contract;
+use App\Models\Integration;
+use App\Models\Location;
+use App\Models\MemberContract;
+use App\Models\StripePlan;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class MemberController extends BaseController
@@ -505,4 +512,111 @@ class MemberController extends BaseController
         }
     }
 
+    public function addChildren(Request $request){
+        $member = Auth::user()->member;
+        if($member->parent_id){
+            return $this->sendError('You need to be a parent to add a children under your account.', [], 500);
+        } else {
+            try {
+                DB::beginTransaction();
+                Member::whereIn('id', $request->memberIds)->update([
+                    "parent_id" => $member->id
+                ]);
+                DB::commit();
+                return $this->sendResponse("Success", "Family Members Added.");
+            } catch(Exception $e){
+                DB::rollBack();
+                return $this->sendError($e->getMessage(), [], 500);
+            }
+        }
+    }
+
+    public function getChildren(){
+        $children = Auth::user()->member->children;
+        return $this->sendResponse($children, "Family Members.");
+    }
+
+    public function removeChildren(Request $request){
+        $member = Auth::user()->member;
+        if($member->parent_id){
+            return $this->sendError('You need to be a parent to remove a children under your account.', [], 500);
+        } else {
+            try {
+                DB::beginTransaction();
+                Member::whereIn('parent_id', $request->memberIds)->update([
+                    "parent_id" => null
+                ]);
+                DB::commit();
+                return $this->sendResponse("Success", "Family Members Removed.");
+            } catch(Exception $e){
+                DB::rollBack();
+                return $this->sendError($e->getMessage(), [], 500);
+            }
+        }
+    }
+
+    public function getProgramsWithPlans(){
+        $locationId = request()->locationId;
+        $member = Auth::user()->member;
+        try{
+            $reservations = Reservation::with('session')->where('member_id', $member->id)->where('status', Reservation::ACTIVE)->get();
+            $programIds = $reservations->pluck('session.program_id')->unique()->toArray();
+            
+            $programs = Program::with(['stripePlans.pricing'])->whereNotIn('id', $programIds)->where('location_id', $locationId)->get();
+            $data = [
+                'programs' => ProgramResource::collection($programs),
+            ];
+            return $this->sendResponse($data, 'Programs with Plans');
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getPlanContract(){
+        
+        try {
+            $planId = request()->planId;
+            $stripePlan = StripePlan::find($planId);
+            if ($stripePlan) {
+                $contracts = $stripePlan->contract;
+                return $this->sendResponse($contracts, 'Contract');
+            }
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function getPlan($planId){
+        try{
+            $member = Auth::user()->member;
+            $memberContract = MemberContract::where(['member_id' => $member->id, 'stripe_plan_id' => $planId, 'signed' => true])->firstOrFail();
+            if($memberContract) {
+                $planId = request()->planId;
+                $stripePlan = StripePlan::with('pricing')->find($planId);
+                return $this->sendResponse($stripePlan, 'Programs with Plans');
+            }
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function fetchVendorStripePk($programId){
+        $program = Program::with('location')->find($programId);
+        try {
+            if($program) {
+                $stripeDetails = Integration::where(['vendor_id' => $program->location->vendor_id, "service" => "Stripe"])->first();
+                return $this->sendResponse($stripeDetails->api_key, 'Stripe Publishable Key');
+            }
+
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function register(Request $request){
+        $program = Program::with(['programLevels', 'location'])->where('id', $request->programId)->first();
+        $addMember = VendorMemberController::createMemberFromRegistration($request, $program->location, $program->programLevels[0]->id);
+        Log::info($addMember);
+        return $this->sendResponse($addMember, 'Register');
+    }
 }

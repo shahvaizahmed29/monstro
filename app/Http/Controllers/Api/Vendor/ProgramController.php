@@ -17,11 +17,14 @@ use App\Http\Resources\Vendor\ProgramResource;
 use App\Models\AchievementActions;
 use App\Models\Action;
 use App\Models\CheckIn;
+use App\Models\Integration;
+use App\Models\Location;
 use App\Models\Member;
 use App\Models\MemberAchievement;
-use App\Models\MemberRewardClaim;
 use App\Models\Reservation;
-use App\Models\Reward;
+use App\Models\StripePlan;
+use App\Models\StripePlanPricing;
+use App\Models\Vendor;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -37,6 +40,37 @@ class ProgramController extends BaseController
         //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
         // }
         $programs = Program::where('location_id', $location->id);
+        if(isset(request()->type)) {
+            if(request()->type == 0) {
+                $programs = $programs->whereNotNull('deleted_at')->withTrashed();
+            }
+        }
+        $programs = $programs->paginate(25);
+        $data = [
+            'programs' => ProgramResource::collection($programs),
+            'pagination' => [
+                'current_page' => $programs->currentPage(),
+                'per_page' => $programs->perPage(),
+                'total' => $programs->total(),
+                'prev_page_url' => $programs->previousPageUrl(),
+                'next_page_url' => $programs->nextPageUrl(),
+                'first_page_url' => $programs->url(1),
+                'last_page_url' => $programs->url($programs->lastPage()),
+            ],
+        ];
+        return $this->sendResponse($data, 'Get programs related to specific location');
+    }
+
+    public function getProgramsByVendor($vendorId){
+        $vendor = Vendor::with('locations')->find($vendorId);
+        $locations = $vendor->locations;
+        $ids = collect($locations)->pluck('id')->all();
+        $programs = Program::whereIn('location_id', $ids)->whereHas('stripePlans', function ($query) {
+            $query->where('status', 1); // Example condition: only include active stripe plans
+        })
+        ->with(['stripePlans' => function ($query) {
+            $query->where('status', 1)->whereHas('contract')->with('pricing'); // Load pricing data with stripePlans
+        }]);
         if(isset(request()->type)) {
             if(request()->type == 0) {
                 $programs = $programs->whereNotNull('deleted_at')->withTrashed();
@@ -81,7 +115,7 @@ class ProgramController extends BaseController
     public function getProgramById($id){
         try{
             $location = request()->location;
-            $program = Program::with(['programLevels','programLevels.sessions'])->where('id',$id)->where('location_id', $location->id)->first();
+            $program = Program::with(['location', 'programLevels','programLevels.sessions', 'stripePlans.pricing'])->where('id',$id)->where('location_id', $location->id)->first();
 
             if(!$program){
                 return $this->sendError("Program doesnot exist", [], 400);
@@ -113,6 +147,7 @@ class ProgramController extends BaseController
 
     public function addProgram(ProgramStoreRequest $request){
         $location = request()->location;
+        $prices = request()->prices;
         try{
             //Code commented out below becuase auth guard is not applied anymore.
             // $location = Location::find($request->location_id);
@@ -164,8 +199,55 @@ class ProgramController extends BaseController
                     'status' => \App\Models\Session::ACTIVE
                 ]);
             }
-            DB::commit();
+
+            $location = Location::find($location->id);
+            // $stripeClientAuth = json_decode($location->stripe_oauth);
+            // $stripe = new \Stripe\StripeClient($stripeClientAuth->access_token);
+            // $product = $stripe->products->create(['name' => $request->program_name, 'description' => $request->description]);
+            // foreach ($prices as $key => $price) {
+            //     $stripePrice = array();
+            //     if($price['recurring'] == "One Time"){
+            //         $stripePrice = $stripe->prices->create([
+            //             'currency' => 'usd',
+            //             'unit_amount' => (float)$price["unit_amount"] * 100,
+            //             'type' => "one_time",
+            //             'product' => $product->id,
+            //         ]);
+            //     } else {
+            //         $stripePrice = $stripe->prices->create([
+            //             'currency' => 'usd',
+            //             'unit_amount' => (float)$price["unit_amount"] * 100,
+            //             'recurring' => ['interval' => $price["recurring"]],
+            //             'product' => $product->id,
+            //         ]);
+            //     }
+            //     $description = '';
+            //     if($price['family']){
+            //         $description = "This is a plan with {$price['family_member_limit']} family members allowed in it.";
+            //     } else {
+            //         $description = "This is a plan with no family members allowed in it.";
+            //     }
+            //     $plan = StripePlan::create([
+            //         'name' => 'Plan '.$key+1,
+            //         'description' => $description,
+            //         'vendor_id' => $location->vendor_id,
+            //         'status' => 1,
+            //         'family' => $price['family'],
+            //         'program_id' => $program->id,
+            //         'family_member_limit' => $price['family_member_limit'],
+            //     ]);
+                
+            //     $plan->save();
+
+            //     $pricing = new StripePlanPricing([
+            //         'amount' => $price['unit_amount'],
+            //         'billing_period' => $price['recurring'],
+            //         'stripe_price_id' => $stripePrice->id
+            //     ]);
+            //     $plan->pricing()->save($pricing);
+            // }
             
+            DB::commit();
             $program = Program::with('programLevels.sessions')->where('id', $program->id)->first();
             return $this->sendResponse(new ProgramResource($program), 'Program created successfully.');
         }catch(Exception $e){
@@ -701,6 +783,121 @@ class ProgramController extends BaseController
             }
         }catch(Exception $error){
             return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function addPlan($programId, Request $request) {
+        $pricing = request()->pricing;
+        $program = Program::with('location')->find($programId);
+        
+        try{
+            //Code commented out below becuase auth guard is not applied anymore.
+            // $location = Location::find($request->location_id);
+            // if($location->vendor_id != auth()->user()->vendor->id) {
+            //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
+            // }
+            DB::beginTransaction();
+            $stripeClientAuth = Integration::where(['vendor_id' => $program->location->vendor_id, "service" => "Stripe"])->first();
+            $stripe = new \Stripe\StripeClient($stripeClientAuth->access_token);
+            
+            $product = $stripe->products->create(['name' => $request->name, 'description' => $request->description]);
+            $description = '';
+            if($request->family){
+                $description = "This is a plan with {$request->family_member_limit} family members allowed in it.";
+            } else {
+                $description = "This is a plan with no family members allowed in it.";
+            }
+            $stripePrice = null;
+            if($pricing['billing_period'] == "One Time"){
+                $stripePrice = $stripe->prices->create([
+                    'currency' => 'usd',
+                    'unit_amount' => (float)$pricing["amount"] * 100,
+                    'billing_scheme' => "per_unit",
+                    'product' => $product->id,
+                    "nickname" => $description
+                ]);
+
+            } else {
+                $stripePrice = $stripe->prices->create([
+                    'currency' => 'usd',
+                    'unit_amount' => (float)$pricing["amount"] * 100,
+                    'recurring' => ['interval' => $pricing["billing_period"]],
+                    'product' => $product->id,
+                    "nickname" => $description
+                ]);
+            }
+
+
+            $plan = StripePlan::create([
+                'name' => $request->name,
+                'description' => $request->description .'. '. $description,
+                'vendor_id' => $program->location->vendor_id,
+                'status' => 1,
+                'family' => $request->family,
+                'program_id' => $program->id,
+                'family_member_limit' => $request->family_member_limit,
+            ]);
+            
+            $plan->save();
+
+            $pricing = new StripePlanPricing([
+                'amount' => $pricing["amount"],
+                'billing_period' => $pricing["billing_period"],
+                'stripe_price_id' => $stripePrice->id
+            ]);
+            $plan->pricing()->save($pricing);
+
+
+            // foreach ($prices as $key => $price) {
+            //     $stripePrice = array();
+            //     if($price['recurring'] == "One Time"){
+                    // $stripePrice = $stripe->prices->create([
+                    //     'currency' => 'usd',
+                    //     'unit_amount' => (float)$price["unit_amount"] * 100,
+                    //     'type' => "one_time",
+                    //     'product' => $product->id,
+                    // ]);
+            //     } else {
+                    // $stripePrice = $stripe->prices->create([
+                    //     'currency' => 'usd',
+                    //     'unit_amount' => (float)$price["unit_amount"] * 100,
+                    //     'recurring' => ['interval' => $price["recurring"]],
+                    //     'product' => $product->id,
+                    // ]);
+            //     }
+                // $description = '';
+                // if($price['family']){
+                //     $description = "This is a plan with {$price['family_member_limit']} family members allowed in it.";
+                // } else {
+                //     $description = "This is a plan with no family members allowed in it.";
+                // }
+                // $plan = StripePlan::create([
+                //     'name' => 'Plan '.$key+1,
+                //     'description' => $description,
+                //     'vendor_id' => $location->vendor_id,
+                //     'status' => 1,
+                //     'family' => $price['family'],
+                //     'program_id' => $program->id,
+                //     'family_member_limit' => $price['family_member_limit'],
+                // ]);
+                
+                // $plan->save();
+
+                // $pricing = new StripePlanPricing([
+                //     'amount' => $price['unit_amount'],
+                //     'billing_period' => $price['recurring'],
+                //     'stripe_price_id' => $stripePrice->id
+                // ]);
+                // $plan->pricing()->save($pricing);
+            // }
+            
+            DB::commit();
+            return $this->sendResponse($plan, 'Program created successfully.');
+        }catch(Exception $e){
+            DB::rollBack();
+            Log::info('===== ProgramController - addLevel() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
         }
     }
 

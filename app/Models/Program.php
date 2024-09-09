@@ -39,6 +39,10 @@ class Program extends Model
         return $this->hasMany(Session::class);
     }
 
+    public function stripePlans(){
+        return $this->hasMany(StripePlan::class);
+    }
+
     public function activeSessions()
     {
         return $this->sessions()->whereHas('programLevel')->with(['reservations', 'reservations.member', 'programLevel'])->where('status', Session::ACTIVE)->latest()->get();

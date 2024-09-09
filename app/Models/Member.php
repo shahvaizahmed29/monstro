@@ -20,7 +20,8 @@ class Member extends Model
         'phone',
         'referral_code',
         'avatar',
-        'current_points'
+        'current_points',
+        'parent_id'
     ];
 
     public function locations(){
@@ -33,6 +34,14 @@ class Member extends Model
 
     public function reservations(){
         return $this->hasMany(Reservation::class);
+    }
+
+    public function parent(){
+        return $this->belongsTo(Member::class, 'parent_id');
+    }
+
+    public function children(){
+        return $this->hasMany(Member::class, 'parent_id');
     }
 
     public function programs(){

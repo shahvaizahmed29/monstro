@@ -11,16 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('members', function (Blueprint $table) {
+        Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->integer('parent_id')->nullable();
-            $table->string('name');
-            $table->string('email');
-            $table->string('phone');
-            $table->string('referral_code')->nullable();
-            $table->double('current_points')->default(0)->nullable();
-            $table->string('avatar')->nullable();
+            $table->string('purchase_id');
+            $table->string('purchase_type');
+            $table->string('amount');
+            $table->enum('type', ['Credit', 'Debit']);
+            $table->string('note');
+            $table->enum('status', ['Completed', 'Pending', 'Failed']);
             $table->timestamps();
             $table->softDeletes();
         });
@@ -31,6 +30,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('members');
+        Schema::table('transactions', function (Blueprint $table) {
+            Schema::dropIfExists('transactions');
+        });
     }
 };

@@ -31,7 +31,8 @@ class LocationResource extends JsonResource
             'metaData' => $this->meta_data,
             'createdAt' => $this->created_at,
             'updatedAt' => $this->updated_at,
-            'isNew' => ($this->is_new == 1)? true: false, 
+            'isNew' => ($this->is_new == 1)? true: false,
+            'niche' => $this->industry 
         ];
 
         return $locations;

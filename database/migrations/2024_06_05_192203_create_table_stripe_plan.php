@@ -11,16 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('members', function (Blueprint $table) {
+        Schema::create('stripe_plans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->integer('parent_id')->nullable();
             $table->string('name');
-            $table->string('email');
-            $table->string('phone');
-            $table->string('referral_code')->nullable();
-            $table->double('current_points')->default(0)->nullable();
-            $table->string('avatar')->nullable();
+            $table->string('description');
+            $table->string('model');
+            $table->boolean('status');
+            $table->foreignId('vendor_id')->constrained()->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -31,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('members');
+        Schema::drop('stripe_plans', function (Blueprint $table) {});
     }
 };
