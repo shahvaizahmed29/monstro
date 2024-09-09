@@ -119,11 +119,11 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::get('member/{memberId}/password-reset', [App\Http\Controllers\Api\Vendor\MemberController::class, 'memberPasswordReset'])->name('member.password.reset');
     Route::get('member/{memberId}/get-family', [App\Http\Controllers\Api\Vendor\MemberController::class, 'getFamilyMembers'])->name('member.fetch.family');
     
-    Route::prefix('achievement')->group(function () {
+    Route::prefix('achievements')->group(function () {
         Route::get('', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'index'])->name('achievement.all');
-        Route::post('create', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'create'])->name('create.achievement');
+        Route::post('', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'create'])->name('create.achievement');
         Route::get('{achievementId}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'getAchievement'])->name('get.achievement');
-        Route::post('{achievement}/update', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'update'])->name('update.achievement');
+        Route::put('{achievement}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'update'])->name('update.achievement');
         Route::delete('{achievementId}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'delete'])->name('delete.achievement');
     });
 
