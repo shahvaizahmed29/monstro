@@ -26,7 +26,8 @@ class SessionSeeder extends Seeder
                 'friday' => '13:00:00',
                 'saturday' => '13:00:00',
                 'sunday' => '13:00:00',
-                'status' => 1
+                'status' => 1,
+                'program_id' => 1
             ],
             [
                 'program_level_id' => 2,
@@ -40,7 +41,8 @@ class SessionSeeder extends Seeder
                 'friday' => '13:00:00',
                 'saturday' => '13:00:00',
                 'sunday' => '13:00:00',
-                'status' => 1
+                'status' => 1,
+                'program_id' => 2
             ],
             [
                 'program_level_id' => 1,
@@ -54,7 +56,8 @@ class SessionSeeder extends Seeder
                 'friday' => '13:00:00',
                 'saturday' => '13:00:00',
                 'sunday' => '13:00:00',
-                'status' => 1
+                'status' => 1,
+                'program_id' => 1
             ],
             [
                 'program_level_id' => 1,
@@ -68,7 +71,8 @@ class SessionSeeder extends Seeder
                 'friday' => '13:00:00',
                 'saturday' => '13:00:00',
                 'sunday' => '13:00:00',
-                'status' => 1
+                'status' => 1,
+                'program_id' => 1
             ],
         ];
 

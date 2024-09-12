@@ -43,7 +43,7 @@ class ReservationSeeder extends Seeder
                 'end_date' => '2023-11-30',
             ],
             [
-                'session_id' => 1,
+                'session_id' => 2,
                 'member_id' => 4,
                 'status' => 1,
                 'start_date' => '2023-11-01',

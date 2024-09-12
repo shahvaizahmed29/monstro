@@ -17,31 +17,33 @@ class VendorSeeder extends Seeder
             [
                 'user_id' => 1,
                 'company_name' => 'Company One',
-                'company_email' => 'companyOne@monto.com',
+                'company_email' => 'companyone@monto.com',
                 'company_website' => 'companyone.com',
-                'company_address' => 'South Wales south plot 1-2DA'
+                'company_address' => 'South Wales south plot 1-2DA',
+                'first_name' => "Vendor",
+                'last_name' => "One",
+
             ],
             [
                 'user_id' => 2,
                 'company_name' => 'Company Two',
-                'company_email' => 'companTwo@monto.com',
+                'company_email' => 'companytwo@monto.com',
                 'company_website' => 'companytwo.com',
-                'company_address' => 'South Wales south plot 4-2DA'
+                'company_address' => 'North Wales south plot 1-2DA',
+                'first_name' => "Vendor",
+                'last_name' => "Two",
+                
             ],
             [
                 'user_id' => 3,
                 'company_name' => 'Company Three',
-                'company_email' => 'companThree@monto.com',
+                'company_email' => 'companythree@monto.com',
                 'company_website' => 'companythree.com',
-                'company_address' => 'South Wales south plot 3-2DA'
-            ],
-            [
-                'user_id' => 4,
-                'company_name' => 'Company Two',
-                'company_email' => 'companFour@monto.com',
-                'company_website' => 'companyfour@company.com',
-                'company_address' => 'South Wales south plot 2-2DA'
-            ],
+                'company_address' => 'East Wales south plot 1-2DA',
+                'first_name' => "Vendor",
+                'last_name' => "Three",
+                
+            ]
         ];
 
         foreach ($vendors as $vendor) {

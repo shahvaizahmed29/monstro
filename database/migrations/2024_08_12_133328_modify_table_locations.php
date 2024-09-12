@@ -25,7 +25,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('locations', function (Blueprint $table) {
-            $table->string('go_high_level_location_id')->nullable(false)->unique()->change();
+            // $table->string('go_high_level_location_id')->nullable(false)->unique()->change();
         });
     }
 };

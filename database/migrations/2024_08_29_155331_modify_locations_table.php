@@ -22,8 +22,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('locations', function (Blueprint $table) {
-            $table->json('stripe_oauth');
-            $table->string('stripe_account_id');
+            $table->json('stripe_oauth')->default("{}");
+            $table->string('stripe_account_id')->default("1");
         });
     }
 };

@@ -16,42 +16,50 @@ class CheckInSeeder extends Seeder
             [
                 'reservation_id' => 1,
                 'check_in_time' => '2023-11-20 01:30:00',
-                'check_out_time' => '2023-11-20 02:00:00'
+                'check_out_time' => '2023-11-20 02:00:00',
+                'time_to_check_in' => '2023-11-20 01:30:00'
             ],
             [
                 'reservation_id' => 1,
                 'check_in_time' => '2023-11-21 01:30:00',
-                'check_out_time' => '2023-11-21 02:00:00'
+                'check_out_time' => '2023-11-21 02:00:00',
+                'time_to_check_in' => '2023-11-21 01:30:00'
             ],
             [
                 'reservation_id' => 1,
                 'check_in_time' => '2023-11-22 01:30:00',
-                'check_out_time' => '2023-11-22 02:00:00'
+                'check_out_time' => '2023-11-22 02:00:00',
+                'time_to_check_in' => '2023-11-22 01:30:00'
             ],
             [
                 'reservation_id' => 1,
                 'check_in_time' => '2023-11-23 01:30:00',
-                'check_out_time' => '2023-11-23 02:00:00'
+                'check_out_time' => '2023-11-23 02:00:00',
+                'time_to_check_in' => '2023-11-20 01:30:00'
             ],
             [
                 'reservation_id' => 5,
                 'check_in_time' => '2023-11-20 01:30:00',
-                'check_out_time' => '2023-11-20 02:00:00'
+                'check_out_time' => '2023-11-20 02:00:00',
+                'time_to_check_in' => '2023-11-20 01:30:00'
             ],
             [
                 'reservation_id' => 6,
                 'check_in_time' => '2023-11-20 01:30:00',
-                'check_out_time' => '2023-11-20 02:00:00'
+                'check_out_time' => '2023-11-20 02:00:00',
+                'time_to_check_in' => '2023-11-20 01:30:00'
             ],
             [
                 'reservation_id' => 7,
                 'check_in_time' => '2023-11-20 01:30:00',
-                'check_out_time' => '2023-11-20 02:00:00'
+                'check_out_time' => '2023-11-20 02:00:00',
+                'time_to_check_in' => '2023-11-20 01:30:00'
             ],
             [
                 'reservation_id' => 8,
                 'check_in_time' => '2023-11-20 01:30:00',
-                'check_out_time' => '2023-11-20 02:00:00'
+                'check_out_time' => '2023-11-20 02:00:00',
+                'time_to_check_in' => '2023-11-20 01:30:00'
             ],
         ];
 

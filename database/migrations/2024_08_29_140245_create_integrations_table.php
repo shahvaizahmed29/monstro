@@ -30,7 +30,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::create('integrations', function (Blueprint $table) {
+        Schema::drop('integrations', function (Blueprint $table) {
             //
         });
     }
