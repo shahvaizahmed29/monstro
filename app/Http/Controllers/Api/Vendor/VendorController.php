@@ -224,8 +224,8 @@ class VendorController extends BaseController
                 'name' => $request->locationName,
                 'email' => $request->email,
                 'phone' => $request->phone,
-                'stripe_oauth' => '{}',
-                'stripe_account_id' => '0',
+                // 'stripe_oauth' => '{}',
+                // 'stripe_account_id' => '0',
                 'vendor_id' => $vendor->id
             ]);
             DB::commit();
