@@ -199,7 +199,7 @@ class VendorController extends BaseController
             if ($user) {
                 return $this->sendError('User not found.', [], 404);
             }
-            $password = Str::random(10);
+            $password = $request->password ? $request->password : Str::random(10);
             DB::beginTransaction();
             $user = User::create([
                 'name' => $request->firstName.' '.$request->lastName,

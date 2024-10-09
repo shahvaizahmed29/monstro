@@ -27,13 +27,13 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Vendor One',
                 'email' => 'vendor.one@monstro.com',
-                'password' => bcrypt('vendor123!'),
+                'password' => bcrypt('Vendor123!'),
                 'email_verified_at' => now()
             ],
             [
                 'name' => 'Vendor Two',
                 'email' => 'vendor.two@monstro.com',
-                'password' => bcrypt('vendor123!'),
+                'password' => bcrypt('Vendor123!'),
                 'email_verified_at' => now()
             ]
         ];
@@ -49,13 +49,13 @@ class UserSeeder extends Seeder
             [
                 'name' => 'Alex',
                 'email' => 'alex.gabreil@monstro.com',
-                'password' => bcrypt('member123!'),
+                'password' => bcrypt('Member123!'),
                 'email_verified_at' => now()
             ],
             [
                 'name' => 'John',
                 'email' => 'john.safari@monstro.com',
-                'password' => bcrypt('member123!'),
+                'password' => bcrypt('Member123!'),
                 'email_verified_at' => now()
             ]
         ];
