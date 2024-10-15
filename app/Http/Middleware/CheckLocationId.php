@@ -4,12 +4,13 @@ namespace App\Http\Middleware;
 
 use Closure;
 use App\Models\Location;
+use Illuminate\Support\Facades\Log;
 
 class CheckLocationId
 {
-    public function handle($request, Closure $next)
-    {
+    public function handle($request, Closure $next)    {
         $requestLocationId = $request->header('Locationid');
+        Log::info('Location ID: ' . $requestLocationId);
 
         if (!$requestLocationId) {
             $response = [
@@ -19,9 +20,10 @@ class CheckLocationId
             return response()->json($response, 400);
         }
 
-        $location = Location::where('go_high_level_location_id', $requestLocationId)->first();
+        $location = Location::where('id', $requestLocationId)->first();
 
         if (!$location) {
+            Log::info("No Location Found");
             $response = [
                 'success' => false,
                 'message' => 'Location Id not found',
@@ -31,7 +33,7 @@ class CheckLocationId
 
         // Pass the $locationId variable to the request
         $request->merge(['location' => $location]);
-    
+
         return $next($request);
     }
 }
