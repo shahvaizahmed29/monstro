@@ -18,18 +18,18 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             PlansSeeder::class,
             ProgressStepsSeeder::class,
-            ActionSeeder::class,
-            // UserSeeder::class,
-            // VendorSeeder::class,
-            // LocationSeeder::class,
-            // MemberSeeder::class,
-            // MemberLocationSeeder::class,
-            // ProgramSeeder::class,
-            // ProgramLevelSeeder::class,
-            // SessionSeeder::class,
-            // ReservationSeeder::class,
-            // CheckInSeeder::class,
-            // MemberProgramsSeeder::class
+            // ActionSeeder::class,
+            UserSeeder::class,
+            VendorSeeder::class,
+            LocationSeeder::class,
+            MemberSeeder::class,
+            MemberLocationSeeder::class,
+            ProgramSeeder::class,
+            ProgramLevelSeeder::class,
+            SessionSeeder::class,
+            ReservationSeeder::class,
+            CheckInSeeder::class,
+            MemberProgramsSeeder::class
         ]);
     }
 }

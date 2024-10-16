@@ -19,6 +19,7 @@ class AchievementResource extends JsonResource
         $achievement = [
             'id' => $this->id,
             'programName' => $program->name,
+            'program' => $program,
             'name' => $this->name,
             'badge' => $this->badge,
             'rewardPoints' => $this->reward_points,            

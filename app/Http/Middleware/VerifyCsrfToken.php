@@ -14,6 +14,7 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         'public/*',
         'api/payments/subscribe',
-        'api/payments/deposit'
+        'api/payments/deposit',
+        'api/*'
     ];
 }

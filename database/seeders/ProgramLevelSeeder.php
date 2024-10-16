@@ -18,13 +18,17 @@ class ProgramLevelSeeder extends Seeder
         $levels = [
             [
                 'name' => 'Level 1',
-                'custom_field_ghl_value' => 'Level 1',
-                'parent_id' => null
+                'parent_id' => null,
+                'capacity' => 18,
+                'min_age' => 16,
+                'max_age' => 48,
             ],
             [
                 'name' => 'Level 2',
-                'custom_field_ghl_value' => 'Level 2',
-                'parent_id' => null
+                'parent_id' => null,
+                'capacity' => 18,
+                'min_age' => 16,
+                'max_age' => 48,
             ]
         ];
 
@@ -34,8 +38,10 @@ class ProgramLevelSeeder extends Seeder
 
                 $program->programLevels()->create([
                     'name' => $level['name'],
-                    'custom_field_ghl_value' => $level['custom_field_ghl_value'],
-                    'parent_id' => $level['parent_id']
+                    'parent_id' => $level['parent_id'],
+                    'capacity' => $level['capacity'],
+                    'min_age' => $level['min_age'],
+                    'max_age' => $level['max_age'],
                 ]);
             }
         }

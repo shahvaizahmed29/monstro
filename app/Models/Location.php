@@ -24,7 +24,8 @@ class Location extends Model
         'phone',
         'vendor_id',
         'meta_data',
-        'timezone'
+        'timezone',
+        'industry'
     ];
 
     protected $casts = [

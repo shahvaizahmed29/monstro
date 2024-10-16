@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +19,13 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::group(['prefix' => 'member'], function () {
+    Route::post('register', [App\Http\Controllers\Api\Member\MemberController::class, 'register'])->name('register.member');
+});
+
+Route::post('password/forgot', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('password/reset', [ResetPasswordController::class, 'reset']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     //==================================================================================================================================================================================
@@ -47,6 +56,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('active-vendors', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberActiveVendors'])->name('get.member.active.vendors');
         Route::get('active-locations', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberActiveLocations'])->name('get.member.active.locations');
         Route::get('upcoming-classes', [App\Http\Controllers\Api\Member\ReservationController::class, 'getReservationsByMember'])->name('get.member.upcoming.classes');
+
+        // routes for enroll in program.
+        Route::get('programs-with-plans-by-location/{locationId}', [App\Http\Controllers\Api\Member\MemberController::class, 'getProgramsWithPlans'])->name('get.programs.with.plans');
+        Route::get('get-plan-contract/{planId}', [App\Http\Controllers\Api\Member\MemberController::class, 'getPlanContract'])->name('get.plan.contract');
+        Route::get('get-plan/{planId}', [App\Http\Controllers\Api\Member\MemberController::class, 'getPlan'])->name('get.plan');
+        Route::get('contract/{contractId}/variables', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContractVariables'])->name('contract.variables.fetch');
+        Route::post('fill-contract', [App\Http\Controllers\Api\Vendor\ContractController::class, 'fillContract'])->name('fill.contract');
+        Route::get('fetch-vendor-stripe-pk/{programId}', [App\Http\Controllers\Api\Member\MemberController::class, 'fetchVendorStripePk'])->name('fetch.vendor.stripe.pk');
+        Route::post('program/plan/subscribe/{programId}/{planId}', [App\Http\Controllers\Api\PaymentController::class, 'completeSubscription'])->name('complete.subscription');
     });
 
     //==================================================================================================================================================================================
@@ -56,6 +74,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('authenticate', [App\Http\Controllers\Api\Vendor\AuthController::class, 'vendorAuthenticate'])->name('vendor.authenticate');
         Route::get('profile', [App\Http\Controllers\Api\Vendor\VendorController::class, 'getProfile'])->name('get.profile');
         Route::put('update-profile', [App\Http\Controllers\Api\Vendor\VendorController::class, 'updateProfile'])->name('update.profile');
+        Route::post('integrations/{service}', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'completeConnection'])->name('complete.integration.connection');
+        Route::get('integrations', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'getIntegrations'])->name('fetch.integrations');
+        Route::delete('integrations/{id}', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'delIntegrations'])->name('delete.integrations');
+        Route::post('update-location-info', [App\Http\Controllers\Api\Vendor\VendorController::class, 'updateLocation'])->name('vendor.location.update');
     });
 
     Route::get('logout', [App\Http\Controllers\Api\Vendor\AuthController::class, 'logout'])->name('logout');
@@ -64,6 +86,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
 //==================================================================================================================================================================================
 //===================================================================================== Vendors Public Routes =============================================================================
 //==================================================================================================================================================================================
+
+Route::group(['prefix' => 'vendor'],function () {
+    Route::post('register/44a1a08a-3109-4199-ad64-fa484ed6b656/gmnq69ju9hds/b0be1897-4db1-4cfb-9c0f-38321a7e6fcb', [App\Http\Controllers\Api\Vendor\VendorController::class, 'registerVendor'])->name('vendor.register.admin');
+    Route::get('register/get-programs-by-vendor/{vendorId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramsByVendor'])->name('get.programs.by.Vendor');
+    Route::get('register/stripe-plans/{programId}', [App\Http\Controllers\Api\Vendor\StripePlanController::class, 'getPlans'])->name('regitser.stripe.plans.fetch');
+});
+
 Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],function () {
     Route::get('get-programs-by-location', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramsByLocation'])->name('get.programs.by.location');
     Route::get('get-programs-by-id/{id}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getProgramById'])->name('get.program.by.id');
@@ -88,12 +117,13 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::put('member/status/{member_id}', [App\Http\Controllers\Api\Vendor\MemberController::class, 'memberStatusUpdate'])->name('member.status.update');
     Route::get('attendances/member/{memberId}/program/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'lastTenAttendance'])->name('member.program.attendances');
     Route::get('member/{memberId}/password-reset', [App\Http\Controllers\Api\Vendor\MemberController::class, 'memberPasswordReset'])->name('member.password.reset');
+    Route::get('member/{memberId}/get-family', [App\Http\Controllers\Api\Vendor\MemberController::class, 'getFamilyMembers'])->name('member.fetch.family');
     
-    Route::prefix('achievement')->group(function () {
+    Route::prefix('achievements')->group(function () {
         Route::get('', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'index'])->name('achievement.all');
-        Route::post('create', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'create'])->name('create.achievement');
+        Route::post('', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'create'])->name('create.achievement');
         Route::get('{achievementId}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'getAchievement'])->name('get.achievement');
-        Route::post('{achievement}/update', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'update'])->name('update.achievement');
+        Route::put('{achievement}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'update'])->name('update.achievement');
         Route::delete('{achievementId}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'delete'])->name('delete.achievement');
     });
 
@@ -132,6 +162,14 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::post('member/create', [App\Http\Controllers\Api\Vendor\MemberController::class, 'createMember'])->name('create.member');
     Route::get('program/{programId}/get-archive-program-levels', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'getArchiveProgramLevelsWithSession'])->name('get.archive.program.levels');
     Route::post('program/{program}/image', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'programImageUpdate'])->name('program.image.update');
+
+    Route::get('stripe-plans/{programId}', [App\Http\Controllers\Api\Vendor\StripePlanController::class, 'getPlans'])->name('stripe.plans.fetch');
+    Route::get('stripe-plans/single/{planId}', [App\Http\Controllers\Api\Vendor\StripePlanController::class, 'getPlan'])->name('stripe.plan.fetch');
+    Route::post('create-contract/{programId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'addContract'])->name('contract.create');
+    Route::get('contracts/{programId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContracts'])->name('contracts.fetch');
+    Route::get('contract/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContractById'])->name('contract.single.fetch');
+    Route::post('invite-member', [App\Http\Controllers\Api\Vendor\MemberController::class, 'inviteMember'])->name('invite.member');
+    Route::post('add-stripe-plan/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addPlan'])->name('plan.create');
 });
 
 Route::post('image-update/{user_id}', [App\Http\Controllers\PublicController::class, 'imageUpdate'])->name('image.update');

@@ -54,6 +54,34 @@ class ProgramStoreRequest extends FormRequest
             'sessions.*.friday' => 'nullable|date_format:H:i:s',
             'sessions.*.saturday' => 'nullable|date_format:H:i:s',
             'sessions.*.sunday' => 'nullable|date_format:H:i:s',
+            // 'prices' => [
+            //     'required',
+            //     'array',
+            //     function ($attribute, $value, $fail) {
+            //         // Collect all prices
+            //         $prices = collect($value);
+                    
+            //         // Group by 'recurring' value
+            //         $groupedByRecurring = $prices->groupBy('recurring');
+                    
+            //         // Iterate through each group and validate
+            //         foreach ($groupedByRecurring as $recurring => $items) {
+            //             if ($items->count() > 2) {
+            //                 // Fail if more than 2 items have the same recurring value
+            //                 $fail("The 'recurring' value '$recurring' can only appear in 2 objects.");
+                           
+            //             } elseif ($items->count() == 2) {
+            //                 // Check family condition if there are exactly 2 items with the same recurring value
+            //                 $families = $items->pluck('family')->toArray();
+            //                 if (count(array_filter($families)) > 1 || count(array_filter($families)) == 0) {
+            //                     // Fail if both items have family set to true or both have family set to false
+            //                     $fail("When Billing period value is '$recurring', You cannot set both with family or both without family.");
+                                
+            //                 }
+            //             }
+            //         }
+            //     },
+            // ]
         ];
     }
 }
