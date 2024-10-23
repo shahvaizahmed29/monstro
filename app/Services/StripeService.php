@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Stripe\Subscription;
 
 class StripeService
@@ -156,6 +157,7 @@ class StripeService
             ]);        
             return $response;
         } catch (Exception $error) {
+            Log::info($error->getMessage());
             return $error->getMessage();
         }
     }
