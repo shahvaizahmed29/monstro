@@ -71,9 +71,8 @@ class ProgramController extends BaseController
     }
 
     public function getProgramsByVendor($vendorId){
-        $output = new Symfony\Component\Console\Output\ConsoleOutput();
-        $output->writeln("Getting Programs");
         $vendor = Vendor::with('locations')->find($vendorId);
+        Log::info(json_encode($vendor));
         $locations = $vendor->locations;
         $ids = collect($locations)->pluck('id')->all();
         $programs = Program::whereIn('location_id', $ids)->whereHas('stripePlans', function ($query) {
