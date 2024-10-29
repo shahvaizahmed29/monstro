@@ -48,4 +48,9 @@ class Location extends Model
         return $this->hasOne(SupportTicket::class);
     }
 
+    public function locationRoles()
+    {
+    return $this->hasMany(LocationRole::class);
+    }
+
 }
