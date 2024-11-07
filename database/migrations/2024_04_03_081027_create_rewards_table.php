@@ -19,6 +19,7 @@ return new class extends Migration
             $table->tinyInteger('type');
             $table->unsignedInteger('limit_per_member')->default(1);
             $table->foreignId('achievement_id')->constrained()->onDelete('cascade')->nullable();
+            $table->foreignId('location_id')->nullable()->constrained()->onDelete('cascade');
             $table->unsignedBigInteger('reward_points')->nullable();
             $table->timestamps();
             $table->softDeletes();

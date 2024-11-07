@@ -14,7 +14,10 @@ class Contract extends Model
         'vendor_id',
         'content',
         'title',
-        'description'
+        'description',
+        'isDraft',
+        'editable',
+        'location_id'
     ];
 
     public function vendors()

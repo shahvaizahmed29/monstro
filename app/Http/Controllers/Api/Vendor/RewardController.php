@@ -7,6 +7,7 @@ use App\Http\Resources\Vendor\NewRewardResource;
 use App\Models\Reward;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class RewardController extends BaseController
@@ -45,32 +46,28 @@ class RewardController extends BaseController
     {
         try {
             $location = request()->location;
-
-            $uploadedFileName = null;
-            if ($request->hasFile('image')) {
-                $img = $request->file('image');
-                $imgPath = 'reward-images/';
-                $uploadedFileName = app('uploadImage')(0, $img, $imgPath);
-            }
-
             $rewardData = [
                 'name' => $request->name,
                 'description' => $request->description,
-                'image' => $uploadedFileName,
+                'image' => $request->image,
                 'type' => $request->type,
-                'limit_per_member' => $request->limit_per_member,
+                'limit_per_member' => $request->limitPerMember,
                 'location_id' => $location->id
             ];
-
+            
             if ($request->type == Reward::ACHIEVEMENT){
-                $rewardData['achievement_id'] = $request->achievement_id;
+                $rewardData['achievement_id'] = $request->achievementId;
             }else{
-                $rewardData['reward_points'] = $request->reward_points;
+                $rewardData['reward_points'] = $request->rewardPoints;
             }
-
+            
+            DB::beginTransaction();
             $reward = Reward::create($rewardData);
+            DB::commit();
             return $this->sendResponse(new NewRewardResource($reward), 'Reward created successfully');
         } catch (Exception $error) {
+            DB::rollBack();
+            Log::info(json_encode($error));
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
@@ -99,25 +96,21 @@ class RewardController extends BaseController
             if (!$reward) {
                 return $this->sendError('Reward not found', [], 400);
             }
-
-            $uploadedFileName = null;
-            if ($request->hasFile('image')) {
-                $img = $request->file('image');
-                $imgPath = 'reward-images/';
-                $uploadedFileName = app('uploadImage')(0, $img, $imgPath);
-            }
-
+            DB::beginTransaction();
             $reward->update([
                 'name' => $request->name ?? $reward->name,
                 'description' => $request->description ?? $reward->description,
-                'image' => ($uploadedFileName) ? $uploadedFileName : $reward->image,
-                'limit_per_member' => $request->limit_per_member ?? $reward->limit_per_member,
+                'image' => $request->image,
+                'limit_per_member' => $request->limitPerMember ?? $reward->limitPerMember,
+                'reward_points' => $request->rewardPoints
             ]);
-
+            DB::commit();
             $reward = Reward::with('achievement')->where('id', $reward->id)->first();
 
             return $this->sendResponse(new NewRewardResource($reward), 'Reward updated successfully');
         } catch (Exception $error) {
+            DB::rollBack();
+            Log::info(json_encode($error));
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
@@ -130,10 +123,13 @@ class RewardController extends BaseController
             if (!$reward) {
                 return $this->sendError('Reward not found', [], 400);
             }
-
+            DB::beginTransaction();
             $reward->delete();
+            DB::commit();
             return $this->sendResponse('Success', 'Reward deleted successfully');
         } catch (Exception $error) {
+            DB::rollBack();
+            Log::info(json_encode($error));
             return $this->sendError($error->getMessage(), [], 500);
         }
     }

@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('contracts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('vendor_id')->constrained()->onDelete('cascade');
-            $table->string('content');
-            $table->string('title');
+            $table->string('content')->nullable();
+            $table->string('title')->nullable();
             $table->string('description')->nullable();
             $table->timestamps();
             $table->softDeletes();

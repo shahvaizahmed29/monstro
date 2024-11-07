@@ -16,11 +16,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class ContractController extends BaseController
 {
-    public function addContract(ContractStoreRequest $request, $programId)
+
+    public function addContract(Request $request, $programId)
     {
         $program = Program::with(['location'])->where('id', $programId)->firstOrFail();
         $location = $program->location;
@@ -31,12 +31,17 @@ class ContractController extends BaseController
                 'content' => $request->content,
                 'title' => $request->title,
                 'description' => $request->description,
+                'editable' => $request->editable,
+                'isDraft' => $request->isDraft,
+                'location_id' => $location->id,
             ]);
-            // Get the Stripe plan you want to attach the contract to
-            $stripePlan = StripePlan::find($request->plan_id);
-            // Attach the contract to the Stripe plan
-            $stripePlan->contract_id = $contract->id;
-            $stripePlan->save();
+            if($request->planId){
+                // Get the Stripe plan you want to attach the contract to
+                $stripePlan = StripePlan::find($request->planId);
+                // Attach the contract to the Stripe plan
+                $stripePlan->contract_id = $contract->id;
+                $stripePlan->save();
+            }
             DB::commit();
             return $this->sendResponse($contract, 'Contract created successfully.');
         } catch (Exception $e) {
@@ -44,6 +49,23 @@ class ContractController extends BaseController
             Log::info('===== ContractController - addContracct() - error =====');
             Log::info($e->getMessage());
             return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function getContractsByProgram($programId) {
+        try {
+
+            $program = Program::with(['location'])->where('id', $programId)->firstOrFail();
+            $location = $program->location;
+            if (!$location) {
+                return $this->sendError("Location doesnot exist", [], 400);
+            }
+            $plans = Contract::with('stripePlans')->where('vendor_id', $location->vendor_id)->get();
+
+            return $this->sendResponse($plans, 'Contract List');
+
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
@@ -145,6 +167,31 @@ class ContractController extends BaseController
             Log::info('===== ContractController - fillContract() - error =====');
             Log::info($e->getMessage());
             return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function updateContractById(Request $request, $contractId) {
+        try {
+            $location = request()->location;
+            $location = Location::find($location->id);
+            if (!$location) {
+                return $this->sendError("Location doesnot exist", [], 400);
+            }
+            $contract = Contract::where(['editable' => true])->find($contractId);
+            if (!$contract) {
+                return $this->sendError("contract doesnot exist", [], 400);
+            }
+            $contract->update([
+                'content' => $request->content,
+                'title' => $request->title,
+                'description' => $request->description,
+                'isDraft' => $request->isDraft,
+            ]);
+            return $this->sendResponse($contract, 'Contract');
+
+        } catch (Exception $error) {
+            Log::info(json_encode($error));
+            return $this->sendError($error->getMessage(), [], 500);
         }
     }
 }
