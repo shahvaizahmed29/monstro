@@ -80,7 +80,7 @@ class IntegrationController extends BaseController
                 }
             } catch (Exception $error) {
                 Log::error($error);
-                return $error->getMessage();
+                return $this->sendError(null, $error->getMessage(), 500);
             }
         } else if ($service == 'ghl') {
           $response = Http::asForm()->post('https://services.leadconnectorhq.com/oauth/token', [
