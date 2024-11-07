@@ -24,8 +24,10 @@ class ContractStoreRequest extends FormRequest
         return [
             'content' => 'required|string',
             'title' => 'required|string',
-            'description' => 'string',
-            'plan_id' => 'required|integer'
+            'description' => 'required|string',
+            'planId' => 'nullable|integer',
+            'editable' => 'nullable|boolean',
+            'isDraft' => 'nullable|boolean'
         ];
     }
 }

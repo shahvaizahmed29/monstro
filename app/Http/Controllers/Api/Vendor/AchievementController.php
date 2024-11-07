@@ -48,13 +48,13 @@ class AchievementController extends BaseController
     public function create(Request $request){
         try{
             DB::beginTransaction();
-            Log::info(json_encode($request->all()));
             $achievement = Achievement::create([
                 "name" => $request->name,
                 "badge" => $request->badge,
                 "reward_points" => $request->rewardPoints,
                 "program_id" => $request->program
             ]);
+            Log::info(json_encode($achievement));
             AchievementActions::create(['action_id' => $request->action, 'count' => $request->actionCount, 'achievement_id' => $achievement->id]);
             DB::commit();
 
@@ -63,6 +63,7 @@ class AchievementController extends BaseController
             return $this->sendResponse(new AchievementResource($achievement), 'Achievement created successfully');
         }catch(Exception $error){
             DB::rollBack();
+            Log::info(json_encode($error));
             return $this->sendError($error->getMessage(), [], 500);
         }
     }

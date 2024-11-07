@@ -203,7 +203,6 @@ class PaymentController extends BaseController
                       Log::info(json_encode($payment));
                       return $this->sendResponse($payment, 'Payment successfull.');
                 } else {
-                    Log::info("lalalalalallalalalalla");
                     $subscription = $stripe->subscriptions->create([
                         'customer' => $customer['id'],
                         'items' => [
