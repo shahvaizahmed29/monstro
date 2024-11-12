@@ -26,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
             $executionTime = $query->time;
 
             // Log the query execution time
-            Log::info('Query executed in ' . $executionTime . ' ms: ' . $query->sql);
+            // Log::info('Query executed in ' . $executionTime . ' ms: ' . $query->sql);
         });
     }
 }

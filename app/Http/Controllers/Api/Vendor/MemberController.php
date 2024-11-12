@@ -90,8 +90,6 @@ class MemberController extends BaseController
     public function getMemberDetails($member_id){
         try{
             $location = request()->location;
-            $locationId = $location->id;
-            
             $reservations = Reservation::with(['checkIns', 'session', 'session.programLevel','session.programLevel.program'])
             ->whereHas('session.programLevel', function ($query) {
                 return $query->whereNull('deleted_at');
@@ -125,10 +123,12 @@ class MemberController extends BaseController
 
             $member_details['current_level'] = $this->getCurrentLevel($member_id);
 
-            $data = [
-                'memberDetails' => new MemberResource($member_details),
-                'reservations' => ReservationResource::collection($reservations)
-            ];
+            $data = array_merge(
+                (new MemberResource($member_details))->resolve(),
+                [
+                    'reservations' => ReservationResource::collection($reservations)->resolve(),
+                ]
+            );
             
             return $this->sendResponse($data, 'Member details with session reservations and program');
         }catch(Exception $error){

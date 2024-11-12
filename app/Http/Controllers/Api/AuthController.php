@@ -44,7 +44,7 @@ class AuthController extends BaseController
                 // 'secondary_email' => $user->member->email,
                 'name' => $user->member->name,
                 'phone' => $user->member->phone,
-                'referral_code' => $user->member->referral_code,
+                'referralCode' => $user->member->referral_code,
                 'avatar' => $user->member->avatar,
                 'locations' => $locations,
                 'member' => $user->member,

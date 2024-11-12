@@ -244,12 +244,14 @@ class VendorController extends BaseController
     {
         try {
             // Find the location by ID
-            $location = Location::find($request->id);
-    
+            $location = request()->location;
+            $location = Location::find($location->id);
             if (!$location) {
                 return $this->sendError("Location not found", [], 404);
             }
             $timezone = TimezoneService::findTimezone($request->timezone);
+            Log::info($timezone); 
+            Log::info($request->niche); 
             // Update the location with the provided data
             $location->update([
                 'timezone' => $timezone, // Assuming timezone logic is commented out for now
@@ -263,13 +265,14 @@ class VendorController extends BaseController
                 'state' => $request->state,
                 'phone' => $request->phone,
                 'email' => $request->email,
-                'industry' => $request->niche
+                'industry' => $request->industry
             ]);
     
             $response = $this->sendResponse($location, "Location updated successfully.");
             Log::info('API Response: ', $response->getData(true)); // Log the response data
             return $response;
         } catch (Exception $error) {
+            Log::info($error->getMessage()); // Log the response data
             return $this->sendError("An error occurred: " . $error->getMessage(), [], 500);
         }
     }
