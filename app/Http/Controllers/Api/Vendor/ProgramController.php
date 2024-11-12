@@ -846,6 +846,7 @@ class ProgramController extends BaseController
                 'family' => $request->family,
                 'program_id' => $program->id,
                 'family_member_limit' => $request->family_member_limit,
+                'contract_id' => $request->contractId
             ]);
 
             $plan->save();

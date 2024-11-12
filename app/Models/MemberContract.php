@@ -16,15 +16,24 @@ class MemberContract extends Model
         'stripe_plan_id',
         'content',
         'signed',
+        'location_id',
     ];
 
-    public function members()
+    public function member()
     {
         return $this->belongsTo(Member::class);
     }
 
     public function stripePlan(){
         return $this->belongsTo(StripePlan::class);
+    }
+
+    public function location() {
+        return $this->belongsTo(Location::class);
+    }
+
+    public function contract() {
+        return $this->belongsTo(Contract::class);
     }
 
 }

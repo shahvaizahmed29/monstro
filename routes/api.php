@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -166,6 +167,9 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::get('stripe-plans/{programId}', [App\Http\Controllers\Api\Vendor\StripePlanController::class, 'getPlans'])->name('stripe.plans.fetch');
     Route::get('stripe-plans/single/{planId}', [App\Http\Controllers\Api\Vendor\StripePlanController::class, 'getPlan'])->name('stripe.plan.fetch');
     Route::post('create-contract/program/{programId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'addContract'])->name('contract.create');
+    Route::get('contracts', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContracts'])->name('get.contracts');
+    Route::get('contracts/signed', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getSignedContracts'])->name('get.signed.contracts');
+    Route::get('contracts/signed/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'createPdf'])->name('get.signed.contract.pdf');
     Route::get('contracts/program/{programId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContractsByProgram'])->name('contracts.fetch');
     Route::post('contracts/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'updateContractById'])->name('update.contract');
     Route::get('contracts/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContractById'])->name('contract.single.fetch');

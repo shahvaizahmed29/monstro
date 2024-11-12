@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api\Vendor;
 
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\ContractStoreRequest;
+use App\Http\Resources\Vendor\SignedContractsResource;
 use App\Models\Contract;
 use App\Models\Location;
 use App\Models\Member;
 use App\Models\MemberContract;
+use App\Models\Plan;
 use App\Models\Program;
 use App\Models\StripePlan;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -69,22 +71,36 @@ class ContractController extends BaseController
         }
     }
 
-    public function getContracts($programId)
+    public function getContracts()
     {
         try {
-
-            $program = Program::with(['location'])->where('id', $programId)->firstOrFail();
-            $location = $program->location;
+            $location = request()->location;
+            $location = Location::find($location->id);
             if (!$location) {
                 return $this->sendError("Location doesnot exist", [], 400);
             }
-            $plans = Contract::with('stripePlans')->where('vendor_id', $location->vendor_id)->get();
+            $contracts = Contract::where('location_id', $location->id)->get();
 
-            return $this->sendResponse($plans, 'Contract List');
+            return $this->sendResponse($contracts, 'Contract List');
 
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
+    }
+
+    public function getSignedContracts() {
+        $location = request()->location;
+        $location = Location::find($location->id);
+        if (!$location) {
+            return $this->sendError("Location doesnot exist", [], 400);
+        }
+        try {
+            $contracts = MemberContract::with(['member', 'stripePlan', 'contract'])->where(['location_id' => $location->id])->get();
+            return $this->sendResponse(SignedContractsResource::collection($contracts), 'Contract List');
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+
     }
 
     public function getContractById($contractId)
@@ -109,15 +125,38 @@ class ContractController extends BaseController
         try {
             // return $this->sendResponse($data, 'Contract');
             $member = Auth::user()->member;
-            $memberDetails = Member::with('programs')->find($member->id);
-            $plans = Contract::with('stripePlans')->find($contractId);
+            $memberDetails = Member::find($member->id);
+            $plan = StripePlan::with('pricing')->where(['contract_id' => $contractId])->first();
+            $program = Program::find($plan->program_id);
+            $location = Location::find($program->location_id);
             $data = collect([
-                "member_name" => $memberDetails->name,
-                "member_email" => $memberDetails->email,
-                "member_phone" => $memberDetails->phone,
-                "plan_title" => $plans->title,
-                "plan_description" => $plans->description,
-                "member_details" => $memberDetails,
+                "contact" => [
+                    "fullName" => $memberDetails->first_name.' '.$memberDetails->last_name,
+                    "firstName" => $memberDetails->first_name,
+                    "lastName" => $memberDetails->last_name,
+                    "email" => $memberDetails->email,
+                    "phone" => $memberDetails->phone
+                ],
+                "plan" => [
+                    "name" => $plan->name,
+                    "description" => $plan->description,
+                    "price" => $plan->pricing->amount,
+                    "period" => $plan->pricing->billing_period,
+                    "familyMemberLimit" => $plan->family_member_limit
+                ],
+                "program" => [
+                    "name" => $program->name,
+                    "description" => $program->description    
+                ],
+                "company" => [
+                    "name" => $location->name,
+                    "address" => $location->address,
+                    "city" => $location->city,
+                    "state" => $location->state,
+                    "zip" => $location->postal_code,
+                    "email" => $location->email,
+                    "phone" => $location->phone
+                ]
 
             ]);
 
@@ -133,12 +172,17 @@ class ContractController extends BaseController
         try {
             $member = Auth::user()->member;
             DB::beginTransaction();
+            $contract = Contract::find($request->contractId);
+            if(!$contract){
+                return $this->sendError("Contract doesnot exist", [], 400);
+            }
             $memberContract = MemberContract::create([
                 'member_id' => $member->id,
                 'contract_id' => $request->contractId,
                 'stripe_plan_id' => $request->stripePlanId,
                 'content' => $request->content,
                 'signed' => $request->signed,
+                'location_id' => $contract->location_id
             ]);
             DB::commit();
             // Generate the PDF from the HTML content
@@ -160,7 +204,7 @@ class ContractController extends BaseController
             $pdfUrl = url('contracts/' . $fileName);
         
             // Send the response with the PDF URL
-            return $this->sendResponse(["data" => $memberContract, "pdf_url" => $pdfUrl], 'Contract created successfully.');
+            return $this->sendResponse(["data" => $memberContract, "pdfUrl" => $pdfUrl], 'Contract created successfully.');
         
         } catch (Exception $e) {
             DB::rollBack();
@@ -191,6 +235,30 @@ class ContractController extends BaseController
 
         } catch (Exception $error) {
             Log::info(json_encode($error));
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    public function createPdf($contractId) {
+        try {
+            $contract = MemberContract::find($contractId);
+            $pdf = Pdf::loadHTML(mb_convert_encoding($contract->content, 'UTF-8', 'UTF-8'));
+
+            // Save the PDF to a public path directly in the 'public' directory
+            $fileName = uniqid() . '.pdf';
+            $pdfPath = public_path('contracts/' . $fileName);
+        
+            // Ensure the 'contracts' directory exists
+            if (!file_exists(public_path('contracts'))) {
+                mkdir(public_path('contracts'), 0755, true);
+            }        
+            // Save the PDF to the specified path
+            file_put_contents($pdfPath, $pdf->output());
+        
+            // Generate the URL to the file
+            $pdfUrl = url('contracts/' . $fileName);
+            return $this->sendResponse(["pdfUrl" => $pdfUrl], 'Contract List');
+        } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
