@@ -321,7 +321,8 @@ class MemberController extends BaseController
                 $user->assignRole(User::MEMBER);
                 $randomNumberMT = mt_rand(100, 999);
                 $member = Member::create([
-                    'name' => $contact['firstName'].' '.$contact['lastName'],
+                    'firstName' => $contact['firstName'],
+                    'lastName' => $contact['lastName'],
                     'email' =>  $contact['email'],
                     'phone' => isset($contact['phone']) ? $contact['phone'] : '',
                     'referral_code' => $randomNumberMT.$user->id,
