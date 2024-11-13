@@ -30,6 +30,7 @@ class AuthController extends BaseController
                 'email' => $user->email,
                 // 'secondary_email' => $user->vendor->company_email,
                 'name' => $user->name,
+                'stripeCustomerId' => $user->vendor->stripe_customer_id,
                 'phone' => $user->vendor->phone_number,
                 'avatar' => $user->vendor->logo,
                 'locations' => $locations,

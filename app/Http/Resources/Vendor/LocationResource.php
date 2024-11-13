@@ -16,7 +16,6 @@ class LocationResource extends JsonResource
     {
         $locations = [
             'id' => $this->id,
-            'goHighLevelUserId' => $this->go_high_level_user_id,
             'name' => $this->name,
             'address' => $this->address,
             'city' => $this->city,

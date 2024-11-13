@@ -83,7 +83,6 @@ class VendorController extends BaseController
                 $vendor->company_email = $ghl_location_data['email'];
                 $vendor->company_website = isset($ghl_location_data['website']) ? $ghl_location_data['website'] : null;
                 $vendor->company_address = isset($ghl_location_data['address']) ? $ghl_location_data['address'] : null;
-                $vendor->go_high_level_user_id = $ghl_user['id'];
                 $vendor->save();
 
                 $this->ghl_controller->updateUser($ghl_user['id'], [
@@ -98,9 +97,6 @@ class VendorController extends BaseController
                         [
                             'key' => 'password',
                             'field_value' => $new_password
-                        ],[
-                            'key' => 'go_high_level_user_id',
-                            'field_value' => $vendor->go_high_level_user_id
                         ],[
                             'key' => 'paymentgateway_customer_id',
                             'field_value' => $vendor->stripe_customer_id
@@ -252,8 +248,7 @@ class VendorController extends BaseController
             $timezone = TimezoneService::findTimezone($request->timezone);
             Log::info($timezone); 
             Log::info($request->niche); 
-            // Update the location with the provided data
-            $location->update([
+            $data = [
                 'timezone' => $timezone, // Assuming timezone logic is commented out for now
                 'logo_url' => $request->logo,
                 'name' => $request->businessName,
@@ -266,7 +261,12 @@ class VendorController extends BaseController
                 'phone' => $request->phone,
                 'email' => $request->email,
                 'industry' => $request->industry
-            ]);
+            ];
+            if($request->logo) {
+              unset($data['logo_url']);  
+            }
+            // Update the location with the provided data
+            $location->update($data);
     
             $response = $this->sendResponse($location, "Location updated successfully.");
             Log::info('API Response: ', $response->getData(true)); // Log the response data

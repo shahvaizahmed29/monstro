@@ -18,7 +18,6 @@ class VendorResource extends JsonResource
             'id' => $this->id,
             'firstName' => $this->first_name,
             'lastName' => $this->last_name,
-            'goHighLevelUserId' => $this->go_high_level_user_id,
             'planId' => $this->plan_id,
             'userId' => $this->user_id,
             'companyName' => $this->company_name,

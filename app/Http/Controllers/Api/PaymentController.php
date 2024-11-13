@@ -91,7 +91,6 @@ class PaymentController extends BaseController
                 $vendor = Vendor::create([
                     'first_name' => $vendorInput['firstName'],
                     'last_name' => isset($vendorInput['lastName']) ? $vendorInput['lastName'] : null,
-                    'go_high_level_user_id' => null,
                     'user_id' => $user->id,
                     'company_name' => $vendorInput['firstName'] . ' ' . isset($vendorInput['lastName']) ? $vendorInput['lastName'] : null,
                     'company_email' => $vendorInput['email'],
