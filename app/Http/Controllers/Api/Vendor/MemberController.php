@@ -99,14 +99,6 @@ class MemberController extends BaseController
             ->where('member_id', $member_id)->get();
             
             $member_details = Member::with(['rewards', 'achievements', 'children'])->where('id', $member_id)->first();
-            
-            $go_high_level_contact_id = DB::table('member_locations')
-                ->where('member_id', $member_id)
-                ->where('go_high_level_location_id', $location->go_high_level_location_id)
-                ->pluck('go_high_level_contact_id')
-                ->first();
-
-            $member_details['go_high_level_contact_id'] = $go_high_level_contact_id;
 
             if(count($reservations)) {
                 $reservationIds = $reservations->pluck('id')->toArray();
