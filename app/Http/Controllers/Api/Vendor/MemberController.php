@@ -191,10 +191,7 @@ class MemberController extends BaseController
                     }
                 }
     
-                $member->locations()->sync([$location->id => [
-                    'go_high_level_location_id' => $location->go_high_level_location_id,
-                    'go_high_level_contact_id' => null
-                ]], false);
+                $member->locations()->sync([$location->id]);
     
                 $data =  [];
                 $data['name'] = $request->name;
@@ -278,10 +275,7 @@ class MemberController extends BaseController
                     'end_date' => $session->end_date
                 ]);
 
-                $member->locations()->sync([$location->id => [
-                    'go_high_level_location_id' => $location->go_high_level_location_id,
-                    'go_high_level_contact_id' => $contact['id']
-                ]], false);
+                $member->locations()->sync([$location->id]);
 
                 DB::commit();
                 return true;
@@ -313,8 +307,8 @@ class MemberController extends BaseController
                 $user->assignRole(User::MEMBER);
                 $randomNumberMT = mt_rand(100, 999);
                 $member = Member::create([
-                    'firstName' => $contact['firstName'],
-                    'lastName' => $contact['lastName'],
+                    'first_name' => $contact['firstName'],
+                    'last_name' => $contact['lastName'],
                     'email' =>  $contact['email'],
                     'phone' => isset($contact['phone']) ? $contact['phone'] : '',
                     'referral_code' => $randomNumberMT.$user->id,
@@ -346,10 +340,7 @@ class MemberController extends BaseController
                     'end_date' => $session->end_date
                 ]);
 
-                $member->locations()->sync([$location->id => [
-                    'go_high_level_location_id' => $location->go_high_level_location_id,
-                    'go_high_level_contact_id' => $contact['id']
-                ]], false);
+                $member->locations()->sync([$location->id]);
 
                 DB::commit();
                 return true;

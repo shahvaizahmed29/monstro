@@ -19,7 +19,7 @@ class SignedContractsResource extends JsonResource
             'content' => $this->content,
             'title' => $this->contract->title,
             'signed' => $this->signed,
-            'member' => $this->member,
+            'member' => new MemberResource($this->member),
             'plan' => $this->stripePlan,
             'createdAt' => $this->created_at,
             'updatedAt' => $this->updated_at,

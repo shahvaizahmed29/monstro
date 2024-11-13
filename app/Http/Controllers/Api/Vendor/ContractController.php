@@ -22,10 +22,10 @@ use Illuminate\Support\Facades\Log;
 class ContractController extends BaseController
 {
 
-    public function addContract(Request $request, $programId)
+    public function addContract(Request $request)
     {
-        $program = Program::with(['location'])->where('id', $programId)->firstOrFail();
-        $location = $program->location;
+        $location = request()->location;
+        $location = Location::find($location->id);
         try {
             DB::beginTransaction();
             $contract = Contract::create([
@@ -95,7 +95,7 @@ class ContractController extends BaseController
             return $this->sendError("Location doesnot exist", [], 400);
         }
         try {
-            $contracts = MemberContract::with(['member', 'stripePlan', 'contract'])->where(['location_id' => $location->id])->get();
+            $contracts = MemberContract::with(['member', 'stripePlan.program', 'contract'])->where(['location_id' => $location->id])->get();
             return $this->sendResponse(SignedContractsResource::collection($contracts), 'Contract List');
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
@@ -126,6 +126,7 @@ class ContractController extends BaseController
             // return $this->sendResponse($data, 'Contract');
             $member = Auth::user()->member;
             $memberDetails = Member::find($member->id);
+            Log::info(json_encode($memberDetails));
             $plan = StripePlan::with('pricing')->where(['contract_id' => $contractId])->first();
             $program = Program::find($plan->program_id);
             $location = Location::find($program->location_id);
@@ -183,6 +184,9 @@ class ContractController extends BaseController
                 'content' => $request->content,
                 'signed' => $request->signed,
                 'location_id' => $contract->location_id
+            ]);
+            $contract->update([
+                'editable' => false
             ]);
             DB::commit();
             // Generate the PDF from the HTML content

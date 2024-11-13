@@ -165,7 +165,7 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     
     Route::get('stripe-plans/{programId}', [App\Http\Controllers\Api\Vendor\StripePlanController::class, 'getPlans'])->name('stripe.plans.fetch');
     Route::get('stripe-plans/single/{planId}', [App\Http\Controllers\Api\Vendor\StripePlanController::class, 'getPlan'])->name('stripe.plan.fetch');
-    Route::post('create-contract/program/{programId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'addContract'])->name('contract.create');
+    Route::post('create-contract', [App\Http\Controllers\Api\Vendor\ContractController::class, 'addContract'])->name('contract.create');
     Route::get('contracts', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContracts'])->name('get.contracts');
     Route::get('contracts/signed', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getSignedContracts'])->name('get.signed.contracts');
     Route::get('contracts/signed/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'createPdf'])->name('get.signed.contract.pdf');
