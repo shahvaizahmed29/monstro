@@ -27,6 +27,7 @@ use App\Models\StripePlanPricing;
 use App\Models\Vendor;
 use Carbon\Carbon;
 use Exception;
+use Hashids\Hashids;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
@@ -39,12 +40,46 @@ class ProgramController extends BaseController
 
 
 
-        $location = request()->location;
+        $location = request()->locationId;
         //Code commented out below becuase auth guard is not applied anymore.
         // if($location->vendor_id != auth()->user()->vendor->id) {
         //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
         // }
         $programs = Program::where('location_id', $location->id);
+        if(isset(request()->type)) {
+            if(request()->type == 0) {
+                $programs = $programs->whereNotNull('deleted_at')->withTrashed();
+            }
+        }
+
+
+        $programs = $programs->paginate(25);
+        $data = [
+            'programs' => ProgramResource::collection($programs),
+            'pagination' => [
+                'current_page' => $programs->currentPage(),
+                'per_page' => $programs->perPage(),
+                'total' => $programs->total(),
+                'prev_page_url' => $programs->previousPageUrl(),
+                'next_page_url' => $programs->nextPageUrl(),
+                'first_page_url' => $programs->url(1),
+                'last_page_url' => $programs->url($programs->lastPage()),
+            ],
+        ];
+
+        Log::info('Data Return');
+        return $this->sendResponse($data, 'Get programs');
+    }
+
+    public function getProgramsByLocationId($locationId){
+        $hashids = new Hashids('', 10);
+        $decoded = $hashids->decode($locationId);
+        $programs = Program::whereIn('location_id', $decoded)->whereHas('stripePlans', function ($query) {
+            $query->where('status', 1); // Example condition: only include active stripe plans
+        })
+        ->with(['stripePlans' => function ($query) {
+            $query->where('status', 1)->whereHas('contract')->with('pricing'); // Load pricing data with stripePlans
+        }]);
         if(isset(request()->type)) {
             if(request()->type == 0) {
                 $programs = $programs->whereNotNull('deleted_at')->withTrashed();
