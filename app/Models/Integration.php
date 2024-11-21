@@ -18,6 +18,7 @@ class Integration extends Model
         'refresh_token',
         'integration_id',
         'additional_settings',
+        'location_id'
     ];
 
     public function vendor(){

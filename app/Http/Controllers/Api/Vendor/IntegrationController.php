@@ -16,10 +16,12 @@ class IntegrationController extends BaseController
 {
     public function getIntegrations()
     {
-        $user = Auth::user();
-        $vendorId = $user->vendor->id;
+        $location = request()->location;
+        if(!$location){
+            return $this->sendError("Location does not exist", [], 400);
+        }
         try {
-            $integrations = Integration::where('vendor_id', $vendorId)->get();
+            $integrations = Integration::where('location_id', $location->id)->get();
             return $this->sendResponse($integrations, 'Integration List');
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
@@ -29,6 +31,10 @@ class IntegrationController extends BaseController
     public function delIntegrations($id)
     {
         $integration = Integration::find($id);
+        $location = request()->location;
+        if(!$location){
+            return $this->sendError("Location does not exist", [], 400);
+        }
         try {
             DB::beginTransaction();
             $integration->delete();
@@ -42,10 +48,13 @@ class IntegrationController extends BaseController
 
     public function completeConnection(Request $request, $service)
     {
-        $user = Auth::user();
-        $vendorId = $user->vendor->id;
         $scope = $request->input("scope");
         $code = $request->input("code");
+        $location = request()->location;
+        if(!$location){
+            return $this->sendError("Location does not exist", [], 400);
+        }
+        $vendorId= $location->vendor_id;
         $integration = Integration::where(['vendor_id' => $vendorId, "service" => $service])->first();
         if ($service == 'stripe') {
             $stripe = new StripeService();
@@ -72,6 +81,7 @@ class IntegrationController extends BaseController
                           "refresh_token" => $token->refresh_token,
                           "integration_id" => $token->stripe_user_id,
                           "additional_settings" => json_encode($token),
+                          "location_id" => $location->id
                       ]);
                     }
                     DB::commit();

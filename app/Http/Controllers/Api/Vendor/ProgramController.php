@@ -31,8 +31,7 @@ use Hashids\Hashids;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
-
-
+use Sqids\Sqids;
 
 class ProgramController extends BaseController
 {
@@ -72,8 +71,8 @@ class ProgramController extends BaseController
     }
 
     public function getProgramsByLocationId($locationId){
-        $hashids = new Hashids('', 10);
-        $decoded = $hashids->decode($locationId);
+        $sqids = new Sqids('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 14);
+        $decoded = $sqids->decode($locationId)[0];
         $programs = Program::whereIn('location_id', $decoded)->whereHas('stripePlans', function ($query) {
             $query->where('status', 1); // Example condition: only include active stripe plans
         })
@@ -107,7 +106,6 @@ class ProgramController extends BaseController
 
     public function getProgramsByVendor($vendorId){
         $vendor = Vendor::with('locations')->find($vendorId);
-        Log::info(json_encode($vendor));
         $locations = $vendor->locations;
         $ids = collect($locations)->pluck('id')->all();
         $programs = Program::whereIn('location_id', $ids)->whereHas('stripePlans', function ($query) {

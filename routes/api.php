@@ -75,9 +75,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('authenticate', [App\Http\Controllers\Api\Vendor\AuthController::class, 'vendorAuthenticate'])->name('vendor.authenticate');
         Route::get('profile', [App\Http\Controllers\Api\Vendor\VendorController::class, 'getProfile'])->name('get.profile');
         Route::put('update-profile', [App\Http\Controllers\Api\Vendor\VendorController::class, 'updateProfile'])->name('update.profile');
-        Route::post('integrations/{service}', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'completeConnection'])->name('complete.integration.connection');
-        Route::get('integrations', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'getIntegrations'])->name('fetch.integrations');
-        Route::delete('integrations/{id}', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'delIntegrations'])->name('delete.integrations');
     });
     
     Route::get('logout', [App\Http\Controllers\Api\Vendor\AuthController::class, 'logout'])->name('logout');
@@ -176,6 +173,10 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::post('invite-member', [App\Http\Controllers\Api\Vendor\MemberController::class, 'inviteMember'])->name('invite.member');
     Route::post('add-stripe-plan/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addPlan'])->name('plan.create');
     Route::post('update-location-info', [App\Http\Controllers\Api\Vendor\VendorController::class, 'updateLocation'])->name('vendor.location.update');
+    Route::post('integrations/{service}', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'completeConnection'])->name('complete.integration.connection');
+    Route::get('integrations', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'getIntegrations'])->name('fetch.integrations');
+    Route::delete('integrations/{id}', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'delIntegrations'])->name('delete.integrations');
+    Route::get('fetch-vendor-stripe-pk', [App\Http\Controllers\Api\Vendor\VendorController::class, 'fetchVendorStripePk'])->name('fetch.vendor.stripe.pk');
 });
 
 Route::post('image-update/{user_id}', [App\Http\Controllers\PublicController::class, 'imageUpdate'])->name('image.update');

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Hashids\Hashids;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Sqids\Sqids;
 
 class AuthController extends BaseController
 {
@@ -62,8 +63,8 @@ class AuthController extends BaseController
     {
         return $locations->map(function ($location) {
             $locationArray = $location->toArray(); // Convert to array
-            $hashids = new Hashids('', 10); // Adjust length as needed
-            $locationArray['id'] = $hashids->encode($locationArray['id']);
+            $sqids = new Sqids('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 14);
+            $locationArray['id'] = $sqids->encode([$locationArray['id']]);
             return (object) $locationArray; // Convert back to an object if needed
         });
     }

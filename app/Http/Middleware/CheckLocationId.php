@@ -6,7 +6,7 @@ use App\Models\Location;
 use Closure;
 use Illuminate\Support\Facades\Log;
 use Hashids\Hashids;
-
+use Sqids\Sqids;
 
 class CheckLocationId
 {
@@ -22,8 +22,9 @@ class CheckLocationId
             ];
             return response()->json($response, 400);
         }
-        $hashids = new Hashids('', 10);
-        $locationId = $hashids->decode($requestLocationId);
+        $sqids = new Sqids('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 14);
+        $locationId = $sqids->decode($requestLocationId);
+        Log::info(json_encode($locationId));
         $locationId = $locationId ? $locationId[0] : null;
         $location = Location::where('id', $locationId)->first();
 
@@ -44,8 +45,8 @@ class CheckLocationId
 
     public function decodeLocationId($encodedId)
     {
-        $hashids = new Hashids('', 10);
-        $decoded = $hashids->decode($encodedId);
+        $sqids = new Sqids('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 14);
+        $decoded = $sqids->decode($encodedId);
         return $decoded ? $decoded[0] : null;
     }
 }
