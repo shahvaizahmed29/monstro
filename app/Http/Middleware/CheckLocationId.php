@@ -36,7 +36,6 @@ class CheckLocationId
             ];
             return response()->json($response, 400);
         }
-
         // Pass the $locationId variable to the request
         $request->merge(['location' => $location]);
 

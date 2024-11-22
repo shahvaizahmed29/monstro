@@ -36,22 +36,14 @@ use Sqids\Sqids;
 class ProgramController extends BaseController
 {
     public function getProgramsByLocation(){
-
-
-
-        $location = request()->locationId;
-        //Code commented out below becuase auth guard is not applied anymore.
-        // if($location->vendor_id != auth()->user()->vendor->id) {
-        //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
-        // }
+        $location = request()->location;
+        Log::info("Hello world".json_encode($location));
         $programs = Program::where('location_id', $location->id);
         if(isset(request()->type)) {
             if(request()->type == 0) {
                 $programs = $programs->whereNotNull('deleted_at')->withTrashed();
             }
         }
-
-
         $programs = $programs->paginate(25);
         $data = [
             'programs' => ProgramResource::collection($programs),

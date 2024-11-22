@@ -17,6 +17,7 @@ use App\Http\Resources\Vendor\ReservationResource;
 use App\Http\Resources\Vendor\MemberResource;
 use App\Http\Resources\Vendor\SessionResource;
 use App\Mail\InviteMembers;
+use App\Mail\MemberRegistration;
 use App\Models\ProgramLevel;
 use App\Notifications\NewMemberNotification;
 use App\Services\GHLService;
@@ -225,25 +226,25 @@ class MemberController extends BaseController
         }
     }
 
-    public static function createMemberFromGHL($contact, $location, $programLevelId) {
+    public static function createMemberFromGHL($contact, $location, $programLevelId, $program) {
         try {
             DB::beginTransaction();
             $session = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->latest()->first();
 
-            $password = 'Monstro2024Welcome';
+            $password = "M2".Str::random(8)."#$!".mt_rand(100, 999);
             $user = User::where('email', $contact['email'])->first();
             if(!$user) {
                 $user = User::create([
-                    'name' => isset($contact['contactName']) ? $contact['contactName'] : '',
+                    'name' => (isset($contact['firstName']) ? $contact['firstName'] : ($contact['name'] ? $contact['name'] : ' ')).' ' .(isset($contact['lastName']) ? $contact['lastName'] : ''),
                     'email' => $contact['email'],
-                    // 'password' => bcrypt($contact['email'].'@'.Carbon::now()->year.'!!'),
                     'password' => bcrypt($password),
                     'email_verified_at' => now()
                 ]);
                 $user->assignRole(User::MEMBER);
                 $randomNumberMT = mt_rand(100, 999);
                 $member = Member::create([
-                    'name' => (isset($contact['firstName']) ? $contact['firstName'] : ($contact['name'] ? $contact['name'] : ' ')).' ' .(isset($contact['lastName']) ? $contact['lastName'] : ''),
+                    'first_name' => (isset($contact['firstName']) ? $contact['firstName'] : $contact['name']),
+                    'last_name' => (isset($contact['lastName']) ? $contact['lastName'] : ''),
                     'email' =>  $contact['email'],
                     'phone' => isset($contact['phone']) ? $contact['phone'] : '',
                     'referral_code' => $randomNumberMT.$user->id,
@@ -278,6 +279,7 @@ class MemberController extends BaseController
                 $member->locations()->sync([$location->id]);
 
                 DB::commit();
+                Mail::to($contact['email'])->send(new MemberRegistration($contact['firstName'], $contact['lastName'], $program->name, $contact['email'], $password, $randomNumberMT.$user->id));
                 return true;
             }
            
@@ -356,25 +358,6 @@ class MemberController extends BaseController
         }
     }
 
-    public static function generateLocationLevelKey($location_id) {
-        $ghlIntegration = Setting::where('name', 'ghl_integration')->first();
-        $tokenObj = Http::withHeaders([
-            'Authorization' => 'Bearer '.$ghlIntegration['value'],
-            'Version' => '2021-07-28'                
-        ])->asForm()->post('https://services.leadconnectorhq.com/oauth/locationToken', [
-            'companyId' => $ghlIntegration['meta_data']['companyId'],
-            'locationId' => $location_id,
-        ]);
-
-        if ($tokenObj->failed()) {
-            $tokenObj->throw();
-        }
-        
-        $url = 'https://services.leadconnectorhq.com/contacts/?locationId='.$location_id.'&limit=100';
-
-        return $tokenObj->json();
-    }
-
     public function getContacts(){
         try{
             $location = request()->location;
@@ -437,126 +420,22 @@ class MemberController extends BaseController
         
     }
 
-    public function syncMembersByLocation($programId) {
-        $delayTimeForEachLocation = 15;
-        $reqCustomField = null;
-        $location = request()->location;
-        $program = Program::with('programLevels')->where('id',$programId)->first();
-        $ghl_integration = Setting::where('name', 'ghl_integration')->first();
-        $token = $ghl_integration['value'];
-        $companyId = $ghl_integration['meta_data']['companyId'];
-        if((Carbon::now()->diffInMinutes($program->last_sync_at) >= $delayTimeForEachLocation) || !$program->last_sync_at) {
-            try {
-                $tokenObj = Http::withHeaders([
-                    'Authorization' => 'Bearer '.$token,
-                    'Version' => '2021-07-28'                
-                ])->asForm()->post('https://services.leadconnectorhq.com/oauth/locationToken', [
-                    'companyId' => $companyId,
-                    'locationId' => $location->go_high_level_location_id,
-                ]);
-        
-                if ($tokenObj->failed()) {
-                    return $this->sendError('Something went wrong!', json_encode($tokenObj->json()));
-                }
-    
-                $tokenObj = $tokenObj->json();
-                
-                $responseCustomField = Http::withHeaders([
-                    'Accept' => 'application/json',
-                    'Authorization' => 'Bearer '.$tokenObj['access_token'],
-                    'Version' => '2021-07-28'
-                ])->get('https://services.leadconnectorhq.com/locations/'.$location->go_high_level_location_id.'/customFields');
-    
-                if ($responseCustomField->failed()) {
-                    $responseCustomField->throw();    
-                }
-                $responseCustomField = $responseCustomField->json();
-    
-                foreach($responseCustomField['customFields'] as $customField) {
-                    if($customField['name'] == 'Program Level') {
-                        $reqCustomField = $customField;
-                    }
-                }
-    
-                if($reqCustomField) {
-                    $url = 'https://services.leadconnectorhq.com/contacts/?locationId='.$location->go_high_level_location_id.'&limit=100';
-                    do {
-                        $response = Http::withHeaders([
-                            'Accept' => 'application/json',
-                            'Authorization' => 'Bearer '.$tokenObj['access_token'],
-                            'Version' => '2021-07-28'
-                        ])->get($url);
-            
-                        if ($response->failed()) {
-                            $response->throw();    
-                        }
-                        $response = $response->json();
-                        $contacts = $response['contacts'];
-                        $url = null;
-                        if(isset($response['meta'])) {
-                            if(isset($response['meta']['nextPageUrl'])) {
-                                $url = $response['meta']['nextPageUrl'];
-                                $url = str_replace('http://', 'https://', $url);
-                            }
-                        }
-                        foreach($contacts as $contact) {
-                            $programLevelId = null;
-
-                            $custom_field_index = array_search($reqCustomField['id'], array_column($contact['customFields'], 'id'));
-
-                            if($custom_field_index !== false) {
-                                if (strpos($contact['customFields'][$custom_field_index]['value'], '_') === false) {
-                                    continue;
-                                }
-                                $parts = explode('_', $contact['customFields'][$custom_field_index]['value']);
-                                if(count($parts) != 2) {
-                                    continue;
-                                }
-
-                                $programLevelName = $parts[1];
-                                $programName = $parts[0];
-
-                                if($programName == $program->name) {
-                                    foreach($program->programLevels as $programLevel) {
-                                        if($programLevelName == $programLevel->name) {
-                                            $programLevelId = $programLevel->id;
-                                            MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } while($url);
-                }
-                $program->last_sync_at = now();
-                $program->save();
-    
-            } catch(\Exception $error) {
-                return $this->sendError('Something went wrong!', $error->getMessage());
-            }
-            return $this->sendResponse([], 'Members synced successfully');
-        } else {
-            return $this->sendError('Resync again in about '. $delayTimeForEachLocation - Carbon::now()->diffInMinutes($program->last_sync_at).' mins', []);
-        }
-    }
-
-    public function addMemberManually($programLevelId, Request $request){
+    public function addMemberManually(Request $request){
         try {
-            $reqCustomField = null;
             $location = request()->location;
-            $tokenObj = $this->generateLocationLevelKey($location->go_high_level_location_id);
-            $programLevel = ProgramLevel::with('program')->where('id',$programLevelId)->first();
+            $program = Program::with(['programLevels', 'location'])->where('id', $request->programId)->first();
+            if(!$location){
+                return $this->sendError('Location Not Found');
+            }
+            if(!$program){
+                return $this->sendError('Program Not Found');
+            }
             $contact = $request->all();
-            if(!isset($contact['email'])) {
-                return $this->sendError('No email found against the contact!', json_encode($tokenObj));
-            } else {
-                $addMember = MemberController::createMemberFromGHL($contact, $location ,$programLevelId);
-                
-                if($addMember == true){
-                    return $this->sendResponse('Success', 'Member synced successfully');
-                }else{
-                    return $this->sendError('Member is already enrolled in another program level', [], 400);
-                }
+            $addMember = MemberController::createMemberFromGHL($contact, $location, $program->programLevels[0]->id, $program);
+            if($addMember == true){
+                return $this->sendResponse('Success', 'Member synced successfully');
+            }else{
+                return $this->sendError('Member is already enrolled in another program level', [], 400);
             }
         } catch(Exception $error) {
             return $this->sendError('Something went wrong!', $error->getMessage());
