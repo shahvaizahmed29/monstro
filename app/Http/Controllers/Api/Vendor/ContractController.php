@@ -32,7 +32,6 @@ class ContractController extends BaseController
                 'vendor_id' => $location->vendor_id,
                 'content' => $request->content,
                 'title' => $request->title,
-                'description' => $request->description,
                 'editable' => $request->editable,
                 'isDraft' => $request->isDraft,
                 'location_id' => $location->id,

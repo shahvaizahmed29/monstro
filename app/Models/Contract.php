@@ -14,7 +14,6 @@ class Contract extends Model
         'vendor_id',
         'content',
         'title',
-        'description',
         'isDraft',
         'editable',
         'location_id'
