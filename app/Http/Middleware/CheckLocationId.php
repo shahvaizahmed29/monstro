@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Location;
 use Closure;
 use Illuminate\Support\Facades\Log;
-use Hashids\Hashids;
+// use Hashids\Hashids;
 use Sqids\Sqids;
 
 class CheckLocationId
@@ -22,11 +22,11 @@ class CheckLocationId
             ];
             return response()->json($response, 400);
         }
-        $sqids = new Sqids('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 14);
-        $locationId = $sqids->decode($requestLocationId);
-        Log::info(json_encode($locationId));
-        $locationId = $locationId ? $locationId[0] : null;
-        $location = Location::where('id', $locationId)->first();
+        // $sqids = new Sqids('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 14);
+        // $locationId = $sqids->decode($requestLocationId);
+        // Log::info(json_encode($locationId));
+        // $locationId = $locationId ? $locationId[0] : null;
+        $location = Location::where('id', $requestLocationId)->first();
 
         if (!$location) {
             Log::info("No Location Found");

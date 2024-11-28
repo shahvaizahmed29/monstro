@@ -18,9 +18,11 @@ use App\Http\Resources\Vendor\MemberResource;
 use App\Http\Resources\Vendor\SessionResource;
 use App\Mail\InviteMembers;
 use App\Mail\MemberRegistration;
+use App\Models\Integration;
 use App\Models\ProgramLevel;
 use App\Notifications\NewMemberNotification;
 use App\Services\GHLService;
+use App\Services\MemberStripeService;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -429,6 +431,16 @@ class MemberController extends BaseController
             }
             if(!$program){
                 return $this->sendError('Program Not Found');
+            }
+            $paymentMethod = $request->paymentMethod;
+            if($paymentMethod == 'card'){
+                $stripeDetails = Integration::where(["service" => "Stripe", "location_id" => $location->id])->first();
+                $memberStripeService = new MemberStripeService($stripeDetails->access_token);
+                $payment = $memberStripeService->completePayment($request);
+                Log::info($payment);
+                if(isset($payment["error"]) && $payment["error"]){
+                    return $this->sendError('Something went wrong!', $payment);
+                }
             }
             $contact = $request->all();
             $addMember = MemberController::createMemberFromGHL($contact, $location, $program->programLevels[0]->id, $program);
