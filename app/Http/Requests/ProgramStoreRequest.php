@@ -44,7 +44,7 @@ class ProgramStoreRequest extends FormRequest
             'sessions.*.min_age' => 'required|integer|min:0',
             'sessions.*.max_age' => 'required|integer|gt:sessions.*.min_age',                                                    
             'sessions.*.program_level_name' => 'required|string',
-            'sessions.*.duration_time' => 'required|integer',
+            // 'sessions.*.duration_time' => 'required|integer',
             // 'sessions.*.start_date' => 'required|date',
             // 'sessions.*.end_date' => 'required|date|after_or_equal:sessions.*.start_date',
             'sessions.*.monday' => 'nullable|date_format:H:i:s',
