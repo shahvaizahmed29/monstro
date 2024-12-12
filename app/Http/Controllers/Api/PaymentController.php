@@ -150,7 +150,7 @@ class PaymentController extends BaseController
     {
         $member = Auth::user()->member;
         $program = Program::with(['location'])->where('id', $request->programId)->first();
-        $stripeDetails = Integration::where(['vendor_id' => $program->location->vendor_id, "service" => "Stripe"])->first();
+        $stripeDetails = Integration::where(['location_id' => $program->location->id, "service" => "Stripe"])->first();
         $stripe = new \Stripe\StripeClient(['api_key' => $stripeDetails->access_token]);
         $oldCustomer = $stripe->customers->search([
             'query' => 'email:\'' . $member['email'] . '\'',
@@ -178,6 +178,9 @@ class PaymentController extends BaseController
                     $paymentMethod->id,
                     ['customer' => $customer['id']]
                 );
+                $member->locations()->syncWithoutDetaching([
+                    $program->location->id => ['stripe_customer_id' => $customer['id']]
+                ]);
     
                 // Set the attached PaymentMethod as the default payment method
                 $stripe->customers->update($customer['id'], [

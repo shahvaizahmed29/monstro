@@ -604,7 +604,7 @@ class MemberController extends BaseController
         $program = Program::with('location')->find($programId);
         try {
             if($program) {
-                $stripeDetails = Integration::where(['vendor_id' => $program->location->vendor_id, "service" => "Stripe"])->first();
+                $stripeDetails = Integration::where(['location_id' => $program->location->id, "service" => "Stripe"])->first();
                 return $this->sendResponse($stripeDetails->api_key, 'Stripe Publishable Key');
             }
 
