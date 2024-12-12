@@ -73,13 +73,13 @@ class MemberStripeService
               Log::info(json_encode($payment));
               return $payment;
         } else {
-            $subscription = $stripe->subscriptions->create([
+            $stripe->subscriptions->create([
                 'customer' => $customer['id'],
                 'items' => [
                     ['price' => $stripePlan->pricing->stripe_price_id],
                 ],
             ]);
-            return $subscription;
+            return $customer;
         }
     }
     } catch(Exception $error) {

@@ -277,8 +277,13 @@ class MemberController extends BaseController
                     'start_date' => Carbon::today()->format('Y-m-d'),
                     'end_date' => $session->end_date
                 ]);
-
-                $member->locations()->sync([$location->id]);
+                if(isset($contact["customerStripeId"])) {
+                    $member->locations()->sync([
+                        $location->id => ['stripe_customer_id' => $contact["customerStripeId"]]
+                    ]);                
+                } else {
+                    $member->locations()->sync([$location->id]);
+                }
 
                 DB::commit();
                 Mail::to($contact['email'])->send(new MemberRegistration($contact['firstName'], $contact['lastName'], $program->name, $contact['email'], $password, $randomNumberMT.$user->id));
@@ -426,6 +431,8 @@ class MemberController extends BaseController
         try {
             $location = request()->location;
             $program = Program::with(['programLevels', 'location'])->where('id', $request->programId)->first();
+            $contact = $request->all(); 
+            $contact["customerStripeId"] = null;
             if(!$location){
                 return $this->sendError('Location Not Found');
             }
@@ -437,12 +444,11 @@ class MemberController extends BaseController
                 $stripeDetails = Integration::where(["service" => "Stripe", "location_id" => $location->id])->first();
                 $memberStripeService = new MemberStripeService($stripeDetails->access_token);
                 $payment = $memberStripeService->completePayment($request);
-                Log::info($payment);
+                $contact["customerStripeId"] = $payment["id"];
                 if(isset($payment["error"]) && $payment["error"]){
                     return $this->sendError('Something went wrong!', $payment);
                 }
             }
-            $contact = $request->all();
             $addMember = MemberController::createMemberFromGHL($contact, $location, $program->programLevels[0]->id, $program);
             if($addMember == true){
                 return $this->sendResponse('Success', 'Member synced successfully');

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\{BelongsTo, BelongsToMany, HasMany};
 
 class Member extends Model
 {
@@ -25,55 +26,57 @@ class Member extends Model
         'parent_id'
     ];
 
-    public function locations(){
-        return $this->belongsToMany(Location::class, 'member_locations', 'member_id', 'location_id');
+    public function locations(): BelongsToMany
+    {
+        return $this->belongsToMany(Location::class, 'member_locations', 'member_id', 'location_id')->withPivot('stripe_customer_id');
     }    
 
-    public function achievements(){
+    public function achievements(): BelongsToMany
+    {
         return $this->belongsToMany(Achievement::class, 'member_achievements', 'member_id', 'achievement_id');
     }
 
-    public function reservations(){
+    public function reservations(): HasMany
+    {
         return $this->hasMany(Reservation::class);
     }
 
-    public function parent(){
-        return $this->belongsTo(Member::class, 'parent_id');
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Member::class, 'parent_id', 'id');
     }
 
-    public function children(){
-        return $this->hasMany(Member::class, 'parent_id');
+    public function children(): HasMany
+    {
+        return $this->hasMany(Member::class, 'parent_id', 'id');
     }
 
-    public function programs(){
+    public function programs(): BelongsToMany
+    {
         return $this->belongsToMany(Program::class, 'member_programs', 'member_id', 'program_id');
     }
     
-    public function user(){
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class);
     }
 
-    public function isActive(): bool{
-        $activeReservationsCount = $this->reservations()
-            ->where('status', \App\Models\Reservation::ACTIVE)
-            ->count();
-
-        return $activeReservationsCount > 0 ? true : false;
+    public function isActive(): bool
+    {
+        return $this->reservations()
+            ->where('status', Reservation::ACTIVE)
+            ->exists();
     }
 
-    public function reedemPoints(){
-        $redeemPoints = 0;
-        $rewards = $this->rewards()->get();
-        foreach($rewards as $reward) {
-            if($reward->reward->type == Reward::POINTS){
-                $redeemPoints = $redeemPoints + $reward->reward->reward_points;
-            }
-        }
-        return $redeemPoints;
+    public function redeemPoints(): int
+    {
+        return $this->rewards()
+            ->whereHas('reward', fn($query) => $query->where('type', Reward::POINTS))
+            ->sum('reward.reward_points');
     }
 
-    public function rewards(){
+    public function rewards(): HasMany
+    {
         return $this->hasMany(MemberRewardClaim::class);
     }
-
 }

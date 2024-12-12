@@ -21,12 +21,12 @@ class CheckLocationId
             return response()->json($response, 400);
         }
         $method = $request->method();
-        $locationId = "";
-        if($method != "GET" || $method != "get"){
-            $sqids = new Sqids('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 14);
-            $locationId = $sqids->decode($requestLocationId);
-            $locationId = $locationId ? $locationId[0] : null;    
-        }
+        $locationId = $requestLocationId;
+        // if($method != "GET" || $method != "get"){
+        //     $sqids = new Sqids('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 14);
+        //     $locationId = $sqids->decode($requestLocationId);
+        //     $locationId = $locationId ? $locationId[0] : null;    
+        // }
         $location = Location::where('id', $locationId)->first();
         if (!$location) {
             Log::info("No Location Found");

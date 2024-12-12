@@ -246,8 +246,9 @@ class VendorController extends BaseController
                 return $this->sendError("Location not found", [], 404);
             }
             $timezone = TimezoneService::findTimezone($request->timezone);
-            Log::info($timezone);
-            Log::info($request->niche);
+            if(!$timezone) {
+                return $this->sendError("An error occurred: " . "Timezone not found", [], 500);
+            }
             $data = [
                 'timezone' => $timezone, // Assuming timezone logic is commented out for now
                 'logo_url' => $request->logo,

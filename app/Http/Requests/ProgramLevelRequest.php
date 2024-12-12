@@ -42,7 +42,7 @@ class ProgramLevelRequest extends FormRequest
                 },
             ],
             // Other validation rules...                       
-            'sessions.*.duration_time' => 'required|integer',
+            'sessions.*.duration_time' => 'required|string',
             'sessions.*.monday' => 'nullable|date_format:H:i:s',
             'sessions.*.tuesday' => 'nullable|date_format:H:i:s',
             'sessions.*.wednesday' => 'nullable|date_format:H:i:s',

@@ -46,6 +46,7 @@ class Session extends Model
     public function getCurrentStatusAttribute($timezone)
     {
 
+        return 'In Progress';
         $location = $this->program->location;
         $locationTimezone = $location->timezone ? $location->timezone : 'UTC';
         // Convert start_date and end_date to the user's timezone

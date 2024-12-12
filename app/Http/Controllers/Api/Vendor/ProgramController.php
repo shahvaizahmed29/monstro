@@ -63,9 +63,7 @@ class ProgramController extends BaseController
     }
 
     public function getProgramsByLocationId($locationId){
-        $sqids = new Sqids('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 14);
-        $decoded = $sqids->decode($locationId)[0];
-        $programs = Program::whereIn('location_id', $decoded)->whereHas('stripePlans', function ($query) {
+        $programs = Program::where('location_id', $locationId)->whereHas('stripePlans', function ($query) {
             $query->where('status', 1); // Example condition: only include active stripe plans
         })
         ->with(['stripePlans' => function ($query) {
@@ -79,6 +77,7 @@ class ProgramController extends BaseController
 
 
         $programs = $programs->paginate(25);
+        Log::info(json_encode($programs));
         $data = [
             'programs' => ProgramResource::collection($programs),
             'pagination' => [
@@ -784,7 +783,7 @@ class ProgramController extends BaseController
             //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
             // }
             DB::beginTransaction();
-            $stripeClientAuth = Integration::where(['vendor_id' => $program->location->vendor_id, "service" => "Stripe"])->first();
+            $stripeClientAuth = Integration::where(['location_id' => $program->location->id, "service" => "Stripe"])->first();
             $stripe = new \Stripe\StripeClient($stripeClientAuth->access_token);
 
             $product = $stripe->products->create(['name' => $request->name, 'description' => $request->description]);
