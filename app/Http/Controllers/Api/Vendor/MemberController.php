@@ -286,7 +286,14 @@ class MemberController extends BaseController
                 }
 
                 DB::commit();
-                Mail::to($contact['email'])->send(new MemberRegistration($contact['firstName'], $contact['lastName'], $program->name, $contact['email'], $password, $randomNumberMT.$user->id));
+                try {
+                    Mail::to($contact['email'])->send(new MemberRegistration($contact['firstName'], $contact['lastName'], $program->name, $contact['email'], $password, $randomNumberMT.$user->id));
+                } catch(\Exception $error) {
+                    Log::info('===== Create New Member email =====');
+                    Log::info(json_encode($contact));
+                    Log::info(json_encode($programLevelId));
+                    Log::info($error->getMessage());
+                }
                 return true;
             }
            
