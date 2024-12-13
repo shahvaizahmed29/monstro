@@ -12,7 +12,7 @@
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
         "laravel/ui": "^4.2",
-        "sendgrid/sendgrid": "*",
+        "sendgrid/sendgrid": "^8.1",
         "spatie/laravel-permission": "^6.1",
         "sqids/sqids": "^0.4.1",
         "stripe/stripe-php": "^13.7"

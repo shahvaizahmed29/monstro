@@ -119,6 +119,29 @@ class ContractController extends BaseController
         }
     }
 
+    public function deleteContract($contractId)
+    {
+        try {
+            $location = request()->location;
+            $location = Location::find($location->id);
+            if (!$location) {
+                return $this->sendError("Location doesnot exist", [], 400);
+            }
+            $contract = Contract::with('stripePlans')->find($contractId);
+            foreach ($contract->stripePlans as $stripePlan) {
+                $stripePlan->contract_id = null;
+                $stripePlan->save();
+            }
+            $contract->delete();
+            
+
+            return $this->sendResponse($contract, 'Contract Deleted');
+
+        } catch (Exception $error) {
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
     public function getContractVariables($contractId)
     {
         try {

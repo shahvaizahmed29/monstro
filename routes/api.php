@@ -169,6 +169,7 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::get('contracts/program/{programId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContractsByProgram'])->name('contracts.fetch');
     Route::post('contracts/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'updateContractById'])->name('update.contract');
     Route::get('contracts/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContractById'])->name('contract.single.fetch');
+    Route::delete('contracts/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'deleteContract'])->name('contract.single.delete');
     Route::post('invite-member', [App\Http\Controllers\Api\Vendor\MemberController::class, 'inviteMember'])->name('invite.member');
     Route::post('add-stripe-plan/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addPlan'])->name('plan.create');
     Route::post('update-location-info', [App\Http\Controllers\Api\Vendor\VendorController::class, 'updateLocation'])->name('vendor.location.update');
