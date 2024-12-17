@@ -83,6 +83,7 @@ class Session extends Model
             $startTime = Carbon::createFromFormat('Y-m-d H:i:s', $nextSessionDate->format('Y-m-d') .' '.$this->{$nextSessionDay}, $locationTimezone);
 
             // $startTime = Carbon::parse($this->{$today}, $timezone)->setTimezone('UTC');
+            $currentDayOfWeek = strtolower($currentTime->format('l'));
             $duration = json_decode($this->duration_time, true);
             $endTime = $startTime->copy()->addMinutes($duration[$currentDayOfWeek]);
 
