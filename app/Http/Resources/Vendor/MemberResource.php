@@ -39,7 +39,7 @@ class MemberResource extends JsonResource
             'children' => $this->children,
             'goHighLevelContactId' => $this->when($this->go_high_level_contact_id !== null, $this->go_high_level_contact_id),
             'lastSeen' => $this->when($this->last_seen !== null, $this->last_seen),
-            'reedemPoints' => $this->reedemPoints(),
+            'reedemPoints' => $this->reedemPoints ? $this->reedemPoints : 0,
             'currentLevel' => $this->current_level,
             'created' => $this->createdAt,
             'update' => $this->updatedAt,

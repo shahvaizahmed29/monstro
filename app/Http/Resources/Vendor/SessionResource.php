@@ -7,6 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\Vendor\ProgramLevelResource;
 use App\Http\Resources\Vendor\ProgramResource;
 use App\Http\Resources\Vendor\ReservationResource;
+use Carbon\Carbon;
 
 class SessionResource extends JsonResource
 {
@@ -17,13 +18,12 @@ class SessionResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-
-      
-
         $timezone = $request->header('Timezone', 'UTC');
         $program = $this->program()->withTrashed()->first();
         $programLevel =  $this->programLevel()->withTrashed()->first();
-
+        $currentTime = Carbon::now()->tz($timezone);
+        $currentDayOfWeek = strtolower($currentTime->format('l'));
+        $duration = json_decode($this->duration_time, true);
         
         $session = [
             'id' => $this->id,
@@ -31,7 +31,7 @@ class SessionResource extends JsonResource
             'programLevelName' => $programLevel->name,
             'programId' => $program->id,
             'programName' => $program->name,
-            'durationTime' => $this->duration_time,
+            'durationTime' => $duration[$currentDayOfWeek],
             'startDate' => $this->start_date,
             'endDate' => $this->end_date,
             'monday' => $this->monday,

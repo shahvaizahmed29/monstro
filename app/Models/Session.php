@@ -45,8 +45,6 @@ class Session extends Model
 
     public function getCurrentStatusAttribute($timezone)
     {
-
-        return 'In Progress';
         $location = $this->program->location;
         $locationTimezone = $location->timezone ? $location->timezone : 'UTC';
         // Convert start_date and end_date to the user's timezone
@@ -85,9 +83,10 @@ class Session extends Model
             $startTime = Carbon::createFromFormat('Y-m-d H:i:s', $nextSessionDate->format('Y-m-d') .' '.$this->{$nextSessionDay}, $locationTimezone);
 
             // $startTime = Carbon::parse($this->{$today}, $timezone)->setTimezone('UTC');
-            $endTime = $startTime->copy()->addMinutes($this->duration_time);
+            $duration = json_decode($this->duration_time, true);
+            $endTime = $startTime->copy()->addMinutes($duration[$currentDayOfWeek]);
 
-            $startTime = $startTime->copy()->subMinutes($this->duration_time);
+            $startTime = $startTime->copy()->subMinutes($duration[$currentDayOfWeek]);
 
             if($currentTime->between($startTime, $endTime)) {
                 return 'In Progress';
@@ -112,7 +111,7 @@ class Session extends Model
                 $startTime = Carbon::createFromFormat('Y-m-d H:i:s', $nextSessionDate->format('Y-m-d') .' '.$this->{$nextSessionDay}, $locationTimezone);
                 
                 // $startTime = Carbon::parse($this->{$today}, $timezone)->setTimezone('UTC');
-                $endTime = $startTime->copy()->addMinutes($this->duration_time);
+                $endTime = $startTime->copy()->addMinutes($duration[$currentDayOfWeek]);
         
                 // Calculate time until next session
                 $timeUntilNextSession = $currentTime->diff($startTime);
