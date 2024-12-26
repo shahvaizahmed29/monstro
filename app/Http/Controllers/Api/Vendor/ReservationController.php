@@ -12,6 +12,7 @@ use App\Models\CheckIn;
 use App\Models\Member;
 use App\Models\MemberAchievement;
 use App\Models\Reservation;
+use App\Models\Session;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -22,16 +23,17 @@ class ReservationController extends BaseController
 {
     public function getReservationsByMember($member_id)
     {   
-        Log::info(12312);
         try {
             $member = Member::find($member_id);
-            $reservations = Reservation::with(['session', 'session.programLevel', 'session.programLevel.program'])
-                ->whereHas('session.programLevel', function ($query) {
-                    return $query->whereNull('deleted_at');
-                })->whereHas('session.program', function ($query) {
-                return $query->whereNull('deleted_at');
-            })->where('status', Reservation::ACTIVE)
-                ->where('member_id', $member_id)->paginate(25);
+            // Fetch the nearest reservation, trusting the resource to handle "in progress" logic
+            $reservation = Reservation::with(['session.programLevel', 'session.program'])
+            ->whereHas('session', function ($query) {
+                $query->whereNull('deleted_at')->where('status', Session::ACTIVE);
+            })
+            ->where('member_id', $member_id)
+            ->where('status', Reservation::ACTIVE)
+            ->orderBy('start_date')
+            ->first();
             // if(count($reservations) > 0) {
             // $location = $reservations[0]->session->programLevel->program->location;
             //Code commented out below becuase auth guard is not applied anymore.
@@ -40,17 +42,8 @@ class ReservationController extends BaseController
             // }
             // }
             $data = [
-                'reservations' => ReservationResource::collection($reservations),
-                'memberDetails' => new MemberResource($member),
-                'pagination' => [
-                    'current_page' => $reservations->currentPage(),
-                    'per_page' => $reservations->perPage(),
-                    'total' => $reservations->total(),
-                    'prev_page_url' => $reservations->previousPageUrl(),
-                    'next_page_url' => $reservations->nextPageUrl(),
-                    'first_page_url' => $reservations->url(1),
-                    'last_page_url' => $reservations->url($reservations->lastPage()),
-                ],
+                'reservation' => new ReservationResource($reservation),
+                'memberDetails' => new MemberResource($member)
             ];
             return $this->sendResponse($data, 'Reservations by member.');
         } catch (Exception $e) {
