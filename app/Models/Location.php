@@ -48,4 +48,14 @@ class Location extends Model
         return $this->hasOne(SupportTicket::class);
     }
 
+    public function achievements()
+    {
+        return $this->hasMany(Achievement::class);
+    }
+
+    public function rewards()
+    {
+        return $this->hasMany(Reward::class);
+    }
+
 }

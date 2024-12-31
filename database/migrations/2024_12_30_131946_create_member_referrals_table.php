@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('member_reward_claims', function (Blueprint $table) {
+        Schema::create('member_referrals', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('member_id');
-            $table->double('previous_points')->nullable();
-            $table->dateTime('date_claimed');
-            $table->unsignedBigInteger('reward_id'); 
-            $table->tinyInteger('status'); 
+            $table->foreignId('member_id')->constrained()->onDelete('cascade');
+            $table->foreignId('referred_member_id')->constrained('members', 'id')->onDelete('cascade');
+            $table->foreignId('location_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('member_reward_claims');
+        Schema::dropIfExists('member_referrals');
     }
 };

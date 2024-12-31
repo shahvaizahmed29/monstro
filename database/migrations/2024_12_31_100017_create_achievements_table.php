@@ -13,13 +13,14 @@ return new class extends Migration
     {
         Schema::create('achievements', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('program_id');
+            $table->unsignedBigInteger('program_id')->nullable();
             $table->string('name');
-            $table->string('image')->nullable();
-            $table->string('badge')->nullable();
-            $table->double('reward_points')->nullable();
+            $table->string('badge');
+            $table->unsignedBigInteger('location_id');
+            $table->bigInteger('points');
+            $table->foreign('program_id')->references('id')->on('programs');
+            $table->foreign('location_id')->references('id')->on('locations');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

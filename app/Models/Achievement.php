@@ -4,18 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Achievement extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
-        'program_id',
         'name',
         'badge',
-        'reward_points',
-        'image'
+        'points',
+        'program_id',
+        'location_id'
     ];
 
     public function program(){
@@ -30,8 +29,19 @@ class Achievement extends Model
         return $this->belongsToMany(Member::class, 'member_achievements', 'achievement_id', 'member_id');
     }
 
-    public function reward(){
-        return $this->belongsTo(Reward::class);
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
+    }
+
+    public function rewards()
+    {
+        return $this->hasMany(Reward::class);
+    }
+
+    public function memberAchievements()
+    {
+        return $this->hasMany(MemberAchievement::class);
     }
 
 }

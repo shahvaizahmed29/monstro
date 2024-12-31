@@ -68,15 +68,16 @@ class Member extends Model
             ->exists();
     }
 
-    public function redeemPoints(): int
-    {
-        return $this->rewards()
-            ->whereHas('reward', fn($query) => $query->where('type', Reward::POINTS))
-            ->sum('reward.reward_points');
-    }
-
     public function rewards(): HasMany
     {
-        return $this->hasMany(MemberRewardClaim::class);
+        return $this->hasMany(RewardClaim::class);
+    }
+
+    public function referrals() {
+        return $this->hasMany(MemberReferrals::class);
+    }
+
+    public function referredBy() {
+        return $this->belongsTo(MemberReferrals::class, 'referred_member_id', 'id');
     }
 }

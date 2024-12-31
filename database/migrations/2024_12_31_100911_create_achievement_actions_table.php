@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('member_achievements', function (Blueprint $table) {
+        Schema::create('achievement_actions', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('action_id');
             $table->unsignedBigInteger('achievement_id');
-            $table->unsignedBigInteger('member_id');
-            $table->tinyInteger('status');
-            $table->longText('note');
-            $table->date('date_achieved');
+            $table->integer('count');
+            $table->string('metadata')->nullable(); // New column for additional metadata
+            $table->foreign('action_id')->references('id')->on('actions');
+            $table->foreign('achievement_id')->references('id')->on('achievements');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('member_achievements');
+        Schema::dropIfExists('achievement_actions');
     }
 };

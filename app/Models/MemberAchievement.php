@@ -16,9 +16,13 @@ class MemberAchievement extends Model
         'member_id',
         'status',
         'note',
-        'date_achieved',
-        'date_expire',
-        'is_expired'
+        'progress',
+        'date_achieved'
+    ];
+
+    protected $casts = [
+        'progress' => 'integer',
+        'date_achieved' => 'datetime',
     ];
 
     public function achievement(){

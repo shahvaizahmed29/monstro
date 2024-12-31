@@ -15,14 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('description');
-            $table->string('image')->nullable();
-            $table->tinyInteger('type');
-            $table->unsignedInteger('limit_per_member')->default(1);
-            $table->foreignId('achievement_id')->constrained()->onDelete('cascade')->nullable();
-            $table->foreignId('location_id')->nullable()->constrained()->onDelete('cascade');
-            $table->unsignedBigInteger('reward_points')->nullable();
+            $table->unsignedBigInteger('achievement_id')->nullable();
+            $table->unsignedBigInteger('location_id');
+            $table->json('images');
+            $table->string('icon');
+            $table->integer('required_points');
+            $table->integer('limit_per_member');
+            $table->foreign('achievement_id')->references('id')->on('achievements');
+            $table->foreign('location_id')->references('id')->on('locations');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

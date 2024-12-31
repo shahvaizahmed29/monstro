@@ -14,15 +14,12 @@ class AchievementResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $program = $this->program()->withTrashed()->first();
-
         $achievement = [
             'id' => $this->id,
-            'programName' => $program->name,
-            'program' => $program,
+            'program' => $this->program,
             'name' => $this->name,
             'badge' => $this->badge,
-            'rewardPoints' => $this->reward_points,            
+            'points' => $this->points,            
             'action' => $this->actions,
             'image' => $this->image,
             'members' => $this->whenLoaded('members', function () {

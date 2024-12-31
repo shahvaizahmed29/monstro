@@ -12,7 +12,13 @@ class AchievementActions extends Model
     protected $fillable = [
         'action_id',
         'count',
-        'achievement_id'
+        'achievement_id',
+        'metadata'
+    ];
+
+    protected $casts = [
+        'count' => 'integer',
+        'metadata' => 'array',
     ];
 
     public function achievement(){

@@ -10,9 +10,10 @@ class Action extends Model
 {
     use HasFactory;
 
-    public const NO_OF_CLASSES = "No of classes";
-    public const LEVEL_ACHIEVED = "Level achieved";
-    public const No_OF_REFERRALS = "No of Referrals";
+    public const NO_OF_CLASSES_ATTENDED = "No Of Classes Attended";
+    public const NO_OF_LEVELS_COMPLETED = "No Of Levels Completed";
+    public const No_OF_REFERRALS_ADDED = "No Of Referrals Added";
+    public const SPEND_AMOUNT_AT_A_LOCATION = "Spend Amount At a Location";
 
     protected $fillable = [
         'name'

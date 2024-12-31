@@ -7,6 +7,7 @@ use App\Http\Resources\Vendor\AchievementResource;
 use App\Models\Achievement;
 use App\Models\Reward;
 use App\Models\AchievementActions;
+use App\Models\Location;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,15 +18,14 @@ class AchievementController extends BaseController
     public function index(){
         try{
             $achievements = Achievement::with(['actions', 'members']);
-
+            
             if(isset(request()->type)) {
                 if(request()->type == 0) {
                     $achievements = $achievements->whereNotNull('deleted_at')->withTrashed();
                 }
             }
-
+            
             $achievements = $achievements->paginate(25);
-
             $data = [
                 'achievements' => AchievementResource::collection($achievements),
                 'pagination' => [
@@ -46,16 +46,27 @@ class AchievementController extends BaseController
     }
 
     public function create(Request $request){
+        $location = request()->location;
+        $location = Location::find($location->id);
+        if(!$location) {
+            return $this->sendError("Location Not found", [], 500);
+        }
         try{
             DB::beginTransaction();
             $achievement = Achievement::create([
                 "name" => $request->name,
                 "badge" => $request->badge,
-                "reward_points" => $request->rewardPoints,
-                "program_id" => $request->program
+                "points" => $request->points,
+                "location_id" => $location->id
             ]);
             Log::info(json_encode($achievement));
             AchievementActions::create(['action_id' => $request->action, 'count' => $request->actionCount, 'achievement_id' => $achievement->id]);
+
+            if($request->program) {
+                $achievement->update([
+                    'program_id' => $request->program
+                ]);
+            }
             DB::commit();
 
             $achievement = Achievement::with(['actions'])->find($achievement->id);
@@ -84,20 +95,11 @@ class AchievementController extends BaseController
 
     public function update(Request $request, Achievement $achievement){
         try{
-            $uploadedFileName = null;
-            if ($request->hasFile('image')) {
-                $img = $request->file('image');
-                $imgPath = 'reward-images/';
-                $uploadedFileName = app('uploadImage')(0, $img, $imgPath);
-            }
-
             DB::beginTransaction();
             $achievement->update([
                 'name' => $request->name,
                 'badge' => $request->badge ?? $achievement->badge,
-                'reward_points' => $request->rewardPoints ?? $achievement->reward_points,
-                'image' => ($uploadedFileName) ? $uploadedFileName : $achievement->image,
-                'action_count' => $request->actionCount ?? $achievement->action_count
+                'points' => $request->points ?? $achievement->points,
             ]);
 
             DB::commit();
