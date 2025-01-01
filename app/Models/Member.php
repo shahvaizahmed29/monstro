@@ -73,11 +73,19 @@ class Member extends Model
         return $this->hasMany(RewardClaim::class);
     }
 
-    public function referrals() {
-        return $this->hasMany(MemberReferrals::class);
+    /**
+     * Get the referrals made by this member (as the referrer).
+     */
+    public function referralsMade(): HasMany
+    {
+        return $this->hasMany(MemberReferrals::class, 'member_id');
     }
 
-    public function referredBy() {
-        return $this->belongsTo(MemberReferrals::class, 'referred_member_id', 'id');
+    /**
+     * Get the referrals where this member was referred (as the referred member).
+     */
+    public function referralsReceived(): HasMany
+    {
+        return $this->hasMany(MemberReferrals::class, 'referred_member_id');
     }
 }

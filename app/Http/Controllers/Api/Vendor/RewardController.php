@@ -49,16 +49,15 @@ class RewardController extends BaseController
             $rewardData = [
                 'name' => $request->name,
                 'description' => $request->description,
-                'image' => $request->image,
-                'type' => $request->type,
                 'limit_per_member' => $request->limitPerMember,
-                'location_id' => $location->id
+                'images' => $request->images,
+                'icon' => $request->icon,
+                'location_id' => $location->id,
+                'required_points' => $request->requiredPoints,
+                
             ];
-            
-            if ($request->type == Reward::ACHIEVEMENT){
+            if ($request->achievementId){
                 $rewardData['achievement_id'] = $request->achievementId;
-            }else{
-                $rewardData['reward_points'] = $request->rewardPoints;
             }
             
             DB::beginTransaction();
@@ -92,18 +91,29 @@ class RewardController extends BaseController
         try {
 
             $reward = Reward::find($id);
+            $location = request()->location;
 
             if (!$reward) {
                 return $this->sendError('Reward not found', [], 400);
             }
+            if (!$location) {
+                return $this->sendError('Location not found', [], 400);
+            }
             DB::beginTransaction();
-            $reward->update([
-                'name' => $request->name ?? $reward->name,
-                'description' => $request->description ?? $reward->description,
-                'image' => $request->image,
-                'limit_per_member' => $request->limitPerMember ?? $reward->limitPerMember,
-                'reward_points' => $request->rewardPoints
-            ]);
+            $rewardData = [
+                'name' => $request->name,
+                'description' => $request->description,
+                'limit_per_member' => $request->limitPerMember,
+                'images' => $request->images,
+                'icon' => $request->icon,
+                'location_id' => $location->id,
+                'required_points' => $request->requiredPoints,
+                
+            ];
+            if ($request->achievementId){
+                $rewardData['achievement_id'] = $request->achievementId;
+            }
+            $reward->update($rewardData);
             DB::commit();
             $reward = Reward::with('achievement')->where('id', $reward->id)->first();
 

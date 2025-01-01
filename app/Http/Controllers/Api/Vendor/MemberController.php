@@ -312,6 +312,10 @@ class MemberController extends BaseController
             DB::beginTransaction();
             $session = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->latest()->first();
             $user = User::where('email', $contact['email'])->first();
+            $referringMember = null;
+            if($contact->referralCode){
+                $referringMember = Member::where(["referral_code" => $contact->referralCode])->first();
+            }
             if(!$user) {
                 $user = User::create([
                     'name' => $contact['firstName'].' '.$contact['lastName'],
@@ -332,6 +336,13 @@ class MemberController extends BaseController
                 ]);
             } else {
                 $member = $user->member;
+            }
+
+            if($referringMember) {
+                $member->referralsReceived()->create([
+                    "location_id" => $location->id,
+                    "member_id" => $referringMember->id
+                ]);
             }
 
             $programLevel = ProgramLevel::with(['program'])->where('id', $programLevelId)->first();

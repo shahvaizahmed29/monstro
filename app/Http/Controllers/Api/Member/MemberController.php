@@ -616,7 +616,6 @@ class MemberController extends BaseController
     public function register(Request $request){
         $program = Program::with(['programLevels', 'location'])->where('id', $request->programId)->first();
         $addMember = VendorMemberController::createMemberFromRegistration($request, $program->location, $program->programLevels[0]->id);
-        Log::info($addMember);
         return $this->sendResponse($addMember, 'Register');
     }
 }

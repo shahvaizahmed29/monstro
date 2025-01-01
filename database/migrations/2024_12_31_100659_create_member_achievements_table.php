@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('status');
             $table->string('note')->nullable();
             $table->integer('progress')->default(0); // New column for tracking progress
-            $table->dateTime('date_achieved')->nullable();
+            $table->dateTime('date_achieved')->default(now());
             $table->foreign('achievement_id')->references('id')->on('achievements');
             $table->foreign('member_id')->references('id')->on('members');
             $table->timestamps();

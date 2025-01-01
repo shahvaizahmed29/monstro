@@ -5,6 +5,7 @@ namespace App\Http\Resources\Member;
 use App\Http\Resources\Member\AchievementResource;
 use App\Models\MemberRewardClaim;
 use App\Models\Reward;
+use App\Models\RewardClaim;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,21 +20,21 @@ class AchievementRewardResource extends JsonResource
     {
         $reward = Reward::where("achievement_id", $this->achievement->id)->first();
         if($reward) {
-            $reward->remainingClaims = $reward->limit_per_member - MemberRewardClaim::where("reward_id", $reward->id)->where("member_id", $this->member_id)->count();
+            $reward->remainingClaims = $reward->limit_per_member - RewardClaim::where("reward_id", $reward->id)->where("member_id", $this->member_id)->count();
         }
         
         $rewardClaim = [
             'id' => $this->id,
             'note' => $this->note,
             'dateAchieved' => $this->date_achieved,
-            'dateExpired' => $this->date_expire,
+            'progress' => $this->progress,
             'isExpired' => $this->is_expired,
             'reward' => $reward,
             'achievement' => [
                 'id' => $this->achievement->id,
                 'name' => $this->achievement->name,
                 'badge' => $this->achievement->badge,
-                'rewardPoints' => $this->achievement->reward_points,
+                'requiredPoints' => $this->achievement->required_points,
                 'image' => $this->image,
             ],
 
