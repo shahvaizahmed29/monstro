@@ -21,5 +21,6 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::create(['name' => \App\Models\User::ADMIN]);
         Role::create(['name' => \App\Models\User::VENDOR]);
         Role::create(['name' => \App\Models\User::MEMBER]);
+        Role::create(['name' => \App\Models\User::STAFF]);
     }
 }

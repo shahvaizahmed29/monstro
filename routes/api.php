@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Vendor\RoleAndPermissionController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use Illuminate\Http\Request;
@@ -177,6 +178,12 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::get('integrations', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'getIntegrations'])->name('fetch.integrations');
     Route::delete('integrations/{id}', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'delIntegrations'])->name('delete.integrations');
     Route::get('fetch-vendor-stripe-pk', [App\Http\Controllers\Api\Vendor\VendorController::class, 'fetchVendorStripePk'])->name('fetch.vendor.stripe.pk');
+    Route::apiResource('roles', App\Http\Controllers\Api\Vendor\RoleAndPermissionController::class)->except(['index', 'show']);
+    Route::apiResource('staffs', App\Http\Controllers\Api\Vendor\StaffController::class)->except(['index', 'show']);
+});
+
+Route::group(['prefix' => 'vendor', 'middleware' => ['auth', 'is_staff']],function () {
+
 });
 
 Route::post('image-update/{user_id}', [App\Http\Controllers\PublicController::class, 'imageUpdate'])->name('image.update');

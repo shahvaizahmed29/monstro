@@ -69,6 +69,15 @@ class Kernel extends HttpKernel
         'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         'is_member' => \App\Http\Middleware\IsMember::class,
         'is_vendor' => \App\Http\Middleware\IsVendor::class,
+        'is_staff' => \App\Http\Middleware\IsStaff::class,
+        'is_staff' => \App\Http\Middleware\IsStaff::class,
         'checkLocationId' => \App\Http\Middleware\CheckLocationId::class,
+    ];
+
+    protected $routeMiddleware = [
+        'is_staff' => \App\Http\Middleware\IsStaff::class,
+        'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+        'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+        'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
     ];
 }

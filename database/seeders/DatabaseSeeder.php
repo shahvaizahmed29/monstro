@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-use App\Models\CheckIn;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -15,21 +14,22 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            RolesAndPermissionsSeeder::class,
-            PlansSeeder::class,
-            ProgressStepsSeeder::class,
+            // RolesAndPermissionsSeeder::class,
+            // PlansSeeder::class,
+            // ProgressStepsSeeder::class,
             // ActionSeeder::class,
-            UserSeeder::class,
-            VendorSeeder::class,
-            LocationSeeder::class,
-            MemberSeeder::class,
-            MemberLocationSeeder::class,
-            ProgramSeeder::class,
-            ProgramLevelSeeder::class,
-            SessionSeeder::class,
-            ReservationSeeder::class,
-            CheckInSeeder::class,
-            MemberProgramsSeeder::class
+            // UserSeeder::class,
+            // VendorSeeder::class,
+            // LocationSeeder::class,
+            // MemberSeeder::class,
+            // MemberLocationSeeder::class,
+            // ProgramSeeder::class,
+            // ProgramLevelSeeder::class,
+            // SessionSeeder::class,
+            // ReservationSeeder::class,
+            // CheckInSeeder::class,
+            // MemberProgramsSeeder::class
+            PermissionsSeeder::class
         ]);
     }
 }

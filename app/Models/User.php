@@ -19,6 +19,7 @@ class User extends Authenticatable
     public const ADMIN = "admin";
     public const VENDOR = "vendor";
     public const MEMBER = "member";
+    public const STAFF = "staff";
 
     /**
      * The attributes that are mass assignable.
@@ -57,6 +58,10 @@ class User extends Authenticatable
 
     public function member(){
         return $this->hasOne(Member::class);
+    }
+
+    public function staff(){
+        return $this->hasOne(Staff::class);
     }
 
     public function sendPasswordResetNotification($token)
