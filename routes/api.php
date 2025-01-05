@@ -182,7 +182,93 @@ Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId']],functio
     Route::apiResource('staffs', App\Http\Controllers\Api\Vendor\StaffController::class)->except(['index', 'show']);
 });
 
-Route::group(['prefix' => 'vendor', 'middleware' => ['auth', 'is_staff']],function () {
+
+Route::group(['prefix' => 'vendor', 'middleware' => ['auth', 'is_staff']],function () {    
+    //edit contract
+    Route::post('contracts/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'updateContractById'])->middleware('permission:edit contract')->name('update.contract');
+    
+    //add contract
+    Route::post('create-contract', [App\Http\Controllers\Api\Vendor\ContractController::class, 'addContract'])->middleware('permission:add contract')->name('contract.create');
+    
+    //delete contract
+    Route::delete('contracts/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'deleteContract'])->middleware('permission:delete contract')->name('contract.single.delete');
+    
+    //edit role
+    Route::put('roles/{id}', [App\Http\Controllers\Api\Vendor\RoleAndPermissionController::class, 'update'])->middleware('permission:edit role')->name('role.update');
+    //add role
+    Route::put('roles', [App\Http\Controllers\Api\Vendor\RoleAndPermissionController::class, 'store'])->middleware('permission:add role')->name('role.add');
+    //delete role
+    Route::put('roles/{id}', [App\Http\Controllers\Api\Vendor\RoleAndPermissionController::class, 'destroy'])->middleware('permission:delete role')->name('role.delete');
+    
+    Route::group(['middleware' => ['permission:edit business_profile']],function () {
+        //edit business_profile
+        Route::put('location/{locationId}', [App\Http\Controllers\Api\Vendor\LocationsController::class, 'updateLocation'])->name('update.location');
+        Route::post('update-location-info', [App\Http\Controllers\Api\Vendor\VendorController::class, 'updateLocation'])->name('vendor.location.update');
+        Route::post('integrations/{service}', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'completeConnection'])->name('complete.integration.connection');
+        Route::delete('integrations/{id}', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'delIntegrations'])->name('delete.integrations');
+    });
+
+    Route::group(['middleware' => ['permission:edit member']],function () {
+        //edit member
+        Route::get('member/{memberId}/password-reset', [App\Http\Controllers\Api\Vendor\MemberController::class, 'memberPasswordReset'])->name('member.password.reset');
+        Route::post('assign-program-level/{programLevelId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'assignProgramLevelToMember'])->name('assign.program.level.to.member');
+        Route::post('assign-program/{programId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'assignProgramToMember'])->name('assign.program.to.member');
+        Route::get('unassign-program/{programId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'unAssignMemberFromProgram'])->name('unassign.member.from.program');
+        Route::get('complete-program/{programId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'programCompletion'])->name('program.completion.for.member');
+        Route::post('mark-attendance', [App\Http\Controllers\Api\Vendor\ReservationController::class, 'markAttendance'])->name('mark.attendance');
+        Route::put('member/status/{member_id}', [App\Http\Controllers\Api\Vendor\MemberController::class, 'memberStatusUpdate'])->name('member.status.update');
+        Route::put('member/{memberId}/profile-update', [App\Http\Controllers\Api\Vendor\MemberController::class, 'profileUpdate'])->name('member.profile.update');
+    });
+    
+    Route::group(['middleware' => ['permission:add member']],function () {
+        //add member
+        Route::post('add-member', [App\Http\Controllers\Api\Vendor\MemberController::class, 'addMemberManually'])->middleware('permission:add member')->name('add.member.manually');
+        Route::post('invite-member', [App\Http\Controllers\Api\Vendor\MemberController::class, 'inviteMember'])->name('invite.member');
+        Route::post('member/create', [App\Http\Controllers\Api\Vendor\MemberController::class, 'createMember'])->name('create.member');
+    
+    });
+
+    Route::group(['middleware' => ['permission:edit achievement']],function () {
+        //edit achievement
+        Route::put('achievements/{achievement}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'update'])->name('update.achievement');
+        Route::post('rewards/{rewardId}/update', [App\Http\Controllers\Api\Vendor\RewardController::class, 'update'])->name('update.reward');
+    });
+
+    Route::group(['middleware' => ['permission:add achievement']],function () {
+        //add achievement
+        Route::post('achievements', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'create'])->name('create.achievement');
+        Route::post('rewards', [App\Http\Controllers\Api\Vendor\RewardController::class, 'store'])->name('create.reward');
+    });
+
+    Route::group(['middleware' => ['permission:delete achievement']],function () {
+        //delete achievement
+        Route::delete('achievements/{achievementId}', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'delete'])->name('delete.achievement');
+        Route::put('rewards/{id}', [App\Http\Controllers\Api\Vendor\RewardController::class, 'restore'])->name('restore.reward');
+        Route::delete('rewards/{id}', [App\Http\Controllers\Api\Vendor\RewardController::class, 'delete'])->name('delete.reward');    
+    });
+
+    //delete member
+    // no function to delete a member
+    
+    Route::group(['middleware' => ['permission:edit program']],function () {
+        //edit program
+        Route::post('/program/{program}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'update'])->name('program.update');
+        Route::put('/program-level-update/{programLevel}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'programLevelUpdate'])->name('program.level.update');
+    });
+    
+    Route::group(['middleware' => ['permission:add program']],function () {
+        //add program
+        Route::post('add-program', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addProgram'])->name('add.program');
+        Route::post('add-program-level', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addProgramLevel'])->name('add.program.level');
+        Route::post('program/{program}/image', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'programImageUpdate'])->name('program.image.update');
+        Route::post('add-stripe-plan/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addPlan'])->name('plan.create');
+    });
+    
+    Route::group(['middleware' => ['permission:delete program']],function () {
+        //delete program
+        Route::delete('program/{program_id}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'delete'])->name('delete.program');
+        Route::delete('program-level/{programLevelId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'deleteProgramLevel'])->name('delete.program.level');
+    });
 
 });
 
