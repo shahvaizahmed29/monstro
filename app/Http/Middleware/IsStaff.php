@@ -19,7 +19,7 @@ class IsStaff
     {
         if (!$request->user()->hasRole(\App\Models\User::STAFF)) {
             return response()->json(['success' => false, 'status' => 401, 'message' => 'Unauthorized role']);
-        } 
+        }
         return $next($request);
     }
 }

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('achievement_id')->nullable();
             $table->unsignedBigInteger('location_id');
             $table->json('images');
-            $table->string('icon');
+            $table->string('icon')->nullable();
             $table->integer('required_points');
             $table->integer('limit_per_member');
             $table->foreign('achievement_id')->references('id')->on('achievements');

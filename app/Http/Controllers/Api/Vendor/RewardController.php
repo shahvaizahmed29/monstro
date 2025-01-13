@@ -50,16 +50,17 @@ class RewardController extends BaseController
                 'name' => $request->name,
                 'description' => $request->description,
                 'limit_per_member' => $request->limitPerMember,
+                'limit_total' => $request->limitTotal,
                 'images' => $request->images,
-                'icon' => $request->icon,
+                // 'icon' => $request->icon,
                 'location_id' => $location->id,
                 'required_points' => $request->requiredPoints,
                 
             ];
-            if ($request->achievementId){
-                $rewardData['achievement_id'] = $request->achievementId;
-            }
-            
+            // if ($request->achievementId){
+            //     $rewardData['achievement_id'] = $request->achievementId;
+            // }
+            Log::info(json_encode($rewardData));
             DB::beginTransaction();
             $reward = Reward::create($rewardData);
             DB::commit();
@@ -104,8 +105,9 @@ class RewardController extends BaseController
                 'name' => $request->name,
                 'description' => $request->description,
                 'limit_per_member' => $request->limitPerMember,
+                'limit_total' => $request->limit_total,
                 'images' => $request->images,
-                'icon' => $request->icon,
+                // 'icon' => $request->icon,
                 'location_id' => $location->id,
                 'required_points' => $request->requiredPoints,
                 

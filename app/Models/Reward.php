@@ -13,9 +13,10 @@ class Reward extends Model {
         'achievement_id',
         'location_id',
         'images',
-        'icon',
+        // 'icon',
         'required_points',
-        'limit_per_member'
+        'limit_per_member',
+        'limit_total'
     ];
 
     protected $casts = [

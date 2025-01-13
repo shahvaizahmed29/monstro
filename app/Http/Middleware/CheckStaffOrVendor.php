@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
-class IsVendor
+class CheckStaffOrVendor
 {
     /**
      * Handle an incoming request.
@@ -17,9 +17,9 @@ class IsVendor
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user()->hasRole(\App\Models\User::VENDOR)) {
-            return response()->json(['success' => false, 'status' => 401, 'message' => 'Unauthorized role']);
-        }
-        return $next($request);
+        if ($request->user()->hasRole(\App\Models\User::STAFF) || $request->user()->hasRole(\App\Models\User::VENDOR)) {
+            return $next($request);
+        } 
+        return response()->json(['success' => false, 'status' => 401, 'message' => 'Unauthorized role']);
     }
 }
