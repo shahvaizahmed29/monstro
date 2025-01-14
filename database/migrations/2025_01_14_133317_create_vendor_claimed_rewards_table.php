@@ -12,7 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('vendor_claimed_rewards', function (Blueprint $table) {
-            //
+            $table->id();
+            $table->unsignedBigInteger('vendor_progress_id');
+            $table->unsignedBigInteger('reward_id');
+            $table->timestamp('claimed_at');
+            $table->foreign('vendor_progress_id')->references('id')->on('vendor_progress')->cascadeOnDelete();
+            $table->foreign('reward_id')->references('id')->on('vendor_rewards')->cascadeOnDelete();
         });
     }
 

@@ -12,7 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('vendor_referrals', function (Blueprint $table) {
-            //
+            $table->id();
+            $table->unsignedInteger('amount');
+            $table->unsignedBigInteger('vendor_id');
+            $table->unsignedBigInteger('referral_id');
+            $table->timestamp('created_at');
+            $table->timestamp('accepted_at')->nullable();
+
+            $table->foreign('vendor_id')->references('id')->on('vendors')->cascadeOnDelete();
         });
     }
 
