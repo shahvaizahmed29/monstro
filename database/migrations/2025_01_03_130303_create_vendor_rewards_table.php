@@ -13,14 +13,13 @@ return new class extends Migration
     {
         Schema::create('vendor_rewards', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('achievement_id')->nullable();
             $table->string('name');
             $table->string('description');
-            $table->string('icon');
-            $table->json('data');
-            $table->integer('total_claimed');
-            $table->foreign('achievement_id')->references('id')->on('vendor_achievements');
+            $table->string('images');
+            $table->json('meta');
+            $table->unsignedInteger('required_points');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

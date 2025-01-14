@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('vendor_progress', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('achievement_id')->nullable();
-            $table->integer('progress')->default(0);
-            $table->boolean('completed')->default(0);
-            $table->boolean('claimed')->default(0);
-            $table->foreign('achievement_id')->references('id')->on('vendor_achievements');
+            $table->unsignedBigInteger('vendor_id')->nullable();
+            $table->unsignedBigInteger('location_id')->nullable();
+            $table->unsignedDouble('points')->default(0);
+            $table->unsignedDouble('total_points')->default(0);
+            $table->foreign('vendor_id')->references('id')->on('vendors');
+            $table->foreign('location_id')->references('id')->on('locations');
             $table->timestamps();
         });
     }
