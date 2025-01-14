@@ -138,9 +138,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
         Route::apiResource('rewards', App\Http\Controllers\Api\Vendor\RewardController::class);
         
-        Route::put('password-reset', [App\Http\Controllers\Api\Vendor\VendorController::class, 'passwordReset'])->name('password.reset');
-        Route::put('update-password',[App\Http\Controllers\Api\Vendor\VendorController::class, 'vendorUpdatePassword'])->name('vendor.update.password');
-        
+        Route::put('password-reset', [App\Http\Controllers\Api\Vendor\VendorController::class, 'passwordReset'])->name('password.reset');        
         Route::post('assign-program-level/{programLevelId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'assignProgramLevelToMember'])->name('assign.program.level.to.member');
         Route::post('assign-program/{programId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'assignProgramToMember'])->name('assign.program.to.member');
         Route::get('unassign-program/{programId}/member/{memberId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'unAssignMemberFromProgram'])->name('unassign.member.from.program');
@@ -176,6 +174,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     Route::group(['prefix' => 'vendor', 'middleware' => ['checkLocationId', 'staff_or_vendor']],function () { 
+
+        Route::put('update-password',[App\Http\Controllers\Api\Vendor\VendorController::class, 'vendorUpdatePassword'])->name('vendor.update.password');
 
         //edit contract
         Route::post('contracts/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'updateContractById'])->middleware('permission:edit contract')->name('update.contract.for.staff');
