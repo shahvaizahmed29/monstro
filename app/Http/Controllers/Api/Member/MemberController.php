@@ -68,6 +68,7 @@ class MemberController extends BaseController
             $member->save();
             return $this->sendResponse('Success', 'User updated successfully.');
         }catch (Exception $error) {
+            Log::info($error->getMessage());
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
