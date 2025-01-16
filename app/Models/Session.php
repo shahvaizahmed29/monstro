@@ -85,9 +85,10 @@ class Session extends Model
             // $startTime = Carbon::parse($this->{$today}, $timezone)->setTimezone('UTC');
             $currentDayOfWeek = strtolower($currentTime->format('l'));
             $duration = json_decode($this->duration_time, true);
-            $endTime = $startTime->copy()->addMinutes($duration[$currentDayOfWeek]);
 
-            $startTime = $startTime->copy()->subMinutes($duration[$currentDayOfWeek]);
+            $endTime = $startTime->copy()->addMinutes(isset($duration[$currentDayOfWeek]) ? $duration[$currentDayOfWeek] : 0);
+
+            $startTime = $startTime->copy()->subMinutes(isset($duration[$currentDayOfWeek]) ? $duration[$currentDayOfWeek] : 0);
 
             if($currentTime->between($startTime, $endTime)) {
                 return 'In Progress';
@@ -112,7 +113,7 @@ class Session extends Model
                 $startTime = Carbon::createFromFormat('Y-m-d H:i:s', $nextSessionDate->format('Y-m-d') .' '.$this->{$nextSessionDay}, $locationTimezone);
                 
                 // $startTime = Carbon::parse($this->{$today}, $timezone)->setTimezone('UTC');
-                $endTime = $startTime->copy()->addMinutes($duration[$currentDayOfWeek]);
+                $endTime = $startTime->copy()->addMinutes(isset($duration[$currentDayOfWeek]) ? $duration[$currentDayOfWeek] : 0);
         
                 // Calculate time until next session
                 $timeUntilNextSession = $currentTime->diff($startTime);
