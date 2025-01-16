@@ -55,8 +55,11 @@ class MemberController extends BaseController
                 return $this->sendError('Member not exist.', [], 400);
             }
 
-            if ($request->has('name')) {
-                $member->name = $request->name;
+            if ($request->has('firstName')) {
+                $member->firstName = $request->firstName;
+            }
+            if ($request->has('lastName')) {
+                $member->lastName = $request->lastName;
             }
 
             $member->save();
