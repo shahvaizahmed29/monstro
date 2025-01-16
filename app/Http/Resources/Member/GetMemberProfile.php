@@ -16,9 +16,9 @@ class GetMemberProfile extends JsonResource
     {
         $member = [
             'id' => $this->id,
-            'name' => $this->firstName.' '.$this->lastName,
-            'firstName' => $this->firstName,
-            'lastName' => $this->lastName,
+            'name' => $this->member->firstName.' '.$this->member->lastName,
+            'firstName' => $this->member->firstName,
+            'lastName' => $this->member->lastName,
             'email' => $this->member->email,
             'phone' => $this->member->phone,
             'referralCode' => $this->member->referral_code,
