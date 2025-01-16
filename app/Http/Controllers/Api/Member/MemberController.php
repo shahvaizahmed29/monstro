@@ -61,6 +61,9 @@ class MemberController extends BaseController
             if ($request->has('lastName')) {
                 $member->lastName = $request->lastName;
             }
+            if($request->has('avatar')) {
+                $member->avatar = $request->avatar;
+            }
 
             $member->save();
             return $this->sendResponse('Success', 'User updated successfully.');
