@@ -18,9 +18,9 @@ class MemberResource extends JsonResource
     {
         $member = [
             'id' => $this->id,
-            'name' => $this->firstName.' '.$this->lastName,
-            'firstName' => $this->firstName,
-            'lastName' => $this->lastName,
+            'name' => $this->first_name.' '.$this->last_name,
+            'firstName' => $this->first_name,
+            'lastName' => $this->last_name,
             'email' => $this->email,
             'phone' => $this->phone,
             'referralCode' => $this->referral_code,
