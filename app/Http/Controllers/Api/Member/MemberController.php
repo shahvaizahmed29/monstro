@@ -56,10 +56,10 @@ class MemberController extends BaseController
             }
 
             if ($request->has('firstName')) {
-                $member->firstName = $request->firstName;
+                $member->first_name = $request->firstName;
             }
             if ($request->has('lastName')) {
-                $member->lastName = $request->lastName;
+                $member->last_name = $request->lastName;
             }
             if($request->has('avatar')) {
                 $member->avatar = $request->avatar;
