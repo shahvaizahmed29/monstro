@@ -24,7 +24,7 @@ class SessionResource extends JsonResource
             'id' => $this->id,
             'programLevelId' => $this->program_level_id,
             'programId' => $this->program_id,
-            'durationTime' => $duration[$currentDayOfWeek],
+            'durationTime' => isset($duration[$currentDayOfWeek]) ? $duration[$currentDayOfWeek] : 0 ,
             'startDate' => $this->start_date,
             'endDate' => $this->end_date,
             'monday' => $this->monday,
