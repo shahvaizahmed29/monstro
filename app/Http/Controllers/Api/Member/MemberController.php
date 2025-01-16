@@ -75,15 +75,15 @@ class MemberController extends BaseController
         }
     }
 
-    public function getMemberEnrolledPrograms($vendorId){
+    public function getMemberEnrolledPrograms($locationId){
         try{
             $reservations = Reservation::with(['session', 'session.programLevel','session.programLevel.program'])
             ->whereHas('session.programLevel', function ($query) {
                 return $query->whereNull('deleted_at');
             })->whereHas('session.program', function ($query) {
                 return $query->whereNull('deleted_at');
-            })->whereHas('session.programLevel.program.location', function ($query) use ($vendorId){
-                $query->where('vendor_id', $vendorId);
+            })->whereHas('session.programLevel.program.location', function ($query) use ($locationId){
+                $query->where('id', $locationId);
             })
                 ->where('member_id', auth()->user()->member->id)
                 ->where('status', Reservation::ACTIVE)
