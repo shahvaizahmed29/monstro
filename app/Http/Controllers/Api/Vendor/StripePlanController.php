@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers\Api\Vendor;
 
-use Illuminate\Http\Request;
-use App\Services\TimezoneService;
-use App\Models\StripePlan;
-use App\Models\Location;
+use App\Models\MemberPlan;
 use App\Http\Controllers\BaseController;
 use App\Models\Program;
 use Exception;
@@ -19,7 +16,7 @@ class StripePlanController extends BaseController
         if(!$location){
             return $this->sendError("Location doesnot exist", [], 400);
         }
-        $plans = StripePlan::with('pricing')->where('vendor_id', $location->vendor_id)->get();
+        $plans = MemberPlan::with('pricing')->where('vendor_id', $location->vendor_id)->get();
 
         return $this->sendResponse($plans, 'Plans List');
 
@@ -30,7 +27,7 @@ class StripePlanController extends BaseController
 
   public function getPlan($planId){
     try{
-      $plans = StripePlan::with('pricing')->where('id', $planId)->firstOrFail();
+      $plans = MemberPlan::with('pricing')->where('id', $planId)->firstOrFail();
 
       return $this->sendResponse($plans, 'Plan');
 

@@ -19,9 +19,11 @@ use App\Http\Resources\Vendor\SessionResource;
 use App\Mail\InviteMembers;
 use App\Mail\MemberRegistration;
 use App\Models\Integration;
+use App\Models\MemberPlan;
 use App\Models\ProgramLevel;
 use App\Notifications\NewMemberNotification;
 use App\Services\GHLService;
+use App\Services\MemberPaymentService;
 use App\Services\MemberStripeService;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -256,6 +258,34 @@ class MemberController extends BaseController
                 $member = $user->member;
             }
 
+            $memberPaymentService = new MemberPaymentService();
+            $newPayment = array(
+                "payer_id" => $member->id,
+                "beneficiary_id" => $member->id,
+                "program_id" => $contact["programId"],
+                "member_plan_id" => $contact["planId"]
+            );
+            $memberPlan = MemberPlan::with('pricing')->find($contact["planId"]);
+            $newTransaction = array(
+                "description" => "Payment added against $program->name program",
+                "statement_description" => "Payment Added",
+                "payment_method" => $contact["paymentMethod"],
+                "transaction_type" => "incoming",
+                "amount" => $memberPlan->pricing->amount,
+                "status" => "completed",
+                "model" => "member",
+                "program_id" => $contact["programId"],
+                "member_plan_id" => $contact["planId"],
+                "plan_id" => null,
+                "location_id" => $location->id,
+                "member_id" => $member->id,
+                "vendor_id" => null,
+                "staff_id" => null,
+                'payment_type' => $memberPlan->pricing->billing_period == "One Time" ? "one-time" : "recurring" 
+            );
+
+            $newPayment = $memberPaymentService->addPayment($newPayment, $newTransaction);
+
             $programLevel = ProgramLevel::with(['program'])->where('id', $programLevelId)->first();
 
             $alreadyEnrolledInProgramLevel = $member->reservations()->whereHas('session.programLevel', function ($query) use ($programLevelId) {
@@ -284,6 +314,8 @@ class MemberController extends BaseController
                 } else {
                     $member->locations()->sync([$location->id]);
                 }
+
+
 
                 DB::commit();
                 try {
@@ -458,7 +490,9 @@ class MemberController extends BaseController
                 return $this->sendError('Program Not Found');
             }
             $paymentMethod = $request->paymentMethod;
-            if($paymentMethod == 'card'){
+            $paymentMode = $request->paymentMode;
+
+            if($paymentMethod == 'stripe' && $paymentMode == 'card'){
                 $stripeDetails = Integration::where(["service" => "Stripe", "location_id" => $location->id])->first();
                 $memberStripeService = new MemberStripeService($stripeDetails->access_token);
                 $payment = $memberStripeService->completePayment($request);
@@ -554,7 +588,7 @@ class MemberController extends BaseController
 
     public function getFamilyMembers($member_id) {
         try{
-            $member = Member::with('children')->findOrFail($member_id);
+            $member = Member::with('familyMembers')->findOrFail($member_id);
 
             if(!$member){
                 return $this->sendError("Member not found", [], 400);
@@ -564,6 +598,10 @@ class MemberController extends BaseController
         } catch(Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
+    }
+
+    public function addFamilyMembers(Request $request) {
+    
     }
 
     public function inviteMember(Request $request) {

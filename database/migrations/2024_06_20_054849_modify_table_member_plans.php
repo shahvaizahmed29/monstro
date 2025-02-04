@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('stripe_plans', function (Blueprint $table) {
+        Schema::table('member_plans', function (Blueprint $table) {
             $table->boolean('family')->default(false);
             $table->foreignId('program_id')->nullable()->constrained()->onDelete('cascade');
             $table->integer('family_member_limit')->default(0);
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('stripe_plans', function (Blueprint $table) {
+        Schema::table('member_plans', function (Blueprint $table) {
             $table->dropColumn(['family', 'program_id', 'family_member_limit']);
         });
     }

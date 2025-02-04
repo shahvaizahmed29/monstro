@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class Program extends Model
 {
@@ -39,14 +39,18 @@ class Program extends Model
         return $this->hasMany(Session::class);
     }
 
-    public function stripePlans(){
-        return $this->hasMany(StripePlan::class);
+    public function memberPlans(){
+        return $this->hasMany(MemberPlan::class);
     }
 
     public function activeSessions()
     {
         return $this->sessions()->whereHas('programLevel')->with(['reservations', 'reservations.member', 'programLevel'])->where('status', Session::ACTIVE)->latest()->get();
     }
+
+    public function transactions() {
+        return $this->hasMany(Transaction::class);
+      }
 
     public function monthlyRetentionRate()
     {

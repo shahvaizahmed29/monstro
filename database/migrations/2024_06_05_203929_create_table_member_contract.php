@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('member_id')->constrained()->onDelete('cascade');
             $table->foreignId('contract_id')->constrained()->onDelete('cascade');
-            $table->foreignId('stripe_plan_id')->constrained()->onDelete('cascade');
+            $table->foreignId('member_plan_id')->nullable()->constrained()->onDelete('set null');
             $table->string('content');
             $table->boolean('signed');
             $table->timestamps();
@@ -28,8 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::drop('member_contracts', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('member_contracts');
     }
 };

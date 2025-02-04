@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\Member;
 use App\Http\Controllers\Api\Vendor\MemberController as VendorMemberController;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\PasswordUpdateRequest;
-use App\Http\Resources\Member\AchievementRewardResource;
 use App\Http\Resources\Member\ClaimedRewardResource;
 use App\Http\Resources\Member\AchievementResource;
 use App\Http\Resources\Member\GetMemberProfile;
@@ -25,11 +24,10 @@ use App\Models\Program;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Models\Reward;
-use App\Models\Contract;
 use App\Models\Integration;
-use App\Models\Location;
 use App\Models\MemberContract;
-use App\Models\StripePlan;
+use App\Models\MemberPlan;
+use App\Models\RewardClaim;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -171,7 +169,7 @@ class MemberController extends BaseController
         try{
 
             $locationId = request()->locationId;
-            $rewards = MemberRewardClaim::with('reward')->whereHas('reward', function ($query) use ($locationId){
+            $rewards = RewardClaim::with('reward')->whereHas('reward', function ($query) use ($locationId){
                 return $query->where('location_id', $locationId);
             })->where('member_id', auth()->user()->member->id)->paginate(25);
             
@@ -196,7 +194,7 @@ class MemberController extends BaseController
 
     public function getTradableRewards(){
         $member = Auth::user()->member;
-        $rewards = Reward::where('type', Reward::POINTS)->where('location_id', request()->locationId)->with(["achievement"])->paginate(25);
+        $rewards = Reward::where('location_id', request()->locationId)->with(["achievement"])->paginate(25);
         $data = [
             'rewards' => RewardResource::collection($rewards),
             'pagination' => [
@@ -219,9 +217,9 @@ class MemberController extends BaseController
             return $query->whereNull('deleted_at');
         })->where('member_id', $member->id)->pluck('achievement_id');
         if(count($alreadyAchieved)) {
-            $rewards = Reward::where('type', Reward::ACHIEVEMENT)->where('location_id', $locationId)->whereIn('achievement_id', $alreadyAchieved)->with(["achievement"])->paginate(25);
+            $rewards = Reward::where('location_id', $locationId)->whereIn('achievement_id', $alreadyAchieved)->with(["achievement"])->paginate(25);
         } else {
-            $rewards = Reward::where('type', Reward::ACHIEVEMENT)->where('location_id', $locationId)->with(["achievement"])->paginate(25);
+            $rewards = Reward::where('location_id', $locationId)->with(["achievement"])->paginate(25);
         }
         $data = [
             'rewards' => RewardResource::collection($rewards),
@@ -366,7 +364,7 @@ class MemberController extends BaseController
             $reward = Reward::where("id", $request->rewardId)->first();
             
             if($reward->reward_points < $member->current_points){
-                MemberRewardClaim::create([
+                RewardClaim::create([
                     'previous_points' => $member->current_points,
                     'date_claimed' => now(),
                     'member_id' => $member->id,
@@ -396,15 +394,15 @@ class MemberController extends BaseController
     public function claimRewardTradeable(Request $request){
         try {
             $member = Auth::user()->member;
-            $reward = Reward::where("id", $request->rewardId)->where('type', Reward::POINTS)->first();
-            $claimedCount = MemberRewardClaim::where("reward_id", $reward->id)->where("member_id", $member->id)->count();
+            $reward = Reward::where("id", $request->rewardId)->first();
+            $claimedCount = RewardClaim::where("reward_id", $reward->id)->where("member_id", $member->id)->count();
             if($reward->limit_per_member <= $claimedCount){
                 return $this->sendError('You have already exceeded the limit for this achievement, You cannot claim it at the moment.', [], 400);
             }
             $previousPoints = $member->current_points;
             $member->current_points = $member->current_points - $reward->reward_points;
             $member->save();
-            MemberRewardClaim::create([
+            RewardClaim::create([
                 'previous_points' => $previousPoints,
                 'date_claimed' => now(),
                 'member_id' => $member->id,
@@ -428,16 +426,16 @@ class MemberController extends BaseController
     public function claimRewardAchieveable(Request $request){
         try {
             $member = Auth::user()->member;
-            $reward = Reward::where("id", $request->rewardId)->where('type', Reward::ACHIEVEMENT)->first();
+            $reward = Reward::where("id", $request->rewardId)->first();
             $memberAchievement = MemberAchievement::with('achievement')->where("id", $reward->achievement_id)->first();
             if($memberAchievement){
                 return $this->sendError('You haven\'t achieved this goal to claim this reward.', [], 400);
             }
-            $claimedCount = MemberRewardClaim::where("reward_id", $reward->id)->where("member_id", $member->id)->count();
+            $claimedCount = RewardClaim::where("reward_id", $reward->id)->where("member_id", $member->id)->count();
             if($claimedCount >= $reward->limit_per_member){
                 return $this->sendError('You have already exceeded the limit for this achievement, You cannot claim it at the moment.', [], 400);
             }
-            MemberRewardClaim::create([
+            RewardClaim::create([
                 'date_claimed' => now(),
                 'member_id' => $member->id,
                 'reward_id' => $reward->id,
@@ -569,7 +567,7 @@ class MemberController extends BaseController
             $reservations = Reservation::with('session')->where('member_id', $member->id)->where('status', Reservation::ACTIVE)->get();
             $programIds = $reservations->pluck('session.program_id')->unique()->toArray();
             
-            $programs = Program::with(['stripePlans.pricing'])->whereNotIn('id', $programIds)->where('location_id', $locationId)->get();
+            $programs = Program::with(['memberPlans.pricing'])->whereNotIn('id', $programIds)->where('location_id', $locationId)->get();
             $data = [
                 'programs' => ProgramResource::collection($programs),
             ];
@@ -583,9 +581,9 @@ class MemberController extends BaseController
         
         try {
             $planId = request()->planId;
-            $stripePlan = StripePlan::find($planId);
-            if ($stripePlan) {
-                $contracts = $stripePlan->contract;
+            $memberPlan = MemberPlan::find($planId);
+            if ($memberPlan) {
+                $contracts = $memberPlan->contract;
                 return $this->sendResponse($contracts, 'Contract');
             }
         } catch (Exception $error) {
@@ -596,11 +594,11 @@ class MemberController extends BaseController
     public function getPlan($planId){
         try{
             $member = Auth::user()->member;
-            $memberContract = MemberContract::where(['member_id' => $member->id, 'stripe_plan_id' => $planId, 'signed' => true])->firstOrFail();
+            $memberContract = MemberContract::where(['member_id' => $member->id, 'member_plan_id' => $planId, 'signed' => true])->firstOrFail();
             if($memberContract) {
                 $planId = request()->planId;
-                $stripePlan = StripePlan::with('pricing')->find($planId);
-                return $this->sendResponse($stripePlan, 'Programs with Plans');
+                $memberPlan = MemberPlan::with('pricing')->find($planId);
+                return $this->sendResponse($memberPlan, 'Programs with Plans');
             }
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);

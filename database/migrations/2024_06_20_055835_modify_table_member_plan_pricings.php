@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stripe_plan_contracts', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('contract_id')->constrained()->onDelete('cascade');
-            $table->foreignId('stripe_plan_id')->constrained()->onDelete('cascade');
+        Schema::table('member_plan_pricings', function (Blueprint $table) {
+            $table->string('stripe_price_id')->nullable();
         });
     }
 
@@ -23,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::drop('stripe_plan_contracts', function (Blueprint $table) {
-            //
+        Schema::table('member_plan_pricings', function (Blueprint $table) {
+            $table->dropColumn(['member_price_id']);
         });
     }
 };

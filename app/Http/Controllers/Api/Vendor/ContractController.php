@@ -3,15 +3,13 @@
 namespace App\Http\Controllers\Api\Vendor;
 
 use App\Http\Controllers\BaseController;
-use App\Http\Requests\ContractStoreRequest;
 use App\Http\Resources\Vendor\SignedContractsResource;
 use App\Models\Contract;
 use App\Models\Location;
 use App\Models\Member;
 use App\Models\MemberContract;
-use App\Models\Plan;
+use App\Models\MemberPlan;
 use App\Models\Program;
-use App\Models\StripePlan;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\Request;
@@ -38,10 +36,10 @@ class ContractController extends BaseController
             ]);
             if($request->planId){
                 // Get the Stripe plan you want to attach the contract to
-                $stripePlan = StripePlan::find($request->planId);
+                $memberPlan = MemberPlan::find($request->planId);
                 // Attach the contract to the Stripe plan
-                $stripePlan->contract_id = $contract->id;
-                $stripePlan->save();
+                $memberPlan->contract_id = $contract->id;
+                $memberPlan->save();
             }
             DB::commit();
             return $this->sendResponse($contract, 'Contract created successfully.');
@@ -61,7 +59,7 @@ class ContractController extends BaseController
             if (!$location) {
                 return $this->sendError("Location doesnot exist", [], 400);
             }
-            $plans = Contract::with('stripePlans')->where('vendor_id', $location->vendor_id)->get();
+            $plans = Contract::with('memberPlans')->where('vendor_id', $location->vendor_id)->get();
 
             return $this->sendResponse($plans, 'Contract List');
 
@@ -94,7 +92,7 @@ class ContractController extends BaseController
             return $this->sendError("Location doesnot exist", [], 400);
         }
         try {
-            $contracts = MemberContract::with(['member', 'stripePlan.program', 'contract'])->where(['location_id' => $location->id])->get();
+            $contracts = MemberContract::with(['member', 'memberPlan.program', 'contract'])->where(['location_id' => $location->id])->get();
             return $this->sendResponse(SignedContractsResource::collection($contracts), 'Contract List');
         } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
@@ -110,7 +108,7 @@ class ContractController extends BaseController
             if (!$location) {
                 return $this->sendError("Location doesnot exist", [], 400);
             }
-            $plans = Contract::with('stripePlans')->find($contractId);
+            $plans = Contract::with('memberPlans')->find($contractId);
 
             return $this->sendResponse($plans, 'Contract');
 
@@ -127,10 +125,10 @@ class ContractController extends BaseController
             if (!$location) {
                 return $this->sendError("Location doesnot exist", [], 400);
             }
-            $contract = Contract::with('stripePlans')->find($contractId);
-            foreach ($contract->stripePlans as $stripePlan) {
-                $stripePlan->contract_id = null;
-                $stripePlan->save();
+            $contract = Contract::with('memberPlans')->find($contractId);
+            foreach ($contract->memberPlans as $memberPlan) {
+                $memberPlan->contract_id = null;
+                $memberPlan->save();
             }
             $contract->delete();
             
@@ -149,7 +147,7 @@ class ContractController extends BaseController
             $member = Auth::user()->member;
             $memberDetails = Member::find($member->id);
             Log::info(json_encode($memberDetails));
-            $plan = StripePlan::with('pricing')->where(['contract_id' => $contractId])->first();
+            $plan = MemberPlan::with('pricing')->where(['contract_id' => $contractId])->first();
             $program = Program::find($plan->program_id);
             $location = Location::find($program->location_id);
             $data = collect([
@@ -202,7 +200,7 @@ class ContractController extends BaseController
             $memberContract = MemberContract::create([
                 'member_id' => $member->id,
                 'contract_id' => $request->contractId,
-                'stripe_plan_id' => $request->stripePlanId,
+                'member_plan_id' => $request->memberPlanId,
                 'content' => $request->content,
                 'signed' => $request->signed,
                 'location_id' => $contract->location_id

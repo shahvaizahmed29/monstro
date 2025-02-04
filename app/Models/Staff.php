@@ -36,4 +36,8 @@ class Staff extends Model
     public function role(): BelongsTo {
       return $this->belongsTo(Role::class);
     }
+
+    public function transactions() {
+      return $this->hasMany(Transaction::class);
+    }
 }

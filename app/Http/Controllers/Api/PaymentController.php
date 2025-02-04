@@ -6,10 +6,8 @@ use App\Http\Controllers\Api\Vendor\VendorController;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\DepositRequest;
 use App\Models\Integration;
-use App\Models\Location;
-use App\Models\Member;
 use App\Models\Program;
-use App\Models\StripePlan;
+use App\Models\MemberPlan;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorProgress;
@@ -189,16 +187,16 @@ class PaymentController extends BaseController
                     ],
                 ]);
                 $planId = request()->planId;
-                $stripePlan = StripePlan::with('pricing')->find($planId);
-                if($stripePlan->pricing->billing_period == "One Time"){
+                $memberPlan = MemberPlan::with('pricing')->find($planId);
+                if($memberPlan->pricing->billing_period == "One Time"){
                     $payment = $stripe->paymentIntents->create([
-                        'amount' => $stripePlan->pricing->amount,
+                        'amount' => $memberPlan->pricing->amount,
                         'currency' => 'usd',
                         'automatic_payment_methods' => ['enabled' => true, 'allow_redirects' => 'never'],
                         'confirm' => true,
                         'customer' => $customer['id'],
                         'metadata' => [
-                            'price' =>  $stripePlan->pricing->stripe_price_id
+                            'price' =>  $memberPlan->pricing->stripe_price_id
                         ],
                         'payment_method' => $paymentMethod->id
                       ]);
@@ -208,7 +206,7 @@ class PaymentController extends BaseController
                     $subscription = $stripe->subscriptions->create([
                         'customer' => $customer['id'],
                         'items' => [
-                            ['price' => $stripePlan->pricing->stripe_price_id],
+                            ['price' => $memberPlan->pricing->stripe_price_id],
                         ],
                     ]);
                     return $this->sendResponse($subscription, 'Subscription successfull.');

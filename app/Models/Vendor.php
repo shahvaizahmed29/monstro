@@ -36,8 +36,8 @@ class Vendor extends Model
         return $this->belongsTo(Plan::class);
     }
 
-    public function stripePlans(){
-        return $this->hasMany(StripePlan::class);
+    public function memberPlans(){
+        return $this->hasMany(MemberPlan::class);
     }
 
     public function steps(){
@@ -51,5 +51,9 @@ class Vendor extends Model
     public function progress(){
         return $this->hasMany(VendorProgress::class);
     }
+
+    public function transactions() {
+        return $this->hasMany(Transaction::class);
+      }
 
 }

@@ -11,9 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('stripe_plans', function (Blueprint $table) {
-            $table->unsignedBigInteger('contract_id')->nullable();
-            $table->foreign('contract_id')->references('id')->on('contracts')->onDelete('cascade');
+        Schema::table('members', function (Blueprint $table) {
+            $table->dropColumn(['parent_id']);
         });
     }
 
@@ -22,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('stripe_plans', function (Blueprint $table) {
-            $table->dropColumn(['contract_id']);
+        Schema::table('members', function (Blueprint $table) {
+            $table->integer('parent_id')->nullable();
         });
     }
 };

@@ -109,6 +109,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('attendances/member/{memberId}/program/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'lastTenAttendance'])->name('member.program.attendances');
         Route::get('member/{memberId}/password-reset', [App\Http\Controllers\Api\Vendor\MemberController::class, 'memberPasswordReset'])->name('member.password.reset');
         Route::get('member/{memberId}/get-family', [App\Http\Controllers\Api\Vendor\MemberController::class, 'getFamilyMembers'])->name('member.fetch.family');
+        Route::post('member/{memberId}/add-family-members', [App\Http\Controllers\Api\Vendor\MemberController::class, 'addFamilyMembers'])->name('member.add.family.members');
         
         Route::prefix('achievements')->group(function () {
             Route::get('', [App\Http\Controllers\Api\Vendor\AchievementController::class, 'index'])->name('achievement.all');
@@ -163,7 +164,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('contracts/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'getContractById'])->name('contract.single.fetch');
         Route::delete('contracts/{contractId}', [App\Http\Controllers\Api\Vendor\ContractController::class, 'deleteContract'])->name('contract.single.delete');
         Route::post('invite-member', [App\Http\Controllers\Api\Vendor\MemberController::class, 'inviteMember'])->name('invite.member');
-        Route::post('add-stripe-plan/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addPlan'])->name('plan.create');
+        Route::post('add-member-plan/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addPlan'])->name('plan.create');
+        Route::put('update-member-plan/{programId}/{plan}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'updatePlan'])->name('plan.create');
         Route::post('update-location-info', [App\Http\Controllers\Api\Vendor\VendorController::class, 'updateLocation'])->name('vendor.location.update');
         Route::post('integrations/{service}', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'completeConnection'])->name('complete.integration.connection');
         Route::get('integrations', [App\Http\Controllers\Api\Vendor\IntegrationController::class, 'getIntegrations'])->name('fetch.integrations');
@@ -248,6 +250,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             //edit program
             Route::post('/program/{program}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'update'])->name('program.update.for.staff');
             Route::put('/program-level-update/{programLevel}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'programLevelUpdate'])->name('program.level.update.for.staff');
+            Route::put('update-member-plan/{programId}/{plan}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'updatePlan'])->name('plan.create');
         });
         
         Route::group(['middleware' => ['permission:add program']],function () {
@@ -255,7 +258,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('add-program', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addProgram'])->name('add.program.for.staff');
             Route::post('add-program-level', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addProgramLevel'])->name('add.program.level.for.staff');
             Route::post('program/{program}/image', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'programImageUpdate'])->name('program.image.update.for.staff');
-            Route::post('add-stripe-plan/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addPlan'])->name('plan.create.for.staff');
+            Route::post('add-member-plan/{programId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'addPlan'])->name('plan.create.for.staff');
         });
         
         Route::group(['middleware' => ['permission:delete program']],function () {

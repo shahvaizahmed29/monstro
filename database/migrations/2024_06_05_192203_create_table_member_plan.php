@@ -11,12 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stripe_plan_pricings', function (Blueprint $table) {
+        Schema::create('member_plans', function (Blueprint $table) {
             $table->id();
-            $table->float('amount');
-            $table->string('billing_period');
-            $table->foreignId('stripe_plan_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->string('description');
+            $table->string('model');
+            $table->boolean('status');
+            $table->foreignId('vendor_id')->constrained()->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -25,8 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::drop('stripe_plan_pricings', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('member_plans', function (Blueprint $table) {});
     }
 };

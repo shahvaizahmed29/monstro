@@ -26,4 +26,8 @@ class Plan extends Model
         return $this->belongsToMany(Vendor::class);
     }
 
+    public function transactions() {
+        return $this->hasMany(Transaction::class);
+      }
+
 }

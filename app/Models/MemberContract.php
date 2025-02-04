@@ -13,7 +13,7 @@ class MemberContract extends Model
     protected $fillable = [
         'member_id',
         'contract_id',
-        'stripe_plan_id',
+        'member_plan_id',
         'content',
         'signed',
         'location_id',
@@ -24,8 +24,8 @@ class MemberContract extends Model
         return $this->belongsTo(Member::class);
     }
 
-    public function stripePlan(){
-        return $this->belongsTo(StripePlan::class);
+    public function memberPlan(){
+        return $this->belongsTo(MemberPlan::class);
     }
 
     public function location() {

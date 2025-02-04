@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class StripePlan extends Model
+class MemberPlan extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -32,10 +32,14 @@ class StripePlan extends Model
     }
 
     public function pricing(){
-        return $this->hasOne(StripePlanPricing::class);
+        return $this->hasOne(MemberPlanPricing::class);
     }
 
     public function contract(){
         return $this->belongsTo(Contract::class);
     }
+
+    public function transactions() {
+        return $this->hasMany(Transaction::class);
+      }
 }

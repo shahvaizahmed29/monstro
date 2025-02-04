@@ -24,8 +24,8 @@ class Contract extends Model
         return $this->belongsTo(Vendor::class);
     }
 
-    public function stripePlans(){
-        return $this->hasMany(StripePlan::class);
+    public function memberPlans(){
+        return $this->hasMany(MemberPlan::class);
     }
 
 }

@@ -1,11 +1,6 @@
 <?php
-
 namespace App\Http\Controllers\Api\Vendor;
 
-
-use App\Models\Program;
-use App\Models\ProgramLevel;
-use App\Models\Session;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\ProgramLevelRequest;
 use App\Http\Requests\ProgramLevelUpdateRequest;
@@ -18,43 +13,44 @@ use App\Models\AchievementActions;
 use App\Models\Action;
 use App\Models\CheckIn;
 use App\Models\Integration;
-use App\Models\Location;
 use App\Models\Member;
 use App\Models\MemberAchievement;
+use App\Models\MemberPlan;
+use App\Models\MemberPlanPricing;
+use App\Models\Program;
+use App\Models\ProgramLevel;
 use App\Models\Reservation;
-use App\Models\StripePlan;
-use App\Models\StripePlanPricing;
+use App\Models\Session;
 use App\Models\Vendor;
 use Carbon\Carbon;
 use Exception;
-use Hashids\Hashids;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;
-use Sqids\Sqids;
 
 class ProgramController extends BaseController
 {
-    public function getProgramsByLocation(){
+    public function getProgramsByLocation()
+    {
         $location = request()->location;
-        Log::info("Hello world".json_encode($location));
+        Log::info("Hello world" . json_encode($location));
         $programs = Program::where('location_id', $location->id);
-        if(isset(request()->type)) {
-            if(request()->type == 0) {
+        if (isset(request()->type)) {
+            if (request()->type == 0) {
                 $programs = $programs->whereNotNull('deleted_at')->withTrashed();
             }
         }
         $programs = $programs->paginate(25);
-        $data = [
-            'programs' => ProgramResource::collection($programs),
+        $data     = [
+            'programs'   => ProgramResource::collection($programs),
             'pagination' => [
-                'current_page' => $programs->currentPage(),
-                'per_page' => $programs->perPage(),
-                'total' => $programs->total(),
-                'prev_page_url' => $programs->previousPageUrl(),
-                'next_page_url' => $programs->nextPageUrl(),
+                'current_page'   => $programs->currentPage(),
+                'per_page'       => $programs->perPage(),
+                'total'          => $programs->total(),
+                'prev_page_url'  => $programs->previousPageUrl(),
+                'next_page_url'  => $programs->nextPageUrl(),
                 'first_page_url' => $programs->url(1),
-                'last_page_url' => $programs->url($programs->lastPage()),
+                'last_page_url'  => $programs->url($programs->lastPage()),
             ],
         ];
 
@@ -62,32 +58,32 @@ class ProgramController extends BaseController
         return $this->sendResponse($data, 'Get programs');
     }
 
-    public function getProgramsByLocationId($locationId){
-        $programs = Program::where('location_id', $locationId)->whereHas('stripePlans', function ($query) {
+    public function getProgramsByLocationId($locationId)
+    {
+        $programs = Program::where('location_id', $locationId)->whereHas('memberPlans', function ($query) {
             $query->where('status', 1); // Example condition: only include active stripe plans
         })
-        ->with(['stripePlans' => function ($query) {
-            $query->where('status', 1)->whereHas('contract')->with('pricing'); // Load pricing data with stripePlans
-        }]);
-        if(isset(request()->type)) {
-            if(request()->type == 0) {
+            ->with(['memberPlans' => function ($query) {
+                $query->where('status', 1)->whereHas('contract')->with('pricing'); // Load pricing data with stripePlans
+            }]);
+        if (isset(request()->type)) {
+            if (request()->type == 0) {
                 $programs = $programs->whereNotNull('deleted_at')->withTrashed();
             }
         }
-
 
         $programs = $programs->paginate(25);
         Log::info(json_encode($programs));
         $data = [
-            'programs' => ProgramResource::collection($programs),
+            'programs'   => ProgramResource::collection($programs),
             'pagination' => [
-                'current_page' => $programs->currentPage(),
-                'per_page' => $programs->perPage(),
-                'total' => $programs->total(),
-                'prev_page_url' => $programs->previousPageUrl(),
-                'next_page_url' => $programs->nextPageUrl(),
+                'current_page'   => $programs->currentPage(),
+                'per_page'       => $programs->perPage(),
+                'total'          => $programs->total(),
+                'prev_page_url'  => $programs->previousPageUrl(),
+                'next_page_url'  => $programs->nextPageUrl(),
                 'first_page_url' => $programs->url(1),
-                'last_page_url' => $programs->url($programs->lastPage()),
+                'last_page_url'  => $programs->url($programs->lastPage()),
             ],
         ];
 
@@ -95,63 +91,65 @@ class ProgramController extends BaseController
         return $this->sendResponse($data, 'Get programs');
     }
 
-    public function getProgramsByVendor($vendorId){
-        $vendor = Vendor::with('locations')->find($vendorId);
+    public function getProgramsByVendor($vendorId)
+    {
+        $vendor    = Vendor::with('locations')->find($vendorId);
         $locations = $vendor->locations;
-        $ids = collect($locations)->pluck('id')->all();
-        $programs = Program::whereIn('location_id', $ids)->whereHas('stripePlans', function ($query) {
+        $ids       = collect($locations)->pluck('id')->all();
+        $programs  = Program::whereIn('location_id', $ids)->whereHas('memberPlans', function ($query) {
             $query->where('status', 1); // Example condition: only include active stripe plans
         })
-        ->with(['stripePlans' => function ($query) {
-            $query->where('status', 1)->whereHas('contract')->with('pricing'); // Load pricing data with stripePlans
-        }]);
-        if(isset(request()->type)) {
-            if(request()->type == 0) {
+            ->with(['memberPlans' => function ($query) {
+                $query->where('status', 1)->whereHas('contract')->with('pricing'); // Load pricing data with stripePlans
+            }]);
+        if (isset(request()->type)) {
+            if (request()->type == 0) {
                 $programs = $programs->whereNotNull('deleted_at')->withTrashed();
             }
         }
         $programs = $programs->paginate(25);
-        $data = [
-            'programs' => ProgramResource::collection($programs),
+        $data     = [
+            'programs'   => ProgramResource::collection($programs),
             'pagination' => [
-                'current_page' => $programs->currentPage(),
-                'per_page' => $programs->perPage(),
-                'total' => $programs->total(),
-                'prev_page_url' => $programs->previousPageUrl(),
-                'next_page_url' => $programs->nextPageUrl(),
+                'current_page'   => $programs->currentPage(),
+                'per_page'       => $programs->perPage(),
+                'total'          => $programs->total(),
+                'prev_page_url'  => $programs->previousPageUrl(),
+                'next_page_url'  => $programs->nextPageUrl(),
                 'first_page_url' => $programs->url(1),
-                'last_page_url' => $programs->url($programs->lastPage()),
+                'last_page_url'  => $programs->url($programs->lastPage()),
             ],
         ];
         return $this->sendResponse($data, 'Get programs related to specific location');
     }
 
-
-    public function lastTenAttendance($member_id, $program_id){
-        try{
-            $attendances = CheckIn::whereHas('reservation', function($query) use ($member_id){
+    public function lastTenAttendance($member_id, $program_id)
+    {
+        try {
+            $attendances = CheckIn::whereHas('reservation', function ($query) use ($member_id) {
                 $query->where('member_id', $member_id);
             })
-            ->whereHas('reservation.session', function($query) use ($program_id){
-                $query->where('program_id', $program_id);
-            })
-            ->with(['reservation.session'])
-            ->orderBy('created_at', 'desc')
-            ->take(10)
-            ->get();
+                ->whereHas('reservation.session', function ($query) use ($program_id) {
+                    $query->where('program_id', $program_id);
+                })
+                ->with(['reservation.session'])
+                ->orderBy('created_at', 'desc')
+                ->take(10)
+                ->get();
 
             return $this->sendResponse(CheckInResource::collection($attendances), 'Get attendances related to member and program.');
-        }catch(Exception $error){
+        } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
-    public function getProgramById($id){
-        try{
+    public function getProgramById($id)
+    {
+        try {
             $location = request()->location;
-            $program = Program::with(['location', 'programLevels','programLevels.sessions', 'stripePlans.pricing'])->where('id',$id)->where('location_id', $location->id)->first();
+            $program  = Program::with(['location', 'programLevels', 'programLevels.sessions', 'memberPlans.pricing'])->where('id', $id)->where('location_id', $location->id)->first();
 
-            if(!$program){
+            if (! $program) {
                 return $this->sendError("Program doesnot exist", [], 400);
             }
             //Code commented out below becuase auth guard is not applied anymore.
@@ -160,28 +158,30 @@ class ProgramController extends BaseController
             //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
             // }
             return $this->sendResponse(new ProgramResource($program), 'Get programs related to specific location');
-        }catch(Exception $error){
+        } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
-    public function getArchiveProgramLevelsWithSession($programId){
-        try{
+    public function getArchiveProgramLevelsWithSession($programId)
+    {
+        try {
             $location = request()->location;
-            $program = Program::with(['programLevels' => function ($query) {
+            $program  = Program::with(['programLevels' => function ($query) {
                 $query->withTrashed();
-                $query->where('deleted_at', '!=', NULL);
+                $query->where('deleted_at', '!=', null);
             }])->where('id', $programId)->first();
 
             return $this->sendResponse(new ProgramResource($program), 'Getting archived levels related to program');
-        }catch(Exception $error){
+        } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
-    public function addProgram(ProgramStoreRequest $request){
-        try{
-            Log::info("Hello world: "); 
+    public function addProgram(ProgramStoreRequest $request)
+    {
+        try {
+            Log::info("Hello world: ");
             $location = request()->location;
             //Code commented out below becuase auth guard is not applied anymore.
             // $location = Location::find($request->location_id);
@@ -191,52 +191,52 @@ class ProgramController extends BaseController
             DB::beginTransaction();
             $program = Program::create([
                 'location_id' => $location->id,
-                'name' => $request->program_name,
+                'name'        => $request->program_name,
                 'description' => $request->description,
-                'avatar' => $request->avatar ?? null,
+                'avatar'      => $request->avatar ?? null,
             ]);
 
             $parent_id = null;
-            foreach($request->sessions as $session){
+            foreach ($request->sessions as $session) {
                 $program_level = ProgramLevel::create([
-                    'name' => $session['program_level_name'],
+                    'name'       => $session['program_level_name'],
                     'program_id' => $program->id,
-                    'parent_id' => $parent_id,
-                    'capacity' => $session['capacity'],
-                    'min_age' => $session['min_age'],
-                    'max_age' => $session['max_age'],
+                    'parent_id'  => $parent_id,
+                    'capacity'   => $session['capacity'],
+                    'min_age'    => $session['min_age'],
+                    'max_age'    => $session['max_age'],
                 ]);
 
                 $program_level->save();
 
                 $parent_id = $program_level->id;
 
-                $now = Carbon::now();
+                $now          = Carbon::now();
                 $formattedNow = $now->format('Y-m-d');
 
-                $twoYearsLater = $now->addYears(2);
+                $twoYearsLater              = $now->addYears(2);
                 $twoYearsLaterformattedDate = $twoYearsLater->format('Y-m-d');
 
                 $session = Session::create([
-                    'program_id' => $program->id,
+                    'program_id'       => $program->id,
                     'program_level_id' => $program_level->id,
-                    'duration_time' => $session['duration_time'],
-                    'start_date' => $formattedNow,
-                    'end_date' => $twoYearsLaterformattedDate,
-                    'monday' => $session['monday'] ?? null,
-                    'tuesday' => $session['tuesday'] ?? null,
-                    'wednesday' => $session['wednesday'] ?? null,
-                    'thursday' => $session['thursday'] ?? null,
-                    'friday' => $session['friday'] ?? null,
-                    'saturday' => $session['saturday'] ?? null,
-                    'sunday' => $session['sunday'] ?? null,
-                    'status' => \App\Models\Session::ACTIVE
+                    'duration_time'    => $session['duration_time'],
+                    'start_date'       => $formattedNow,
+                    'end_date'         => $twoYearsLaterformattedDate,
+                    'monday'           => $session['monday'] ?? null,
+                    'tuesday'          => $session['tuesday'] ?? null,
+                    'wednesday'        => $session['wednesday'] ?? null,
+                    'thursday'         => $session['thursday'] ?? null,
+                    'friday'           => $session['friday'] ?? null,
+                    'saturday'         => $session['saturday'] ?? null,
+                    'sunday'           => $session['sunday'] ?? null,
+                    'status'           => \App\Models\Session::ACTIVE,
                 ]);
             }
             DB::commit();
             $program = Program::with('programLevels.sessions')->where('id', $program->id)->first();
             return $this->sendResponse(new ProgramResource($program), 'Program created successfully.');
-        }catch(Exception $e){
+        } catch (Exception $e) {
             DB::rollBack();
             Log::info('===== ProgramController - addProgram() - error =====');
             Log::info($e->getMessage());
@@ -244,55 +244,56 @@ class ProgramController extends BaseController
         }
     }
 
-    public function addProgramLevel(ProgramLevelRequest $request){
-        try{
+    public function addProgramLevel(ProgramLevelRequest $request)
+    {
+        try {
             DB::beginTransaction();
-            $parent_id = null;
-            $programId = $request->program_id;
+            $parent_id         = null;
+            $programId         = $request->program_id;
             $oldProgramLevelId = ProgramLevel::where('program_id', $programId)->latest()->first();
 
-            if($oldProgramLevelId){
+            if ($oldProgramLevelId) {
                 $parent_id = $oldProgramLevelId->id;
             }
 
             $program_level = ProgramLevel::create([
-                'name' => $request->name,
+                'name'       => $request->name,
                 'program_id' => $programId,
-                'parent_id' => $parent_id,
-                'capacity' => $request->capacity,
-                'min_age' => $request->min_age,
-                'max_age' => $request->max_age,
+                'parent_id'  => $parent_id,
+                'capacity'   => $request->capacity,
+                'min_age'    => $request->min_age,
+                'max_age'    => $request->max_age,
             ]);
 
             $program_level->save();
 
-            foreach($request->sessions as $session){
-                $now = Carbon::now();
+            foreach ($request->sessions as $session) {
+                $now          = Carbon::now();
                 $formattedNow = $now->format('Y-m-d');
 
-                $twoYearsLater = $now->addYears(2);
+                $twoYearsLater              = $now->addYears(2);
                 $twoYearsLaterformattedDate = $twoYearsLater->format('Y-m-d');
 
                 $session = Session::create([
-                    'program_id' => $programId,
+                    'program_id'       => $programId,
                     'program_level_id' => $program_level->id,
-                    'duration_time' => $session['duration_time'],
-                    'start_date' => $formattedNow,
-                    'end_date' => $twoYearsLaterformattedDate,
-                    'monday' => $session['monday'] ?? null,
-                    'tuesday' => $session['tuesday'] ?? null,
-                    'wednesday' => $session['wednesday'] ?? null,
-                    'thursday' => $session['thursday'] ?? null,
-                    'friday' => $session['friday'] ?? null,
-                    'saturday' => $session['saturday'] ?? null,
-                    'sunday' => $session['sunday'] ?? null,
-                    'status' => \App\Models\Session::ACTIVE
+                    'duration_time'    => $session['duration_time'],
+                    'start_date'       => $formattedNow,
+                    'end_date'         => $twoYearsLaterformattedDate,
+                    'monday'           => $session['monday'] ?? null,
+                    'tuesday'          => $session['tuesday'] ?? null,
+                    'wednesday'        => $session['wednesday'] ?? null,
+                    'thursday'         => $session['thursday'] ?? null,
+                    'friday'           => $session['friday'] ?? null,
+                    'saturday'         => $session['saturday'] ?? null,
+                    'sunday'           => $session['sunday'] ?? null,
+                    'status'           => \App\Models\Session::ACTIVE,
                 ]);
             }
             DB::commit();
 
             return $this->sendResponse(new ProgramLevelResource($program_level), 'Program Level created successfully.');
-        }catch(Exception $e){
+        } catch (Exception $e) {
             DB::rollBack();
             Log::info('===== ProgramController - addProgramLevel() - error =====');
             Log::info($e->getMessage());
@@ -300,48 +301,51 @@ class ProgramController extends BaseController
         }
     }
 
-    public function getProgramDetails($programId){
-        try{
+    public function getProgramDetails($programId)
+    {
+        try {
             $location = request()->location;
-            $program = Program::with('members')->where('id', $programId)->where('location_id', $location->id)->first();
+            $program  = Program::with('members')->where('id', $programId)->where('location_id', $location->id)->first();
 
-            if(!$program){
+            if (! $program) {
                 return $this->sendError('Program does not exist.', [], 400);
             }
 
             $data = [
-                'totalStudents' => $program->totalStudents(),
-                'totalActiveStudents' => $program->totalActiveStudents(),
-                'monthlyRetentionRate' => $program->monthlyRetentionRate()
+                'totalStudents'        => $program->totalStudents(),
+                'totalActiveStudents'  => $program->totalActiveStudents(),
+                'monthlyRetentionRate' => $program->monthlyRetentionRate(),
             ];
 
             return $this->sendResponse($data, 'Program related information related to program and location.');
-        }catch(Exception $e){
+        } catch (Exception $e) {
             return $this->sendError($e->getMessage(), [], 500);
         }
     }
 
-    public function programLevelActiveSessions($programLevelId){
-        try{
-            $programLevel = ProgramLevel::where('id', $programLevelId)->first();
+    public function programLevelActiveSessions($programLevelId)
+    {
+        try {
+            $programLevel      = ProgramLevel::where('id', $programLevelId)->first();
             $formated_sessions = $programLevel->getFormattedSessions();
             return $formated_sessions;
-        }catch(Exception $e){
+        } catch (Exception $e) {
             return $this->sendError($e->getMessage(), [], 500);
         }
     }
 
-    public function update(ProgramUpdateRequest $request, Program $program){
-        try{
+    public function update(ProgramUpdateRequest $request, Program $program)
+    {
+        try {
             $program->update([
-                'name' => $request->name,
-                'description' => $request->description
+                'name'        => $request->name,
+                'description' => $request->description,
             ]);
 
-            $program = Program::with('programLevels')->where('id',$program->id)->first();
+            $program = Program::with('programLevels')->where('id', $program->id)->first();
 
             return $this->sendResponse(new ProgramResource($program), 'Program updated successfully.');
-        }catch (Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::info('===== ProgramController - programUpdate() - error =====');
             Log::info($e->getMessage());
@@ -349,16 +353,17 @@ class ProgramController extends BaseController
         }
     }
 
-    public function programImageUpdate(Request $request, Program $program){
-        try{
-            $avatar = $request->file('avatar');
-            $imgPath = 'program-images/';
+    public function programImageUpdate(Request $request, Program $program)
+    {
+        try {
+            $avatar   = $request->file('avatar');
+            $imgPath  = 'program-images/';
             $imageUrl = null;
 
-            if($avatar){
+            if ($avatar) {
                 $fileName = $program->id . '_' . time() . '.' . $avatar->getClientOriginalExtension();
                 $avatar->move(public_path($imgPath), $fileName);
-                $imageUrl = getenv('APP_URL') .$imgPath. $fileName;
+                $imageUrl = getenv('APP_URL') . $imgPath . $fileName;
             }
 
             $program->update([
@@ -366,7 +371,7 @@ class ProgramController extends BaseController
             ]);
 
             return $this->sendResponse(new ProgramResource($program), 'Program image updated successfully.');
-        }catch (Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::info('===== ProgramController - programImageUpdate() - error =====');
             Log::info($e->getMessage());
@@ -374,31 +379,32 @@ class ProgramController extends BaseController
         }
     }
 
-    public function programLevelUpdate(ProgramLevelUpdateRequest $request, ProgramLevel $programLevel){
-        try{
+    public function programLevelUpdate(ProgramLevelUpdateRequest $request, ProgramLevel $programLevel)
+    {
+        try {
             DB::beginTransaction();
 
             $programLevel->update([
-                'name' => $request->name,
+                'name'     => $request->name,
                 'capacity' => $request->capacity,
-                'min_age' => $request->min_age,
-                'max_age' => $request->max_age
+                'min_age'  => $request->min_age,
+                'max_age'  => $request->max_age,
             ]);
 
             foreach ($request->sessions as $session) {
                 $sessionId = isset($session['id']) ? $session['id'] : null;
-                if(isset($session['duration_time'])){
+                if (isset($session['duration_time'])) {
                     Session::updateOrCreate(
                         ['id' => $sessionId],
                         [
                             'duration_time' => $session['duration_time'],
-                            'monday' => isset($session['monday']) ? $session['monday'] : null,
-                            'tuesday' => isset($session['tuesday']) ? $session['tuesday'] : null,
-                            'wednesday' => isset($session['wednesday']) ? $session['wednesday'] : null,
-                            'thursday' => isset($session['thursday']) ? $session['thursday'] : null,
-                            'friday' => isset($session['friday']) ? $session['friday'] : null,
-                            'saturday' => isset($session['saturday']) ? $session['saturday'] : null,
-                            'sunday' => isset($session['sunday']) ? $session['sunday'] : null,
+                            'monday'        => isset($session['monday']) ? $session['monday'] : null,
+                            'tuesday'       => isset($session['tuesday']) ? $session['tuesday'] : null,
+                            'wednesday'     => isset($session['wednesday']) ? $session['wednesday'] : null,
+                            'thursday'      => isset($session['thursday']) ? $session['thursday'] : null,
+                            'friday'        => isset($session['friday']) ? $session['friday'] : null,
+                            'saturday'      => isset($session['saturday']) ? $session['saturday'] : null,
+                            'sunday'        => isset($session['sunday']) ? $session['sunday'] : null,
                         ]
                     );
                 }
@@ -406,7 +412,7 @@ class ProgramController extends BaseController
             DB::commit();
             $programLevel = ProgramLevel::with('sessions')->where('id', $programLevel->id)->first();
             return $this->sendResponse(new ProgramLevelResource($programLevel), 'Program level updated successfully.');
-        }catch (Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::info('===== ProgramController - programLevelUpdate() - error =====');
             Log::info($e->getMessage());
@@ -414,47 +420,48 @@ class ProgramController extends BaseController
         }
     }
 
-    public function oldUpdate(ProgramUpdateRequest $request, Program $program){
+    public function oldUpdate(ProgramUpdateRequest $request, Program $program)
+    {
         try {
             DB::beginTransaction();
             $program->update([
-                'name' => $request->program_name,
+                'name'        => $request->program_name,
                 'description' => $request->description,
-                'avatar' => $request->avatar ?? $program->avatar,
+                'avatar'      => $request->avatar ?? $program->avatar,
             ]);
 
             foreach ($request->sessions as $session) {
                 $programLevelId = isset($session['program_level_id']) ? $session['program_level_id'] : null;
-                $programLevel = ProgramLevel::updateOrCreate(
+                $programLevel   = ProgramLevel::updateOrCreate(
                     ['id' => $programLevelId],
                     [
                         'program_id' => $program->id,
-                        'name' => $session['program_level_name'],
-                        'capacity' => $session['capacity'],
-                        'min_age' => $session['min_age'],
-                        'max_age' => $session['max_age']
+                        'name'       => $session['program_level_name'],
+                        'capacity'   => $session['capacity'],
+                        'min_age'    => $session['min_age'],
+                        'max_age'    => $session['max_age'],
                     ]
                 );
 
                 $programLevel->save();
 
                 $sessionId = isset($session['id']) ? $session['id'] : null;
-                if(isset($session['duration_time']) && isset($session['start_date']) && isset($session['end_date'])){
+                if (isset($session['duration_time']) && isset($session['start_date']) && isset($session['end_date'])) {
                     Session::updateOrCreate(
                         ['id' => $sessionId],
                         [
                             'program_level_id' => $programLevel->id,
-                            'program_id' => $program->id,
-                            'duration_time' => $session['duration_time'],
-                            'start_date' => $session['start_date'],
-                            'end_date' => $session['end_date'],
-                            'monday' => isset($session['monday']) ? $session['monday'] : null,
-                            'tuesday' => isset($session['tuesday']) ? $session['tuesday'] : null,
-                            'wednesday' => isset($session['wednesday']) ? $session['wednesday'] : null,
-                            'thursday' => isset($session['thursday']) ? $session['thursday'] : null,
-                            'friday' => isset($session['friday']) ? $session['friday'] : null,
-                            'saturday' => isset($session['saturday']) ? $session['saturday'] : null,
-                            'sunday' => isset($session['sunday']) ? $session['sunday'] : null,
+                            'program_id'       => $program->id,
+                            'duration_time'    => $session['duration_time'],
+                            'start_date'       => $session['start_date'],
+                            'end_date'         => $session['end_date'],
+                            'monday'           => isset($session['monday']) ? $session['monday'] : null,
+                            'tuesday'          => isset($session['tuesday']) ? $session['tuesday'] : null,
+                            'wednesday'        => isset($session['wednesday']) ? $session['wednesday'] : null,
+                            'thursday'         => isset($session['thursday']) ? $session['thursday'] : null,
+                            'friday'           => isset($session['friday']) ? $session['friday'] : null,
+                            'saturday'         => isset($session['saturday']) ? $session['saturday'] : null,
+                            'sunday'           => isset($session['sunday']) ? $session['sunday'] : null,
                         ]
                     );
                 }
@@ -471,12 +478,13 @@ class ProgramController extends BaseController
         }
     }
 
-    public function assignProgramLevelToMember($programLevelId, $memberId){
-        try{
+    public function assignProgramLevelToMember($programLevelId, $memberId)
+    {
+        try {
             // Finding Program Level
             $programLevelCheck = ProgramLevel::find($programLevelId);
 
-            if(!$programLevelCheck){
+            if (! $programLevelCheck) {
                 return $this->sendError('Program level does not exist. Cannot assign a level to member', [], 400);
             }
 
@@ -486,64 +494,64 @@ class ProgramController extends BaseController
             })->where('member_id', $memberId)->where('status', Reservation::ACTIVE)->get();
 
             //Checking for reservations
-            if(count($reservations) > 0){
+            if (count($reservations) > 0) {
                 // Getting program level id
                 $currentProgramLevelId = $reservations[0]->session->programLevel->id;
 
                 // Checking if member is currently enrolled in this program level or not
-                if($currentProgramLevelId == $programLevelId){
+                if ($currentProgramLevelId == $programLevelId) {
                     // If member is already enrolled return back with a message
                     return $this->sendError('Member already assigned to this level.', [], 400);
-                }elseif($currentProgramLevelId < $programLevelId){ // Checking if program level is bigger than the current enrolled program or not
+                } elseif ($currentProgramLevelId < $programLevelId) { // Checking if program level is bigger than the current enrolled program or not
                     DB::beginTransaction();
                     //Getting next level sessions
                     $nextLevelSession = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->first();
-                    if($nextLevelSession) {
+                    if ($nextLevelSession) {
                         // Create reservation if not present or update if already present
                         Reservation::updateOrCreate([
                             'session_id' => $nextLevelSession->id,
-                            'member_id' =>  $memberId
-                        ],[
+                            'member_id'  => $memberId,
+                        ], [
                             'session_id' => $nextLevelSession->id,
-                            'member_id' =>  $memberId,
-                            'status' => Reservation::ACTIVE,
+                            'member_id'  => $memberId,
+                            'status'     => Reservation::ACTIVE,
                             'start_date' => Carbon::today()->format('Y-m-d'),
-                            'end_date' => $nextLevelSession->end_date
+                            'end_date'   => $nextLevelSession->end_date,
                         ]);
 
                     }
 
                     $currentSession = Session::where('program_level_id', $currentProgramLevelId)->where('status', Session::ACTIVE)->first();
-                    if($currentSession) {
+                    if ($currentSession) {
                         // Updating current reservations sessions status to completed
                         Reservation::where('session_id', $currentSession->id)->where('member_id', $memberId)->update(['status' => Reservation::COMPLETED]);
                     }
                     DB::commit();
                     $this->levelCompletionReward($memberId);
                     return $this->sendResponse("Success", "Member assigned to next level successfully");
-                }else{
+                } else {
                     DB::beginTransaction();
                     // Getting old level sessions
                     $oldSession = Session::where('program_level_id', $programLevelId)->where('status', Session::ACTIVE)->first();
-                    if($oldSession) {
+                    if ($oldSession) {
                         // Updating old reservations status to active
                         Reservation::updateOrCreate([
                             'session_id' => $oldSession->id,
-                            'member_id' =>  $memberId
-                        ],[
+                            'member_id'  => $memberId,
+                        ], [
                             'session_id' => $oldSession->id,
-                            'member_id' =>  $memberId,
-                            'status' => Reservation::ACTIVE,
+                            'member_id'  => $memberId,
+                            'status'     => Reservation::ACTIVE,
                             'start_date' => Carbon::today()->format('Y-m-d'),
-                            'end_date' => $oldSession->end_date
+                            'end_date'   => $oldSession->end_date,
                         ]);
                     }
 
                     // Getting current sessions
                     $currentSession = Session::where('program_level_id', $currentProgramLevelId)->where('status', Session::ACTIVE)->first();
-                    if($currentSession) {
+                    if ($currentSession) {
                         // Updating current reservations sessions status to inactive
-                        $reservation = Reservation::where('session_id', $currentSession->id)->where('member_id', $memberId)->first();
+                        $reservation         = Reservation::where('session_id', $currentSession->id)->where('member_id', $memberId)->first();
                         $reservation->status = Reservation::INACTIVE;
                         $reservation->save();
                     }
@@ -551,10 +559,10 @@ class ProgramController extends BaseController
                     $this->levelCompletionReward($memberId);
                     return $this->sendResponse("Success", "Member assigned to previous level successfully");
                 }
-            }else{
+            } else {
                 $programLevel = ProgramLevel::find($programLevelId);
 
-                if(!$programLevel){
+                if (! $programLevel) {
                     return $this->sendError('Program level does not exist. Cannot assign a level to member', [], 400);
                 }
 
@@ -562,19 +570,19 @@ class ProgramController extends BaseController
 
                 Reservation::updateOrCreate([
                     'session_id' => $session->id,
-                    'member_id' =>  $memberId
-                ],[
+                    'member_id'  => $memberId,
+                ], [
                     'session_id' => $session->id,
-                    'member_id' =>  $memberId,
-                    'status' => Reservation::ACTIVE,
+                    'member_id'  => $memberId,
+                    'status'     => Reservation::ACTIVE,
                     'start_date' => Carbon::today()->format('Y-m-d'),
-                    'end_date' => $session->end_date
+                    'end_date'   => $session->end_date,
                 ]);
 
                 $this->levelCompletionReward($memberId);
                 return $this->sendResponse("Success", "Member assigned to program level and reservation created successfully");
             }
-        }catch (Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::info('===== ProgramController - assignProgramLevelToMember() - error =====');
             Log::info($e->getMessage());
@@ -582,12 +590,13 @@ class ProgramController extends BaseController
         }
     }
 
-    public function assignProgramToMember($programId, $memberId){
-        try{
+    public function assignProgramToMember($programId, $memberId)
+    {
+        try {
             // Finding Program Level
             $program = Program::with('programLevels')->where('id', $programId)->first();
 
-            if(!$program){
+            if (! $program) {
                 return $this->sendError('Program level does not exist. Cannot assign a level to member', [], 400);
             }
             // Getting current reservations for the members
@@ -596,32 +605,33 @@ class ProgramController extends BaseController
             })->where('member_id', $memberId)->get();
 
             //Checking for reservations
-            if(count($reservations) > 0) {
+            if (count($reservations) > 0) {
                 return $this->sendError('Program already assigned', [], 400);
-            }else{
+            } else {
                 $programLevel = $program->programLevels->whereNull('parent_id')->first();
-                $session = Session::where('program_level_id', $programLevel->id)->where('status', Session::ACTIVE)->first();
+                $session      = Session::where('program_level_id', $programLevel->id)->where('status', Session::ACTIVE)->first();
                 Reservation::updateOrCreate([
                     'session_id' => $session->id,
-                    'member_id' =>  $memberId
-                ],[
+                    'member_id'  => $memberId,
+                ], [
                     'session_id' => $session->id,
-                    'member_id' =>  $memberId,
-                    'status' => Reservation::ACTIVE,
+                    'member_id'  => $memberId,
+                    'status'     => Reservation::ACTIVE,
                     'start_date' => Carbon::today()->format('Y-m-d'),
-                    'end_date' => $session->end_date
+                    'end_date'   => $session->end_date,
                 ]);
                 return $this->sendResponse("Success", "Member assigned to program and reserved successfully");
             }
-        }catch (Exception $e) {
+        } catch (Exception $e) {
             Log::info('===== ProgramController - assignProgramLevelToMember() - error =====');
             Log::info($e->getMessage());
             return $this->sendError($e->getMessage(), [], 500);
         }
     }
 
-    public function unAssignMemberFromProgram($programId, $memberId){
-        try{
+    public function unAssignMemberFromProgram($programId, $memberId)
+    {
+        try {
             $sessionIds = Session::where('program_id', $programId)
                 ->pluck('id')->toArray();
 
@@ -637,8 +647,9 @@ class ProgramController extends BaseController
         }
     }
 
-    public function programCompletion($programId, $memberId){
-        try{
+    public function programCompletion($programId, $memberId)
+    {
+        try {
             $sessionIds = Session::where('program_id', $programId)
                 ->where('status', Session::ACTIVE)
                 ->pluck('id')
@@ -648,7 +659,7 @@ class ProgramController extends BaseController
                 ->where('member_id', $memberId)
                 ->where('status', Reservation::ACTIVE)
                 ->update([
-                    'status' => Reservation::COMPLETED
+                    'status' => Reservation::COMPLETED,
                 ]);
 
             return $this->sendResponse("Success", "The program for the member has been completed successfully");
@@ -659,46 +670,47 @@ class ProgramController extends BaseController
         }
     }
 
-    public function levelCompletionReward($member_id){
+    public function levelCompletionReward($member_id)
+    {
         // Finding a achivement action related to defined no of level cleared
-        $action = Action::where('name', Action::LEVEL_ACHIEVED)->first();
+        $action = Action::where('name', Action::NO_OF_LEVELS_COMPLETED)->first();
         $member = Member::find($member_id);
 
         // Getting achievement action
-        $achievement_action = AchievementActions::with(['achievement'])->whereHas('achievement' , function ($q) use ($member){
+        $achievement_action = AchievementActions::with(['achievement'])->whereHas('achievement', function ($q) use ($member) {
             $q->where('program_id', $member->reservations[0]->session->program->id);
         })->where('action_id', $action->id)->first();
 
         // If achievement action present
-        if($achievement_action){
+        if ($achievement_action) {
             // Checking criteria count
-            $eligibilityCriteria = $achievement_action->count;
+            $eligibilityCriteria    = $achievement_action->count;
             $completedProgramLevels = Reservation::where('member_id', $member_id)->where('status', Reservation::COMPLETED)
-            ->with('session.programLevel')->get()->pluck('session.programLevel') // Extract programLevel from reservations
-            ->unique('id') // Ensure unique programLevel instances
-            ->count();
+                ->with('session.programLevel')->get()->pluck('session.programLevel') // Extract programLevel from reservations
+                ->unique('id')                                                       // Ensure unique programLevel instances
+                ->count();
 
             // Checking for eligibility
-            if($completedProgramLevels >= $eligibilityCriteria){
+            if ($completedProgramLevels >= $eligibilityCriteria) {
                 $existingMemberAchievement = MemberAchievement::where('achievement_id', $achievement_action->achievement->id)
                     ->where('member_id', $member_id)->first();
 
                 // Check for if member achievment is already exist
-                if(!$existingMemberAchievement){
+                if (! $existingMemberAchievement) {
                     //Creating a new achievment for member
                     $member_achievement = MemberAchievement::create([
                         'achievement_id' => $achievement_action->achievement->id,
-                        'member_id' => $member_id,
-                        'status' => 1,
-                        'note' => 'Achievement accomplished on number of levels completion',
-                        'date_achieved' => now(),
+                        'member_id'      => $member_id,
+                        'status'         => 1,
+                        'note'           => 'Achievement accomplished on number of levels completion',
+                        'date_achieved'  => now(),
                     ]);
 
                     // Fidning member in order to get the current member achieved points
-                    $member = Member::find($member_id);
+                    $member        = Member::find($member_id);
                     $currentPoints = $member->current_points;
 
-                    if($member_achievement){
+                    if ($member_achievement) {
                         // Updating mmeber overall points
                         $currentPoints = $currentPoints + $achievement_action->achievement->reward_points;
                     }
@@ -710,11 +722,12 @@ class ProgramController extends BaseController
         }
     }
 
-    public function delete($programId){
-        try{
+    public function delete($programId)
+    {
+        try {
             $program = Program::with('programLevels.sessions')->find($programId);
 
-            if(!$program){
+            if (! $program) {
                 return $this->sendError("Program not found", [], 400);
             }
 
@@ -730,16 +743,17 @@ class ProgramController extends BaseController
 
             $program->delete();
             return $this->sendResponse("Success", "Program deleted successfully");
-        }catch(Exception $error){
+        } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
-    public function deleteProgramLevel($programLevelId){
-        try{
+    public function deleteProgramLevel($programLevelId)
+    {
+        try {
             $programLevel = ProgramLevel::with('sessions.reservations')->find($programLevelId);
 
-            if(!$programLevel){
+            if (! $programLevel) {
                 return $this->sendError("Program Level not exist", [], 400);
             }
 
@@ -753,136 +767,139 @@ class ProgramController extends BaseController
 
             $programLevel->delete();
             return $this->sendResponse("Success", "Program Level deleted successfully");
-        }catch(Exception $error){
+        } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
-    public function getProgramLevels($programId){
-        try{
+    public function getProgramLevels($programId)
+    {
+        try {
             $programLevels = ProgramLevel::where('program_id', $programId)->get();
 
-            if(count($programLevels) > 0){
+            if (count($programLevels) > 0) {
                 return $this->sendResponse(ProgramLevelResource::collection($programLevels), 'Program levels related to specific program');
-            }else{
+            } else {
                 return $this->sendError('No program levels found for this program', [], 400);
             }
-        }catch(Exception $error){
+        } catch (Exception $error) {
             return $this->sendError($error->getMessage(), [], 500);
         }
     }
 
-    public function addPlan($programId, Request $request) {
+    public function addPlan($programId, Request $request)
+    {
         $pricing = request()->pricing;
         $program = Program::with('location')->find($programId);
-
-        try{
-            //Code commented out below becuase auth guard is not applied anymore.
-            // $location = Location::find($request->location_id);
-            // if($location->vendor_id != auth()->user()->vendor->id) {
-            //     return $this->sendError('Vendor not authorize, Please contact admin', [], 403);
-            // }
+        Log::info($programId);
+        Log::info(json_encode($program));
+        try {
             DB::beginTransaction();
-            $stripeClientAuth = Integration::where(['location_id' => $program->location->id, "service" => "Stripe"])->first();
-            $stripe = new \Stripe\StripeClient($stripeClientAuth->access_token);
+            if ($pricing["paymentMethod"] == "stripe") {
+                $stripeClientAuth = Integration::where(['location_id' => $program->location->id, "service" => "Stripe"])->first();
+                $stripe           = new \Stripe\StripeClient($stripeClientAuth->access_token);
 
-            $product = $stripe->products->create(['name' => $request->name, 'description' => $request->description]);
-            $description = '';
-            if($request->family){
-                $description = "This is a plan with {$request->family_member_limit} family members allowed in it.";
+                $product     = $stripe->products->create(['name' => $request->name, 'description' => $request->description]);
+                $description = '';
+                if ($request->family) {
+                    $description = "This is a plan with {$request->familyMemberLimit} family members allowed in it.";
+                } else {
+                    $description = "This is a plan with no family members allowed in it.";
+                }
+                $stripePrice = null;
+                if ($pricing['billingPeriod'] == "One Time") {
+                    $stripePrice = $stripe->prices->create([
+                        'currency'       => 'usd',
+                        'unit_amount'    => (float) $pricing["amount"] * 100,
+                        'billing_scheme' => "per_unit",
+                        'product'        => $product->id,
+                        "nickname"       => $description,
+                    ]);
+
+                } else {
+                    $stripePrice = $stripe->prices->create([
+                        'currency'    => 'usd',
+                        'unit_amount' => (float) $pricing["amount"] * 100,
+                        'recurring'   => ['interval' => $pricing["billingPeriod"]],
+                        'product'     => $product->id,
+                        "nickname"    => $description,
+                    ]);
+                }
+                $plan = MemberPlan::create([
+                    'name'                => $request->name,
+                    'description'         => $request->description . '. ' . $description,
+                    'vendor_id'           => $program->location->vendor_id,
+                    'status'              => 1,
+                    'family'              => $request->family,
+                    'program_id'          => $program->id,
+                    'family_member_limit' => $request->familyMemberLimit,
+                    'contract_id'         => $request->contractId,
+                ]);
+                $plan->save();
+                $pricing = new MemberPlanPricing([
+                    'amount'          => $pricing["amount"],
+                    'billing_period'  => $pricing["billingPeriod"],
+                    'stripe_price_id' => $stripePrice->id,
+                ]);
+                $plan->pricing()->save($pricing);
             } else {
-                $description = "This is a plan with no family members allowed in it.";
-            }
-            $stripePrice = null;
-            if($pricing['billing_period'] == "One Time"){
-                $stripePrice = $stripe->prices->create([
-                    'currency' => 'usd',
-                    'unit_amount' => (float)$pricing["amount"] * 100,
-                    'billing_scheme' => "per_unit",
-                    'product' => $product->id,
-                    "nickname" => $description
+                $plan = MemberPlan::create([
+                    'name'                => $request->name,
+                    'description'         => $request->description,
+                    'vendor_id'           => $program->location->vendor_id,
+                    'status'              => 1,
+                    'family'              => $request->family,
+                    'program_id'          => $program->id,
+                    'family_member_limit' => $request->familyMemberLimit,
+                    'contract_id'         => $request->contractId,
                 ]);
 
-            } else {
-                $stripePrice = $stripe->prices->create([
-                    'currency' => 'usd',
-                    'unit_amount' => (float)$pricing["amount"] * 100,
-                    'recurring' => ['interval' => $pricing["billing_period"]],
-                    'product' => $product->id,
-                    "nickname" => $description
+                $plan->save();
+
+                $pricing = new MemberPlanPricing([
+                    'amount'          => $pricing["amount"],
+                    'billing_period'  => $pricing["billingPeriod"],
+                    'stripe_price_id' => null,
                 ]);
+                $plan->pricing()->save($pricing);
             }
-
-
-            $plan = StripePlan::create([
-                'name' => $request->name,
-                'description' => $request->description .'. '. $description,
-                'vendor_id' => $program->location->vendor_id,
-                'status' => 1,
-                'family' => $request->family,
-                'program_id' => $program->id,
-                'family_member_limit' => $request->family_member_limit,
-                'contract_id' => $request->contractId
-            ]);
-
-            $plan->save();
-
-            $pricing = new StripePlanPricing([
-                'amount' => $pricing["amount"],
-                'billing_period' => $pricing["billing_period"],
-                'stripe_price_id' => $stripePrice->id
-            ]);
-            $plan->pricing()->save($pricing);
-
-
-            // foreach ($prices as $key => $price) {
-            //     $stripePrice = array();
-            //     if($price['recurring'] == "One Time"){
-                    // $stripePrice = $stripe->prices->create([
-                    //     'currency' => 'usd',
-                    //     'unit_amount' => (float)$price["unit_amount"] * 100,
-                    //     'type' => "one_time",
-                    //     'product' => $product->id,
-                    // ]);
-            //     } else {
-                    // $stripePrice = $stripe->prices->create([
-                    //     'currency' => 'usd',
-                    //     'unit_amount' => (float)$price["unit_amount"] * 100,
-                    //     'recurring' => ['interval' => $price["recurring"]],
-                    //     'product' => $product->id,
-                    // ]);
-            //     }
-                // $description = '';
-                // if($price['family']){
-                //     $description = "This is a plan with {$price['family_member_limit']} family members allowed in it.";
-                // } else {
-                //     $description = "This is a plan with no family members allowed in it.";
-                // }
-                // $plan = StripePlan::create([
-                //     'name' => 'Plan '.$key+1,
-                //     'description' => $description,
-                //     'vendor_id' => $location->vendor_id,
-                //     'status' => 1,
-                //     'family' => $price['family'],
-                //     'program_id' => $program->id,
-                //     'family_member_limit' => $price['family_member_limit'],
-                // ]);
-
-                // $plan->save();
-
-                // $pricing = new StripePlanPricing([
-                //     'amount' => $price['unit_amount'],
-                //     'billing_period' => $price['recurring'],
-                //     'stripe_price_id' => $stripePrice->id
-                // ]);
-                // $plan->pricing()->save($pricing);
-            // }
 
             DB::commit();
-            return $this->sendResponse($plan, 'Program created successfully.');
-        }catch(Exception $e){
+            return $this->sendResponse($plan, 'Plan created successfully.');
+        } catch (Exception $e) {
             DB::rollBack();
             Log::info('===== ProgramController - addLevel() - error =====');
+            Log::info($e->getMessage());
+            return $this->sendError($e->getMessage(), [], 500);
+        }
+    }
+
+    public function updatePlan(Request $request)
+    {
+        $pricing = $request->pricing;
+
+        try {
+            DB::beginTransaction();
+            if ($request->paymentMethod == "stripe") {
+                return $this->sendError('Stripe plans can\'t be updated', [], 400);
+            }
+            $plan = MemberPlan::findOrFail($request->plan);
+            $plan->update([
+                'name'                => $request->name,
+                'description'         => $request->description,
+                'family'              => $request->family,
+                'family_member_limit' => $request->familyMemberLimit,
+                'contract_id'         => $request->contractId,
+            ]);
+            $plan->pricing->update([
+                'amount'          => $pricing["amount"],
+                'billing_period'  => $pricing["billingPeriod"],
+            ]);
+            DB::commit();
+            return $this->sendResponse($plan, 'Plan Updated successfully.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::info('===== ProgramController - updateLevel() - error =====');
             Log::info($e->getMessage());
             return $this->sendError($e->getMessage(), [], 500);
         }
