@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('transactions', function (Blueprint $table) {
             $table->string('item')->nullable();
+            $table->string('program_id')->nullable()->change();
         });
     }
 

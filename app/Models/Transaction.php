@@ -25,7 +25,8 @@ class Transaction extends Model
         'member_id',
         'vendor_id',
         'staff_id',
-        'payment_type'
+        'payment_type',
+        'item'
     ];
 
     /**

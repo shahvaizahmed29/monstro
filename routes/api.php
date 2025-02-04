@@ -266,6 +266,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::delete('program/{program_id}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'delete'])->name('delete.program.for.staff');
             Route::delete('program-level/{programLevelId}', [App\Http\Controllers\Api\Vendor\ProgramController::class, 'deleteProgramLevel'])->name('delete.program.level.for.staff');
         });
+
+        Route::group(['prefix' => 'transactions/{model}'],function () {
+            Route::post('', [App\Http\Controllers\Api\PaymentController::class, 'addManualPayment'])->name('manual.payment.create');
+        });
     
     });
 });
