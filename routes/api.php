@@ -69,6 +69,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('fill-contract', [App\Http\Controllers\Api\Vendor\ContractController::class, 'fillContract'])->name('fill.contract');
         Route::get('fetch-vendor-stripe-pk/{programId}', [App\Http\Controllers\Api\Member\MemberController::class, 'fetchVendorStripePk'])->name('fetch.vendor.stripe.pk');
         Route::post('program/plan/subscribe/{programId}/{planId}', [App\Http\Controllers\Api\PaymentController::class, 'completeSubscription'])->name('complete.subscription');
+        Route::get('get-family', [App\Http\Controllers\Api\Member\MemberController::class, 'getFamilyMembers'])->name('get.member.family.members');
+        Route::post('invite-family-member', [App\Http\Controllers\Api\Member\MemberController::class, 'inviteFamilyMember'])->name('invite.family.member');
+        Route::get('get-family-member-details/{memberId}', [App\Http\Controllers\Api\Member\MemberController::class, 'getFamilyMemberDetails'])->name('get.family.member.details');
     });
 
     //==================================================================================================================================================================================
@@ -272,6 +275,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         });
     
     });
+});
+
+Route::group(['prefix' => 'member'], function () {
+    Route::get('/family-invite/validate', [App\Http\Controllers\Api\Member\MemberController::class, 'validateFamilyInvitationToken'])->name('family.member.token.validate');
 });
 
 //==================================================================================================================================================================================
