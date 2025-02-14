@@ -297,21 +297,22 @@ class MemberController extends BaseController
     public function getMemberAchievements()
     {
         try {
-            $achievements = Achievement::whereHas('members', function ($query) {
+            $member       = Auth::user()->member;
+            $memberId = $member->id; // Replace with the actual member ID
+
+            $achievements = Achievement::whereHas('location', function ($query) use ($memberId) {
+                $query->whereHas('members', function ($query) use ($memberId) {
+                    $query->where('member_id', $memberId);
+                });
+            })->get();
+
+            $memberAcheivements = Achievement::with('location')->whereHas('members', function ($query) {
                 $query->where('member_id', auth()->user()->member->id);
-            })->paginate(25);
+            })->get();
 
             $data = [
-                'rewards'    => AchievementResource::collection($achievements),
-                'pagination' => [
-                    'current_page'   => $achievements->currentPage(),
-                    'per_page'       => $achievements->perPage(),
-                    'total'          => $achievements->total(),
-                    'prev_page_url'  => $achievements->previousPageUrl(),
-                    'next_page_url'  => $achievements->nextPageUrl(),
-                    'first_page_url' => $achievements->url(1),
-                    'last_page_url'  => $achievements->url($achievements->lastPage()),
-                ],
+                'memberAcheivements'    => AchievementResource::collection($memberAcheivements),
+                'achievements' => AchievementResource::collection($achievements)
             ];
 
             return $this->sendResponse($data, 'Achievements fetched successfully');

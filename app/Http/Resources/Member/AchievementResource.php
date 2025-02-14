@@ -18,12 +18,12 @@ class AchievementResource extends JsonResource
 
         $achievement = [
             'id' => $this->id,
-            'programName' => $program->name,
-            'name' => $this->name,
+            'title' => $this->title,
+            'description' => $this->description,
+            'icon' => $this->icon,
             'badge' => $this->badge,
-            'rewardPoints' => $this->reward_points,            
+            'points' => $this->points,            
             'action' => $this->actions,
-            'image' => $this->image,
             'members' => $this->whenLoaded('members', function () {
                 return MemberResource::collection($this->members);
             }),

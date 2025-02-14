@@ -10,7 +10,9 @@ class Achievement extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
+        'title',
+        'description',
+        'icon',
         'badge',
         'points',
         'program_id',

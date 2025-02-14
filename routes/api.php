@@ -44,14 +44,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('profile-update/{user_id}', [App\Http\Controllers\Api\Member\MemberController::class, 'profileUpdate'])->name('profile.update');
         Route::put('update-password/{user_id}', [App\Http\Controllers\Api\Member\MemberController::class, 'updatePassword'])->name('update.password');
         Route::get('profile', [App\Http\Controllers\Api\Member\MemberController::class, 'getProfile'])->name('get.profile');
+        Route::get('achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberAchievements'])->name('get.member.achievements');
         Route::get('rewards', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberRewards'])->name('get.member.rewards');
         Route::get('tradable-rewards', [App\Http\Controllers\Api\Member\MemberController::class, 'getTradableRewards'])->name('get.member.tradable.rewards');
-        Route::get('achievement-rewards', [App\Http\Controllers\Api\Member\MemberController::class, 'getAchievementRewards'])->name('get.member.achievement.rewards');
-        Route::get('unclaimed-achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getUnclaimedAchievements'])->name('get.member.unclaimed.achievements');
-        Route::get('claimed-achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getClaimedAchievements'])->name('get.member.claimed.achievements');
-        Route::post('claim-reward-tradeable', [App\Http\Controllers\Api\Member\MemberController::class, 'claimRewardTradeable'])->name('member.claim.reward.tradeable');
-        Route::post('claim-reward-achieveable', [App\Http\Controllers\Api\Member\MemberController::class, 'claimRewardAchieveable'])->name('member.claim.reward.achieveable');
-        Route::get('achievements', [App\Http\Controllers\Api\Member\MemberController::class, 'getMemberAchievements'])->name('get.member.achievements');
+        
         Route::post('redeem-points', [App\Http\Controllers\Api\Member\MemberController::class, 'redeemPoints'])->name('redeem.points');
         Route::get('current-points', [App\Http\Controllers\Api\Member\MemberController::class, 'getCurrentPoints'])->name('get.current.points');
         Route::get('get-programs-by-locations', [App\Http\Controllers\Api\Member\MemberController::class, 'getProgramByLocations'])->name('get.programs.by.location');
