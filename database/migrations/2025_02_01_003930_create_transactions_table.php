@@ -31,7 +31,7 @@ return new class extends Migration
             $table->unsignedBigInteger('vendor_id')->nullable();
             $table->unsignedBigInteger('staff_id')->nullable();
             $table->foreign('program_id')->references('id')->on('programs')->onDelete('cascade');
-            $table->foreign('member_plan_id')->references('id')->on('members_plans')->onDelete('cascade');
+            $table->foreign('member_plan_id')->references('id')->on('member_plans')->onDelete('cascade');
             $table->foreign('plan_id')->references('id')->on('plans')->onDelete('cascade');
             $table->foreign('location_id')->references('id')->on('locations')->onDelete('cascade');
             $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
