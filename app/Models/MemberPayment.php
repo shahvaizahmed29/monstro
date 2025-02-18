@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class MemberPayment extends Model
 {
     use HasFactory;
+    protected $table = 'member_subscriptions';
     
     protected $fillable = [
         'payer_id',

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('company_email');
             $table->longText('company_website')->nullable();
             $table->longText('company_address')->nullable();
-            $table->string('logo')->nullable();
+            $table->string('icon')->nullable();
             $table->foreignId('plan_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('phone_number')->nullable();
             $table->boolean('is_new')->default(1);

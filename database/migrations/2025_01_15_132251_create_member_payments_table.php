@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('member_payments', function (Blueprint $table) {
+        Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('payer_id')->constrained('members')->onDelete('cascade'); // Member who pays
             $table->foreignId('beneficiary_id')->constrained('members')->onDelete('cascade'); // Member for whom payment is made
             $table->foreignId('program_id')->constrained('programs')->onDelete('cascade'); // Associated program
             $table->foreignId('member_plan_id')->nullable()->constrained('member_plans')->onDelete('cascade'); // Associated plan
+            $table->string('stripe_subscription_id')->nullable();
             $table->timestamps();
         });
     }
